@@ -1,0 +1,14 @@
+# --- Android / Gradle build output ---
+android/build/
+android/app/build/
+android/.gradle/
+android/local.properties
+**/*.iml
+.idea/
+
+# --- macOS / editor junk ---
+.DS_Store
+**/.DS_Store
+
+# --- session scratch / perm-test artifacts ---
+_perm_test_*.txt

@@ -1,0 +1,908 @@
+49b 6>:+
+fa6 6Ke
+10ba },:]
+11ff w/&*
+1216 E$&+D
+1231 E&^_]
+14ab X^_]
+198e v;~
+19a7 w,G&
+19ae t,<-t
+19b9 < t
+19c0 < t
+1aba CJt&
+1d6b tUPQ
+1d94 J+u#SR
+1e8c t5RP
+1ef1 +RP
+1fc5 UUUU
+1fcd UUUU
+210b G +F
+2123 ~'+N
+2250 K|Ft0
+22e7 & %G
+2312 & %G
+233d K|2t%
+2379 &0%G
+2383 K|2t%
+23a0 &0%G
+23cf K|Jt4
+2425 & %O
+242f K|8t)
+2450 & %O
+247b K|2t%
+24b7 &0%O
+24c1 K|2t%
+24de &0%O
+26b9 K~D*
+274a ;O |
+294a &0%G
+2985 & %G
+29f5 ;] ~
+2b20 &0%G
+2b5a & %G
+2cd6 K|Ft0
+2d5f & %G
+2d8a & %G
+2db3 K|2t%
+2ded &0%G
+2df7 K|2t%
+2e14 &0%G
+2e44 J|6t'
+2ec2 ?<<<300030003000
+2f02 ?<<<300030003000
+2f42 ?<<<300030003000
+2fec 9 ^_
+30b8 L!^_
+30d2 Z,uG
+317d )s,0-U
+3248 G +F
+3260 ~%+N
+336a u9:^
+3414 J|pt[
+341b uC:n
+34c9 uC:n
+36fd ;O |
+3721 F+G
+390e ;] ~
+3b94 J|Gt2
+3e0b ..^_
+3e5d 7x8o<
+3f1e G +F
+404a K|Ft0
+40e1 & %G
+40eb K|8t)
+410c & %G
+4137 K|2t%
+4173 &0%G
+417d K|2t%
+419a &0%G
+41c9 K|Jt4
+421f & %O
+4229 K|8t)
+424a & %O
+4275 K|2t%
+42b1 &0%O
+42bb K|2t%
+42d8 &0%O
+448d I~.*
+4508 ;O |
+453c F+G
+46be &0%G
+46f8 & %G
+4758 ;] ~
+47dc p82F
+4840 &0%G
+487a & %G
+488f 7L8.8
+49d9 K|Ft0
+4a62 & %G
+4a8d & %G
+4ab6 K|2t%
+4af0 &0%G
+4afa K|2t%
+4b17 &0%G
+4b47 J|6t'
+4c73 ???WV
+4cc3 2=^_
+4cd8 B=#?
+4ce3 B:DWDU
+4dae ;O ~
+5074 ;O |
+50a8 F+G
+51e2 ;G ~
+5355 *Du(
+54e2 4u&
+55db [CGG
+5766 t=RSP%?
+58db SQR2
+5e6f 6^,Y
+5e8b 6d,&
+5ea2 PSQRP
+5eba l,ZY[X
+61aa PSQR
+61b8 ,tX+
+61e2 ZY[X
+63be ^P+
+6481 BRQ+
+65a0 4u&
+6bc9 ,t+_
+6bfc s5t2
+6db9 P@PV
+6e05 x:&
+7117 x:&1
+7201 -QRPR
+7250 PSQR
+727a tEUWV
+728a *-)5
+72df ZY[X
+7318 RPVW
+7386 <Qt)
+76c5 x:&1
+7ee7 &WV+
+8198 V^_
+8343 V^_
+864f hwQ+v
+871a ^YKu
+8766 .Q+v
+8812 t.Q+v
+8afc t4;~
+8b5f Y[Xu
+8bae Y[Xu
+8c18 \&8E
+8c48 !r;;
+8dd3 ;qLt
+8f0f *RPS
+8f50 G.^_
+9042 E*PR
+9457 GV^_]
+955f *^_]
+966a /|WP
+9795 E PW
+9845 )O<)W:)O@)W>
+9cd3 SQRWVP
+9d90 g0PW
+9ddc P%X=
+9dfd ^_ZY[
+9e2f PSQR
+9e56 ZY[X
+9fbf ZYA;M*|
+9fc7 B;U(|
+9fdd /;M2
+9ff8 +M0u
+a054 Ht+=
+a059 Pt+=
+a05e Kt+=
+a063 Mt-<
+a093 B;U&}
+a0aa ;M2~
+a123 ;E}
+a13c BWQR
+a16d ZXuB;U*|
+a177 @;E(|
+a1e4 M0;N
+a23e D$WV
+a284 @;D&~
+a2a4 @;D$~
+a2b5 B;T2~
+a2be RVRW
+a2ed +M&~
+a300 +M$~
+a378 W.RP
+a38f ;M0tS;M2
+a3b9 +U.|
+a3be B+U*}
+a3c6 +E,|
+a3cb @+E(}
+a3d6 M0QWRP
+a3f4 G._]
+a426 R+E,
+a438 X+E.
+a462 T.RP
+a4a5 ;E2~
+a4ba D.^_
+a559 ;E0u
+a62d ;></u
+a71f "/t%
+a7f8 *PS+
+a816 ;></t!
+a85e ./K}
+a8f0 1uZX
+a98e Ht4=
+a9fe $/;?t
+aa61 ;></t
+ac6b ;></t
+aca3 ;>8/uW
+acf2 <!t </t"<(u/
+ade3 *RPS
+ae33 G.^_
+ae55 ;M w
+ae7c A;M v
+afc2 W*RS
+b056 @@;E
+b06b E +E
+b2e9 U"uW
+b353 y;v
+b3ce G*PS
+b454 +W;
+b4a0 >/P+
+b527 ^YRPRPQV
+b596 H;E 
+b59b E t=
+b600  s.
+b777 =[.u
+b790 /PSW
+b9a3 G @P
+bf21 *RPS
+bf58 G.^_
+c0d4 /;|0t@
+c194 EBP+
+c1fa G*PS
+c221 ]BSP
+c29c G*PSV
+c2a9 ]BSPP
+c37c EBPS
+c3cf }0;>
+c489 M0;~
+c4a8 G(PS
+c4ec 5YZX[
+c4f2 G(^_
+c538 Kt!=
+c53d Mt =
+c5c0 G(PS
+c5e2  O;~
+c647 RLZY
+c67a G(^_
+c6bf EBPW
+c781 EBPW
+c868 EBPW
+c89d EBPW
+c9ad *^_]
+c9c9 )O<)W:)O@)W>
+ca30 G*PS
+cc8e D*P=
+cdd8 ,+E$
+ce96 ;M4s
+cea0 ;M4s
+cec0 Stg<
+cedb <~wA< r=u
+cef9 ] ;]6s
+cfd9 E.HPP
+cfdf E,HP
+cff6 9E"u
+d045 U2;]*u
+d0ce ;]6t
+d266 9G~w
+d4c6 DF)G
+d4cc DD)G
+da22 t"WV
+de82 KtL=
+e2fa _,&+G
+e41a 6&+G
+e44f _,&+G
+e545 W.RP
+e6c9 6&+O
+ec2e 9G0t
+f5dd |89F
+f9f5 *+G&P
+fc4c *)9F
+108bb 6D:+
+1106a J@9F
+11259 9;G wS
+112fb X:9F
+1130b G @P
+1134d G0H;
+11432 X:+F
+116e4 G0HP
+11704 G @P
+117f0 6D:+
+11a89 X:9F
+11ac3 J@9F
+11b6d >X:(|
+122df |:@P
+122ec ~:u 
+1235e |:@P
+12a65 W.RP
+12aa7 W.RP
+12aed W.RP
+12b37 W.RP
+12b7d W.RP
+12bca W.RP
+1322a Z&;F
+13234 Z&9F
+1350b v&9F
+13847 9G s
+13d03 9G0t
+141e5 D:t9
+14c51 )@Ky
+14dda tBH;
+15459 t^9v
+1566f r;V
+15681 V+F
+1573a tkGN
+1574d tX<"t$<\t
+1577e t'<"t
+157f9 ?CCN
+1580c t^<"t'<\t
+15840 t*<"t
+15876 .P)U
+158cb <;Ct
+15a10 x)u5
+15b0d x)u$
+15b8a x)u~
+15c77 0u<F
+15ce8 <.u$
+15d16 t3=N
+15d1b t6=h
+15d20 t!=l
+16042 , FG
+1648b <0|5
+16573 t5r&=
+1657a u3GG3
+165ec (r59
+168e1 0<9v
+16951 t5r&=
+16958 u5GG3
+169e6 ;Fu
+16d76 PSQRWVU
+16da4  ]^_ZY[X
+178db PQRSTUVW
+1790d _^][[ZYX
+17916 PQRSTUVW
+17948 _^][[ZYX
+17af9 PQRSTUVW
+17b4b r9PP
+17b64 _^][[ZYX
+183a5  `  p
+18525     
+1855c P   
+186ea 8l8z
+1870e `000`
+187c2 0000
+188a8 `````
+188b4 
+18937 000000
+1897a x000
+189ac 00000
+18a1b ````
+18a50 000000
+18ad9 ```8
+18b4e ``0``
+18d07 @   @
+18d6a  `    p
+18dbb  @@@
+18ea2 @@@@@
+18f31       
+18f73 P    
+19064 @@@@@
+190d2 @@H0
+19147 ` 0 `
+19207 E>F0E0E
+19211 F0E0ENF0E0E1E
+192c3 YhVrVwV
+193a1 &-3:AGMSZ`fkqw}
+193ef `P@80*$ 
+19404 $8Pdx
+19440 .???
+1945d MS Run-Time Library - Copyright (c) 1988, Microsoft Corp
+194a6 Design:
+194ae Programming:
+194bb Graphic Artists:
+194cc Music & Sound:
+194db Product Manager:
+194ec Gene Portwood
+194fa Lauren Elliott
+19509 Glenn Axworthy
+19518 Leila Bronstein
+19528 Barbara Lawrence
+19539 Tom Rettig
+19544 Cricket Rothrum
+19554 Where in the World is Carmen Sandiego?
+1957b MS-DOS Version 2.1
+1958e Copyright 1990, Br
+195a1 derbund Software
+195ce Carmen's gang has pulled another caper!
+195f6 and it's up to you to crack the case...
+19659 Do you really want to quit?
+19699 said that
+196a3 enjoyed playing tennis
+196bb asked about the recent tennis match
+196e0 was carrying a tennis raquet
+196fe That's all I know.
+19713 said
+19718 was a mountain climber
+19730 bragged about dangerous sports
+19750 talked about great mountains
+1976f mentioned that
+1977e plays croquet
+1978d said
+19792 hated dangerous sports
+197aa talked about a croquet match
+197d1 had brown hair
+197e2 had blond hair
+197f3 had red hair
+19802 had black hair
+1981d had a large ring on
+19832 had a fancy ring on
+19846 I liked the ring
+19857 had on
+1985f I noticed a tattoo on
+1987a tried to conceal a tattoo
+19895 had an ugly tattoo
+198aa wore fancy jewelry
+198bd The jewelry
+198c9 wore was stunning
+198db The jewelry
+198e7 wore looked expensive
+19907 arrived in a convertible
+19921 had a nice convertible
+19939 offered me a ride in
+1994e convertible
+1995c arrived in a private limo
+19977 was driving a limo
+1998f driver along
+1999e arrived on a motorcycle
+199b7 was riding a motorbike
+199cf was carrying a helmet
+199eb mentioned
+199f5 liked seafood
+19a05 mentioned
+19a0f liked Mexican food
+19a23 said
+19a28 didn't like seafood
+19a47 male
+19a4c female
+19a54 tennis
+19a5b music
+19a61 mt. climbing
+19a6e skydiving
+19a78 swimming
+19a81 croquet
+19a8a brown
+19a90 blond
+19a9a black
+19aa1 limps
+19aa7 ring
+19aac tattoo
+19ab3 scar
+19ab8 jewelry
+19ac1 convertible
+19acd limousine
+19ad7 race car
+19ae0 motorcycle
+19aff Carmen Sandiego
+19b0f Female
+19b16 Former spy for the Intelligence Service of Monaco
+19b48 Tennis
+19b4f Reddish-brown
+19b5d 1939 Packard convertible
+19b76 Never appears in public without her ruby necklace.
+19ba9 Great fondness for tacos.
+19bc3 Merey LaRoc
+19bcf Female
+19bd6 Freelance aerobic dancer
+19bef Mountain climbing
+19c01 Brown
+19c07 Fancy limousine
+19c17 Has an absolute mania for fancy jewelry.
+19c40 Loves spicy foods.
+19c53 Dazzle Annie Nonker
+19c67 Female
+19c6e Yogurt bar owner
+19c7f Tennis
+19c86 Blond
+19c8c Bugatti Limousine
+19c9e Reported to have a tattoo.
+19cb9 Has an incredible craving for shellfish.
+19ce2 Lady Agatha Wayland
+19cf6 Female
+19cfd Reader of upper-class English mystery stories
+19d2b Tennis
+19d36 Denghby Roadster
+19d47 Has a diamond ring the size of a grapefruit.
+19d74 Speeds through the countryside looking for great Mexican restaurants.
+19dba Len "Red" Bulk
+19dc9 Male
+19dce Ex-professional hockey player and gambler
+19df8 Mountain climbing
+19e0e Convertible
+19e1a Tattoo of mermaid on his right thumb.
+19e40 Loves seafood.
+19e4f Scar Graynolt
+19e5d Male
+19e62 Folk guitarist
+19e71 Croquet
+19e7d Limousine with shaded windows
+19e9b Wears a five-carat pinky ring.
+19eba Has a 6'8" man servant named "The Asp"; can eat his own weight in tacos.
+19f03 Nick Brunch
+19f0f Male
+19f14 Ex-private eye
+19f23 Mountain climbing
+19f35 Black
+19f3b "Black Mamba" motorcycle
+19f54 Prefers soiled trenchcoats and snap-brimmed fedoras.  Has brown eyes and a moustache.
+19faa Loves Mexican food; always wears Crimefighter's ring.
+19fe0 Fast Eddie B.
+19fee Male
+19ff3 World class croquet player
+1a00e Croquet
+1a016 Raven-haired or black
+1a02c Convertible
+1a038 Always leaves a diamond stickpin at the scene of his crimes.
+1a075 Fast Eddie is an impeccably dressed jet-setter and likes Mexican food.
+1a0bc Ihor Ihorovich
+1a0cb Male
+1a0d0 Pretender to the Czarist throne
+1a0f0 Croquet
+1a0f8 Blond
+1a0fe Limousine
+1a108 Strange Ukranian tattoo on right shoulder.
+1a133 Loves eating lobsters, watching cartoons and is fascinated by large marsupials.
+1a183 Katherine "Boom-Boom" Drib
+1a19e Female
+1a1a5 Motorcycle racer
+1a1b6 Mountain climbing
+1a1c8 Brunette or brown
+1a1da Honcho-1250 motorcycle
+1a1f1 Has a tattoo of an eagle on her left bicep.
+1a21d Gourmet seafood cook; fascinated with health and fitness.
+1a267 Cancel 
+1a29b Cancel 
+1a2b1 Bank
+1a2b7 Hotel
+1a2bd Museum
+1a2c4 Sport Club
+1a2cf Library
+1a2d7 Airport
+1a2df Harbor
+1a2e6 Riverfront
+1a2f1 Palace
+1a2f8 Stock Exchange
+1a307 Marketplace
+1a313 Foreign Ministry
+1a324 $Vice President
+1a334 Bank Guard
+1a33f Teller
+1a346 Hotel manager
+1a354 Bellhop
+1a35c House detective
+1a36c Museum guard
+1a379 Docent
+1a380 Curator
+1a388 Waiter
+1a38f Tennis pro
+1a39a Bartender
+1a3a4 Circulation clerk
+1a3b6 Reference librarian
+1a3ca Archivist
+1a3d4 Pilot
+1a3da Flight attendant
+1a3eb Baggage clerk
+1a3f9 Sailor
+1a400 Harbor Master
+1a40e Customs officer
+1a41e Stevedore
+1a428 Tugboat captain
+1a438 Sailor's parrot
+1a448 Palace guard
+1a455 Soldier
+1a45d Privy Councillor
+1a46e Analyst
+1a476 Trader
+1a47d Messenger
+1a487 Hawker
+1a48e Street merchant
+1a49e Urchin
+1a4a5 Under Secretary
+1a4b5 Attache
+1a4bd Ambassador
+1a4f2 I'm sorry, I have never seen the person you are looking for.
+1a530 No one like that has checked in here.
+1a556 I'm sorry, I have never seen the person you are looking for.
+1a593 Sorry, I haven't seen anybody like that around here.
+1a5c8 I don't think I've seen anybody like that around the library.
+1a606 It's awfully busy around here; I haven't noticed anyone suspicious.
+1a64a Sorry, I haven't noticed anything suspicious around the harbor.
+1a68a There hasn't been another person around here all day.
+1a6c0 I'm sorry, I have never seen the person you are looking for.
+1a6fd No one like that has done business here today.
+1a72c Sorry, I haven't seen anybody like that around here.
+1a761 I'm sorry, I have never seen the person you are looking for.
+1a7c7 Joystick improperly centered or not present.
+1a81d Not enough memory.
+1a831 My sources tell me
+1a844 A reliable source told me
+1a85e I heard
+1a866 The person you're looking for was here and
+1a891 Sources tell me
+1a8a1 I saw the person you're looking for and
+1a8c9 All I know is that
+1a8dc A suspicious person was here and
+1a93a Cancel 
+1a94f Do you wish to save your current game?
+1a99f Unable to open ACME roster file.
+1a9d0 Delete 
+1a9e8 Cancel 
+1aa28 Unable to save game.
+1aa3d Disk full.
+1aa67 All I know is that something suspicious is going on in town.
+1aaa4 Rumor has it that the gang is in town somewhere.
+1aad5 The word is out: You're getting too close, gumshoe...
+1ab0b The only thing I can tell you is to watch your step!
+1ab8c COMPUTE
+1ab98 HOBBY
+1ab9e HAIR
+1aba3 FEATURE
+1abab VEHICLE
+1abb7 READY.
+1abbf Wait...
+1abc9 The information provided eliminates all possible suspects.
+1ac06 No warrant has been issued.
+1ac23 Suspect:
+1ac30 You now have a warrant to arrest %s.
+1ac56 Suspects:
+1accf %s: 
+1acf5 Name
+1acfe Occupation
+1ad09 Hobby
+1ad0f Hair Color
+1ad1a Auto
+1ad1f Feature
+1ad27 Other
+1ad4d CARMEN.DAT
+1ad59 CITIES.DAT
+1ad65 DIGISND.DAT
+1ad71 ACME.DAT
+1ad7b MIDISND.DAT
+1adc0 DISK1
+1adc6 DISK2
+1ade8 HEADQUARTERS
+1adf5 %dK bytes available.
+1ae0a Requires at least 432K bytes application memory.
+1ae3b Please remove any memory resident software.
+1ae78 herc
+1ae81 Graphics mode not available.
+1ae9f ROSTER=
+1aea7 stdsnd
+1aeae adlib
+1aeb4 covox
+1aeba gblast
+1aec1 ibmg
+1aec6 sblast
+1aecd tandy
+1aed3 /G"Game
+1aedb /V/About Carmen...
+1aeee /N1New
+1aef5 (Save
+1aefe Quit
+1af06 Options
+1af13 Sound
+1af19 /J$Joystick
+1af28 Acme
+1af30 Detective Roster
+1af41 /H#Hall of Fame
+1af51 (/D Dossiers
+1af64 Hall of Fame
+1af71 Acme Detective Roster
+1af87 Where in the World is Carmen Sandiego?I
+1afec Carmen Sandiego
+1affc Merey LaRoc
+1b008 Dazzle Annie
+1b015 Lady Agatha
+1b021 Len Bulk
+1b02a Scar Graynolt
+1b038 Nick Brunch
+1b044 Fast Eddie B
+1b051 Ihor Ihorovich
+1b060 Katherine Drib
+1b070 Rookie
+1b077 Sleuth
+1b07e Private Eye
+1b08a Investigator
+1b097 Ace Detective
+1b13e The Hall of Fame is empty.
+1b16a Name
+1b16f Rank
+1b174 Cases
+1b181 Detective at keyboard,
+1b198  please identify yourself:
+1b1b5 You're a famous Ace Detective!
+1b1d6 Your name could be on a hit list somewhere...
+1b206 You had better sign on under an assumed name.
+1b236 You have a criminal record.
+1b252 Access denied.
+1b263 Interpol files are full.
+1b27e Please sign on as one of the detectives on file or delete (use ALT-R) an old detective who is no longer an active player.
+1b2fa There is no record of your name on Interpol files.
+1b32f Are you new here?
+1b341 (Y/N) 
+1b349 Please type in the name you normally use:
+1b375 You have been identified, %s.
+1b395 Your current rank is %Fs.
+1b3b1 Do you wish to resume your saved game (if not, it will be erased)?
+1b3f4 (Y/N) 
+1b3fc Sorry, it was not possible to resume your saved game.
+1b435 *** FLASH ***
+1b445 National treasure stolen from %s.
+1b469 The treasure has been identified as %s.
+1b492 Male
+1b497 Female
+1b49f %s suspect reported at the scene of the crime.
+1b4d0 Your assignment:
+1b4f2 Track the thief from %s to %s hideout and arrest %s!
+1b529 You must apprehend the thief by Sunday, 5 p.m.
+1b55a Good luck, %Fs %s.
+1b56f Message from Interpol:
+1b588 Bad news...
+1b595 We've just received word that %s slipped through your fingers because your investigation took too long!
+1b5fe There goes
+1b609 the suspect!
+1b617 Interpol here.
+1b628 You have caught up with %s.
+1b646 However, without a warrant we cannot make a legal arrest!
+1b682 It looks like Carmen's gang has gotten away with another caper!
+1b6c4 Interpol here.
+1b6d5 You have trailed %s correctly.
+1b6f6 Unfortunately, you have a warrant for %s.
+1b722 Be careful, we could all be sued for false arrest!
+1b757 We hope you do better on your next case.
+1b782 Thanks to your help, the %s police have apprehended %s.
+1b7bc %s had the loot, %s, which will be returned to the grateful residents of %s.
+1b80b We here at Interpol thank you for your good work on this case.
+1b84c Your success will be noted on your record.
+1b879 Good job, %s, you have earned a promotion.
+1b8a6 Your new rank is: %Fs.
+1b8be case
+1b8c3 cases
+1b8ca %Fs more %s until your next promotion.
+1b8f3 Fantastic!
+1b900 You have successfully arrested the ring-leader, Carmen Sandiego, and sent her to jail for good!
+1b962 Congratulations, your name will go into the Interpol Hall of Fame!
+1b9a7 Ready for your next case, %s? 
+1b9ce Three
+1b9d4 Four
+1b9d9 Five
+1b9e2 Seven
+1b9e8 Eight
+1b9ee Nine
+1b9f7 Press any key or
+1ba08 button to continue.
+1ba2d She 
+1ba32  she 
+1ba38  her 
+1ba3e  her 
+1ba49  he 
+1ba4e  his 
+1ba54  him 
+1ba61   00
+1ba6a @0080   
+1ba77 0 0 
+1ba8d 0000
+1ba92    0
+1ba97 A V.I.L.E. henchman!
+1baac You must be on
+1babb the right track.
+1bb0b Where is the file '%.12s'?
+1bb28 Please insert the disk
+1bb3f '%.11s' into 
+1bb4d drive (specify)
+1bb5d SLEEPING...
+1bb69 Please insert the disk '%.11Fs' into drive %c:.
+1bb9e p.m.
+1bba3 a.m.
+1bba8 %s, %d %s
+1bbb3 Monday
+1bbba Tuesday
+1bbc2 Wednesday
+1bbcc Thursday
+1bbd5 Friday
+1bbdc Saturday
+1bbe5 Sunday
+1bbed GAME%d.SAV
+1bc0c (;C_FILE_INFO
+1bc95 *(null)
+1bc9d (null)
+1bca4 +- #
+1bd30 MThd
+1bd3b MTrk
+1bd66  aetonisrdlhugfcwypbmk,vSA.T'PMxBCIRGDWHqE-zNFKL0j:51YJ8\U?73Q;2!469
+1bdad OVXZ()*+"#$%&<=>/@[]^_`
+1bde0 {|}~
+1bde9 03<?
+1be07 Kr/\/
+1be0f MR/g/
+1be5e  |\,.<>?/:;"[]*+=?:\r
+1be79 .???
+1bea8 Abort
+1bebc Cancel 
+1bed3 Retry
+1bee6 Disk error on Drive ?:
+1befd Drive ?: not ready.
+1bf11 Please close the drive door.
+1bf2e Printer error.
+1bf3d Printer out of paper.
+1bf53 System error.
+1bf61 Drive ?: is write protected.
+1bf7e Please adjust the write protect tab.
+1bfcc Invalid DOS path.
+1c019 File already exists.
+1c02e Replace it?
+1c054 Drive 
+1c06b Okay 
+1c081 Cancel 
+1c0cd Drive 
+1c0e4 Okay 
+1c0fa Cancel 
+1c12c Volume: '%.11s'
+1c13c %ld bytes free.
+1c156 <<NMSG>>
+1c160 R6000
+1c167 - stack overflow
+1c17c R6003
+1c183 - integer divide by 0
+1c19d R6009
+1c1a4 - not enough space for environment
+1c1d0 run-time error 
+1c1e2 R6002
+1c1e9 - floating point not loaded
+1c209 R6001
+1c210 - null pointer assignment
+1c356 !Packed file is corrupt
+1c45c [C
+1c6fe XYYfY|Y
+1c712 Z+Z>ZHZ
+1c720 ZX[_[d[
+1c730 \B]"^,^
+1c748 _K`v`sc
+1c758 j5l@lHlZldl
+1c772 xpx\xGx
+1c782 vlvAv
+1c79a {I{%{i
+1ca00 zqRI#
+1cb90  m b ] O F A 3 * % 
+1cbac #q#N#.#"#
+1cbc0 "P"D"7"
+1cbd0 !}!^!R!E!'!
+1cbe8 #`'S'%&
+1cc02 %~%r%N%F%>%5%'%
+1cc2e $|$p$V$J$=$!$
+1cc4c ';+6+,+
+1cc6c (~(q(P(6(
+1cc84 ,y,j,^,P,>,2,',
+1cca0 +k+X+
+1cca6 -~-r-f-M-
+1ccbe .l.b.l/T/E/0/
+1ccd6 0l1_1R161
+1ccf4 1C2+2
+1cd00 2x2l2=313
+1cd1a 3u3V3c5]5S5G545$5
+1cd3a 4Q4@444>
+1cd48 6}6v6p6g6`6Z656,6
+1cd6e 7u7@838%8
+1cd88 8A9)9u9I:
+1cdac :j<T<E<(<!<
+1cdbc <r=j=O=7=.='=!=
+1cdd8 >~>i>W>F>/>"?
+1cde8 >R?G?:?1?
+1ce06 ApA]AKA
+1ce0e ACB/B
+1ce1c CsCnCdCJC7C
+1ce32 BwBtDaDND@D5D.D
+1ce4c DAF3F
+1ce56 E{EZECE7E
+1ce68 FqFeF4H$H
+1ce88 J#J+JsJzJ
+1cea0 KTLGL5L/N
+1ceac OoP_PVP>P*P
+1ceda Y3Y [
+1cee8 aca+_
+1cf25 kp\rKr?r'r
+1cf42 qrqZqDq2q
+1cf6c tstOtGt
+1cf84 w{wawOw
+1cfa4 uyzoz[zTz
+1cfc2 {e{U{G{*{
+1cfdc |w|Y|
+1d018 }~}e}Q};}"}
+1d041 MsDos?
