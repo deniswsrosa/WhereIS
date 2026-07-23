@@ -914,7 +914,8 @@ fun CrimeScreen(vm: CarmenViewModel) = VirtualScreen { v ->
                 !vm.anyFilterSet() -> paperWrap("Please enter the suspect's description first.").forEach { paper.add(it); delay(180) }
                 results.isEmpty() -> paperWrap(GameData.ELIMINATES_ALL).forEach { paper.add(it); delay(180) }
                 else -> {
-                    paper.add("Suspects:"); delay(220)
+                    // the original prints "Suspect:" when the description narrows to one
+                    paper.add(if (results.size == 1) "Suspect:" else "Suspects:"); delay(220)
                     results.forEach { paper.add(it.name); delay(220) }
                     if (results.size == 1) {
                         paper.add("")
@@ -1005,28 +1006,85 @@ fun CrimeScreen(vm: CarmenViewModel) = VirtualScreen { v ->
     OverlayHost(v, vm)
 }
 
-/* ----------------------------- RESULT ----------------------------- */
+/* ----------------------------- RESULT -----------------------------
+ * Faithful to the original ending: the left printer types the Interpol messages while the
+ * right panel shows the culprit behind bars in the brick JAIL (win) or stays black (loss).
+ * "Press any key or button to continue." advances to the next case.
+ */
 @Composable
 fun ResultScreen(vm: CarmenViewModel) = VirtualScreen { v ->
     val s = vm.s
-    Column(Modifier.fillMaxSize().background(if (s.won) Vga.Blue else Vga.Black).padding(v.w(12)),
-        horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(if (s.won) "CASE CLOSED" else "CASE FAILED",
-            style = v.text(14, color = if (s.won) Vga.LightGreen else Vga.LightRed, bold = true))
-        Spacer(Modifier.height(v.w(6)))
-        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally) {
-            s.resultLines.forEach {
-                Text(it, style = v.text(8.5f, color = Vga.White), textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = v.w(1.5f)))
+    val printed = remember { mutableStateListOf<String>() }
+    var typing by remember { mutableStateOf("") }
+    var done by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        for (line in s.resultLines) {
+            for (piece in paperWrap(line, 20)) {
+                typing = ""
+                for (ch in piece) { typing += ch; delay(14) }
+                printed.add(piece); typing = ""
+                delay(90)
             }
-            Spacer(Modifier.height(v.w(4)))
-            Text("Rank: ${GameData.ranks[s.rankIndex]}    Cases solved: ${s.casesSolved}",
-                style = v.text(8, color = Vga.LightCyan))
+            printed.add("")
         }
-        Spacer(Modifier.height(v.w(4)))
-        DosButton("NEXT CASE", fill = Vga.Green, textColor = Vga.White, style = v.text(10, bold = true)) {
-            vm.toBriefingForNext()
+        done = true
+    }
+    val scroll = rememberScrollState()
+    LaunchedEffect(printed.size, typing) { scroll.animateScrollTo(scroll.maxValue) }
+
+    v.At(0, 0, 320, 11) { GameMenuBar(v, vm) }
+    // city name box
+    v.At(4, 13, 141, 30, Alignment.Center) {
+        Box(Modifier.fillMaxSize().background(Vga.Black)
+            .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(2)), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(s.currentCity, style = v.text(9, color = Vga.White, bold = true))
+                Text(vm.clockLabel(), style = v.text(8, color = Vga.White))
+            }
         }
     }
+    // left: the printer with the Interpol report typing on
+    v.At(2, 44, 146, 154) {
+        Box(Modifier.fillMaxSize()) {
+            PixelImage("crime_printer", Modifier.fillMaxSize())
+            val lineH = 7.4f
+            val shown = printed.takeLast(12) + (if (typing.isNotEmpty()) listOf(typing) else emptyList())
+            val sheetH = (10f + shown.size * lineH).coerceAtLeast(29f).coerceAtMost(96f)
+            v.At(14, 102f - sheetH, 113, sheetH) {
+                Box(Modifier.fillMaxSize().background(Vga.White).border(BorderStroke(v.w(0.7f), Vga.Black))) {
+                    Canvas(Modifier.fillMaxSize()) {
+                        val unit = size.width / 113f
+                        val hole = unit * 1.7f
+                        var y = size.height - unit * 4f
+                        while (y > unit * 2f) {
+                            drawRect(Vga.Black, topLeft = Offset(unit * 2.6f, y), size = Size(hole, hole))
+                            drawRect(Vga.Black, topLeft = Offset(size.width - unit * 4.3f, y), size = Size(hole, hole))
+                            y -= unit * 6.2f
+                        }
+                    }
+                    Column(Modifier.fillMaxSize().padding(start = v.w(8), end = v.w(7), top = v.w(2)),
+                        verticalArrangement = Arrangement.Bottom) {
+                        shown.forEach { Text(it, style = v.text(6.8f, color = Vga.Black), maxLines = 1) }
+                        Spacer(Modifier.height(v.w(3)))
+                    }
+                }
+            }
+        }
+    }
+    // right: the JAIL (win) or black panel (loss)
+    v.At(150, 26, 168, 146) {
+        Box(Modifier.fillMaxSize().background(Vga.Black)) {
+            if (s.won) PixelImage("jail_cell", Modifier.fillMaxSize())
+        }
+    }
+    if (done) {
+        v.At(150, 174, 168, 24, Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Press any key or", style = v.text(9.5f, color = Vga.White, bold = true))
+                Text("button to continue.", style = v.text(9.5f, color = Vga.White, bold = true))
+            }
+        }
+        Box(Modifier.fillMaxSize().clickable { vm.toBriefingForNext() })
+    }
+    OverlayHost(v, vm)
 }

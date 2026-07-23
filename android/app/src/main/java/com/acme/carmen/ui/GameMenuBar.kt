@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Text
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,12 +74,19 @@ private fun MenuTitle(v: Virtual, title: String, items: List<MenuItemDef>) {
             style = v.text(8, color = Vga.Black, bold = true),
             modifier = Modifier.clickable { open = true }
         )
+        // DOS-style dropdown: white box, black border, tight monospace items that
+        // highlight to a black bar (inverse video) when pressed — like the original menus.
         DropdownMenu(expanded = open, onDismissRequest = { open = false },
-            modifier = Modifier.background(Vga.LightGray)) {
-            items.forEach { it ->
-                DropdownMenuItem(onClick = { open = false; it.action() }) {
-                    Text(it.label, fontFamily = FontFamily.Monospace, color = Vga.Black,
-                        fontWeight = FontWeight.Medium, fontSize = 15.sp)
+            modifier = Modifier.background(Vga.White).border(BorderStroke(1.5.dp, Vga.Black))) {
+            items.forEach { def ->
+                var pressed by remember { mutableStateOf(false) }
+                Box(Modifier.fillMaxWidth()
+                    .background(if (pressed) Vga.Black else Vga.White)
+                    .clickable { pressed = true; open = false; def.action() }
+                    .padding(horizontal = 14.dp, vertical = 5.dp)) {
+                    Text(def.label, fontFamily = FontFamily.Monospace,
+                        color = if (pressed) Vga.White else Vga.Black,
+                        fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
             }
         }

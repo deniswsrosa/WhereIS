@@ -150,6 +150,7 @@ class CarmenViewModel : ViewModel() {
         val routeLen = maxOf(base, order.size + 1).coerceAtMost(6)
 
         val cities = GameData.cities.shuffled().take(routeLen)
+        android.util.Log.d("Carmen", "case: culprit=${culprit.name} route=$cities")
         s = s.copy(
             phase = Phase.BRIEFING,
             culprit = culprit,
@@ -326,7 +327,13 @@ class CarmenViewModel : ViewModel() {
     fun arrive() {
         val city = s.flying ?: return
         val correct = s.route.getOrNull(s.progress + 1)
-        var st = s.copy(clock = s.clock + s.flightHours, flying = null, flightHours = 0)
+        var newClock = s.clock + s.flightHours
+        // overnight rule (observed in the original): landing between 10 p.m. and 8 a.m.
+        // rolls the clock forward to 8 a.m. — the detective rests for the night
+        val hour = (9 + newClock) % 24
+        if (hour >= 22) newClock += (24 - hour) + 8
+        else if (hour < 8) newClock += 8 - hour
+        var st = s.copy(clock = newClock, flying = null, flightHours = 0)
         if (city == correct) {
             st = st.copy(progress = st.progress + 1, currentCity = city, onTrack = true)
             // the culprit is sighted when you arrive close behind (last cities of the trail)
@@ -409,18 +416,23 @@ class CarmenViewModel : ViewModel() {
     }
 
     private fun win(c: Suspect) {
+        val crimeCity = s.route.firstOrNull() ?: s.currentCity
         val lines = mutableListOf<String>()
         if (c.name == "Carmen Sandiego") {
             lines += "You have successfully arrested the ring-leader, Carmen Sandiego, and sent her to jail for good!"
             lines += "Congratulations, your name will go into the Interpol Hall of Fame!"
         } else {
-            lines += "Thanks to your help, the ${s.currentCity} police have apprehended ${c.name}."
-            lines += "${c.name} had the loot, ${s.treasure}, which will be returned to its grateful owners."
+            // faithful phrasing: the CRIME city's police make the arrest and get the loot back
+            lines += "Thanks to your help, the $crimeCity police have apprehended ${c.name}."
+            lines += "${c.name} had the loot, ${s.treasure}, which will be returned to the grateful residents of $crimeCity."
         }
         lines += "We here at Interpol thank you for your good work on this case."
         val newCases = s.casesSolved + 1
         var newRank = s.rankIndex
-        if (newCases % 2 == 0 && newRank < GameData.ranks.lastIndex) {
+        // promotions come quickly at first (a promotion after the very first case, like the
+        // original), then every other case
+        val promote = newRank < GameData.ranks.lastIndex && (newCases == 1 || newCases % 2 == 1)
+        if (promote) {
             newRank++
             lines += "Good job, ${s.detectiveName}, you have earned a promotion."
             lines += "Your new rank is: ${GameData.ranks[newRank]}."
