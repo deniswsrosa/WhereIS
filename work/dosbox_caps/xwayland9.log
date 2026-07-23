@@ -1,0 +1,68 @@
+The XKEYBOARD keymap compiler (xkbcomp) reports:
+> Warning:          Unsupported maximum keycode 708, clipping.
+>                   X11 cannot support keycodes above 255.
+> Warning:          Virtual modifier Hyper multiply defined
+>                   Using 0, ignoring 0
+> Warning:          Virtual modifier ScrollLock multiply defined
+>                   Using 0, ignoring 0
+Errors from xkbcomp are not fatal to the X server
+
+(Xwayland:230272): Gtk-WARNING **: 21:07:36.956: gtk_disable_setlocale() must be called before gtk_init()
+The XKEYBOARD keymap compiler (xkbcomp) reports:
+> Warning:          Unsupported maximum keycode 708, clipping.
+>                   X11 cannot support keycodes above 255.
+> Warning:          Virtual modifier Hyper multiply defined
+>                   Using 0, ignoring 0
+> Warning:          Virtual modifier ScrollLock multiply defined
+>                   Using 0, ignoring 0
+Errors from xkbcomp are not fatal to the X server
+1 XSELINUXs still allocated at reset
+SCREEN: 0 objects of 728 bytes = 0 total bytes 0 private allocs
+DEVICE: 0 objects of 48 bytes = 0 total bytes 0 private allocs
+CLIENT: 0 objects of 472 bytes = 0 total bytes 0 private allocs
+WINDOW: 0 objects of 80 bytes = 0 total bytes 0 private allocs
+PIXMAP: 1 objects of 160 bytes = 160 total bytes 0 private allocs
+GC: 0 objects of 40 bytes = 0 total bytes 0 private allocs
+SYNC_FENCE: 0 objects of 24 bytes = 0 total bytes 0 private allocs
+TOTAL: 1 objects, 160 bytes, 0 allocs
+1 PIXMAPs still allocated at reset
+PIXMAP: 1 objects of 160 bytes = 160 total bytes 0 private allocs
+GC: 0 objects of 40 bytes = 0 total bytes 0 private allocs
+SYNC_FENCE: 0 objects of 24 bytes = 0 total bytes 0 private allocs
+TOTAL: 1 objects, 160 bytes, 0 allocs
+
+(Xwayland:230272): Gtk-WARNING **: 22:19:33.918: gtk_disable_setlocale() must be called before gtk_init()
+The XKEYBOARD keymap compiler (xkbcomp) reports:
+> Warning:          Unsupported maximum keycode 708, clipping.
+>                   X11 cannot support keycodes above 255.
+> Warning:          Virtual modifier Hyper multiply defined
+>                   Using 0, ignoring 0
+> Warning:          Virtual modifier ScrollLock multiply defined
+>                   Using 0, ignoring 0
+Errors from xkbcomp are not fatal to the X server
+1 XSELINUXs still allocated at reset
+SCREEN: 0 objects of 728 bytes = 0 total bytes 0 private allocs
+DEVICE: 0 objects of 48 bytes = 0 total bytes 0 private allocs
+CLIENT: 0 objects of 472 bytes = 0 total bytes 0 private allocs
+WINDOW: 0 objects of 80 bytes = 0 total bytes 0 private allocs
+PIXMAP: 1 objects of 160 bytes = 160 total bytes 0 private allocs
+GC: 0 objects of 40 bytes = 0 total bytes 0 private allocs
+SYNC_FENCE: 0 objects of 24 bytes = 0 total bytes 0 private allocs
+TOTAL: 1 objects, 160 bytes, 0 allocs
+1 PIXMAPs still allocated at reset
+PIXMAP: 1 objects of 160 bytes = 160 total bytes 0 private allocs
+GC: 0 objects of 40 bytes = 0 total bytes 0 private allocs
+SYNC_FENCE: 0 objects of 24 bytes = 0 total bytes 0 private allocs
+TOTAL: 1 objects, 160 bytes, 0 allocs
+
+(Xwayland:230272): Gtk-WARNING **: 15:38:45.708: gtk_disable_setlocale() must be called before gtk_init()
+The XKEYBOARD keymap compiler (xkbcomp) reports:
+> Warning:          Unsupported maximum keycode 708, clipping.
+>                   X11 cannot support keycodes above 255.
+> Warning:          Virtual modifier Hyper multiply defined
+>                   Using 0, ignoring 0
+> Warning:          Virtual modifier ScrollLock multiply defined
+>                   Using 0, ignoring 0
+Errors from xkbcomp are not fatal to the X server
+XWAYLAND: wl_registry#2: error 0: invalid global zwp_xwayland_keyboard_grab_manager_v1 (47)
+(EE) failed to dispatch Wayland events with libdecor: Protocol error

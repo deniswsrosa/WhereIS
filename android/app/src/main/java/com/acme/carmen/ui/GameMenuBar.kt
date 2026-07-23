@@ -55,9 +55,10 @@ fun GameMenuBar(v: Virtual, vm: CarmenViewModel) {
             MenuItemDef("Detective Roster") { vm.openOverlay(Overlay.Roster) },
             MenuItemDef("Hall of Fame") { vm.openOverlay(Overlay.HallOfFame) },
         ))
-        MenuTitle(v, "Dossiers", listOf(
-            MenuItemDef("Suspect Dossiers") { vm.openOverlay(Overlay.Dossiers) },
-        ))
+        // Dossiers menu lists the ten suspects directly, like the original
+        MenuTitle(v, "Dossiers", GameData.suspects.map { su ->
+            MenuItemDef(su.name.replace("\"", "")) { vm.openOverlay(Overlay.Dossier(su)) }
+        })
     }
 }
 
@@ -89,7 +90,7 @@ private fun MenuTitle(v: Virtual, title: String, items: List<MenuItemDef>) {
 @Composable
 fun OverlayHost(v: Virtual, vm: CarmenViewModel) {
     val o = vm.s.overlay ?: return
-    if (o is Overlay.Dossiers) { DossiersOverlay(v, vm); return }
+    if (o is Overlay.Dossier) { DossierWindow(v, o.suspect) { vm.dismissOverlay() }; return }
     val (title, lines) = when (o) {
         Overlay.About -> "ABOUT" to listOf(
             "Where in the World is", "Carmen Sandiego?  (Enhanced)", "MS-DOS Version 2.1",
@@ -103,7 +104,7 @@ fun OverlayHost(v: Virtual, vm: CarmenViewModel) {
         Overlay.HallOfFame -> "HALL OF FAME" to if (vm.s.casesSolved == 0)
             listOf("The Hall of Fame is empty.")
         else listOf("${vm.s.detectiveName}", "${GameData.ranks[vm.s.rankIndex]} — ${vm.s.casesSolved} case(s)")
-        Overlay.Dossiers -> "" to emptyList()   // handled by DossiersOverlay above
+        is Overlay.Dossier -> "" to emptyList()   // handled by DossierWindow above
         is Overlay.Info -> o.title to o.lines
     }
 
@@ -130,59 +131,85 @@ fun OverlayHost(v: Virtual, vm: CarmenViewModel) {
     }
 }
 
-/* Suspect Dossiers — per-suspect portrait + full stats, matching the original (web_05). */
+/* Suspect Dossier — the authentic white window from the original's Dossiers menu:
+ * a name tab on top, the framed portrait upper-left, bold black field labels beside it,
+ * Feature/Other full-width below, and the text typing on progressively. Geometry measured
+ * from DOSBox captures: window (25,49)-(306,189), portrait interior 61x80 at (32,59). */
 @Composable
-private fun DossiersOverlay(v: Virtual, vm: CarmenViewModel) {
-    Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
-        contentAlignment = Alignment.Center) {
-        Column(Modifier.fillMaxWidth(0.92f).fillMaxHeight(0.94f).background(Vga.Blue)
-            .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(4)),
-            horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("SUSPECT DOSSIERS", style = v.text(10, color = Vga.Yellow, bold = true))
-            Spacer(Modifier.height(v.w(2)))
-            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
-                GameData.suspects.forEach { su -> SuspectDossierCard(v, su) }
+private fun DossierWindow(v: Virtual, su: Suspect, onClose: () -> Unit) {
+    // typed-on effect: number of characters shown across all fields
+    val fields = listOf(
+        "Name:" to su.name, "Sex:" to su.sex, "Occupation:" to su.occupation,
+        "Hobby:" to su.hobby, "Hair Color:" to su.hair, "Auto:" to su.auto,
+        "Feature:" to su.feature1, "Other:" to su.feature2,
+    )
+    val total = fields.sumOf { it.second.length }
+    var shown by remember(su.name) { mutableStateOf(0) }
+    LaunchedEffect(su.name) { shown = 0; while (shown < total) { kotlinx.coroutines.delay(8); shown += 2 } }
+    fun taken(idx: Int): String {
+        var budget = shown
+        for (i in 0 until idx) budget -= fields[i].second.length
+        return fields[idx].second.take(budget.coerceAtLeast(0))
+    }
+    val label = v.text(8, color = Vga.Black, bold = true)
+    val value = v.text(8, color = Vga.Black)
+
+    Box(Modifier.fillMaxSize().clickable { onClose() }) {
+        // drop shadow, then the window
+        v.At(28, 52, 281, 140) { Box(Modifier.fillMaxSize().background(Vga.Black)) }
+        v.At(25, 49, 281, 140) {
+            Box(Modifier.fillMaxSize().background(Vga.White).border(BorderStroke(v.w(1), Vga.Black))) {
+                Row(Modifier.fillMaxSize().padding(v.w(4))) {
+                    // framed portrait: black outer border, white gap, black inner border
+                    Column {
+                        Box(Modifier.border(BorderStroke(v.w(1), Vga.Black)).padding(v.w(2))) {
+                            Box(Modifier.border(BorderStroke(v.w(1), Vga.Black))) {
+                                val slug = "suspect_" + su.name.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')
+                                if (drawableId(slug) != 0)
+                                    PixelImage(slug, Modifier.size(v.w(61), v.w(80)))
+                                else Box(Modifier.size(v.w(61), v.w(80)).background(Vga.DarkGray))
+                            }
+                        }
+                    }
+                    Spacer(Modifier.width(v.w(5)))
+                    Column(Modifier.weight(1f)) {
+                        Row { Text("Name: ", style = label); Text(taken(0), style = value) }
+                        Spacer(Modifier.height(v.w(2)))
+                        Row { Text("Sex: ", style = label); Text(taken(1), style = value) }
+                        Spacer(Modifier.height(v.w(2)))
+                        Text(buildAnnotatedString {
+                            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("Occupation: ") }
+                            append(taken(2))
+                        }, style = value)
+                        Spacer(Modifier.height(v.w(4)))
+                        Row { Text("Hobby: ", style = label); Text(taken(3), style = value) }
+                        Spacer(Modifier.height(v.w(2)))
+                        Row { Text("Hair Color: ", style = label); Text(taken(4), style = value) }
+                        Spacer(Modifier.height(v.w(2)))
+                        Row { Text("Auto: ", style = label); Text(taken(5), style = value) }
+                    }
+                }
+                // Feature / Other span the full window width beneath the portrait
+                Column(Modifier.align(Alignment.BottomStart).fillMaxWidth()
+                    .padding(start = v.w(4), end = v.w(4), bottom = v.w(4))) {
+                    Text(buildAnnotatedString {
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("Feature: ") }
+                        append(taken(6))
+                    }, style = value)
+                    Spacer(Modifier.height(v.w(4)))
+                    Text(buildAnnotatedString {
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("Other: ") }
+                        append(taken(7))
+                    }, style = value)
+                }
             }
-            Spacer(Modifier.height(v.w(2)))
-            DosButton("CLOSE", fill = Vga.Green, textColor = Vga.White, style = v.text(9, bold = true)) { vm.dismissOverlay() }
+        }
+        // name tab overlapping the window's top edge
+        v.At(103, 43, 170, 11) {
+            Box(Modifier.background(Vga.White).border(BorderStroke(v.w(1), Vga.Black))
+                .padding(horizontal = v.w(4)), contentAlignment = Alignment.Center) {
+                Text(su.name.replace("\"", "").uppercase(), style = v.text(7.5f, color = Vga.Black, bold = true))
+            }
         }
     }
-}
-
-@Composable
-private fun SuspectDossierCard(v: Virtual, su: Suspect) {
-    Row(Modifier.fillMaxWidth().padding(vertical = v.w(1)).background(Vga.Black)
-        .border(BorderStroke(v.w(1), Vga.DarkGray)).padding(v.w(2))) {
-        Canvas(Modifier.size(v.w(34), v.w(40))) { drawSuspectBust(size.width, size.height, su) }
-        Spacer(Modifier.width(v.w(3)))
-        Column(Modifier.weight(1f)) {
-            Text(su.name, style = v.text(8.5f, color = Vga.Yellow, bold = true))
-            Text("Sex: ${su.sex}    Hair: ${su.hair}", style = v.text(6.5f, color = Vga.White))
-            Text("Occupation: ${su.occupation}", style = v.text(6.5f, color = Vga.White))
-            Text("Hobby: ${su.hobby}", style = v.text(6.5f, color = Vga.White))
-            Text("Auto: ${su.auto}", style = v.text(6.5f, color = Vga.White))
-            Text("Feature: ${su.feature1}", style = v.text(6.5f, color = Vga.LightCyan))
-        }
-    }
-}
-
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawSuspectBust(w: Float, h: Float, su: Suspect) {
-    val hl = su.hair.lowercase()
-    val hair = when {
-        "red" in hl && "brown" in hl -> Color(0xFFA0522D)
-        "red" in hl -> Vga.LightRed
-        "blond" in hl -> Vga.Yellow
-        "black" in hl || "raven" in hl -> Vga.Black
-        "brun" in hl || "brown" in hl -> Vga.Brown
-        else -> Vga.DarkGray
-    }
-    val skin = Color(0xFFF0C8A0)
-    val shirt = if (su.sex == "Female") Vga.Magenta else Vga.Blue
-    drawRoundRect(shirt, topLeft = Offset(w * 0.08f, h * 0.62f), size = Size(w * 0.84f, h * 0.4f),
-        cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.14f, w * 0.14f))
-    drawRect(skin, topLeft = Offset(w * 0.42f, h * 0.52f), size = Size(w * 0.16f, h * 0.14f))
-    drawOval(skin, topLeft = Offset(w * 0.24f, h * 0.16f), size = Size(w * 0.52f, h * 0.42f))
-    drawArc(hair, 180f, 180f, true, topLeft = Offset(w * 0.22f, h * 0.10f), size = Size(w * 0.56f, h * 0.34f))
-    drawRect(Vga.Black, topLeft = Offset(w * 0.38f, h * 0.32f), size = Size(w * 0.05f, h * 0.04f))
-    drawRect(Vga.Black, topLeft = Offset(w * 0.55f, h * 0.32f), size = Size(w * 0.05f, h * 0.04f))
 }

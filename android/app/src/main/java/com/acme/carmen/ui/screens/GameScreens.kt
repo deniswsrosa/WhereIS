@@ -9,28 +9,60 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
-import androidx.compose.material.TextField
-import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.PlatformImeOptions
 import androidx.compose.ui.text.style.TextAlign
 import com.acme.carmen.game.Venue
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.acme.carmen.data.CityMeta
 import com.acme.carmen.data.GameData
-import com.acme.carmen.data.Suspect
 import com.acme.carmen.game.CarmenViewModel
 import com.acme.carmen.game.Overlay
 import com.acme.carmen.ui.*
 import com.acme.carmen.ui.theme.Vga
+
+/* ----------------------------- INTRO (boot animation) -----------------------------
+ * Faithful to the original attract sequence: the three-crowns "Brøderbund Software
+ * Presents" card while the detective strides across the bottom of the screen (2-frame
+ * walk cycle), then the police squad marches through. Tap anywhere to skip to the title.
+ */
+@Composable
+fun IntroScreen(vm: CarmenViewModel) = VirtualScreen { v ->
+    var walkX by remember { mutableStateOf(-40f) }
+    var frame by remember { mutableStateOf(0) }
+    var cops by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        // detective walks left -> right across the bottom (like the original boot)
+        while (walkX < 330f) { delay(60); walkX += 4f; frame++ }
+        // then the police squad marches through
+        cops = true; walkX = -60f
+        while (walkX < 330f) { delay(60); walkX += 5f; frame++ }
+        vm.introDone()
+    }
+    PixelImage("intro_presents", Modifier.fillMaxSize())
+    val sprite = if (cops) "anim_cops_${frame % 3}" else "anim_detective_${frame % 2}"
+    val w = if (cops) 49f else 34f
+    v.At(walkX, 151, w, 48, Alignment.BottomCenter) {
+        PixelImage(sprite, Modifier.fillMaxSize(), ContentScale.Fit)
+    }
+    Box(Modifier.fillMaxSize().clickable { vm.introDone() })
+}
 
 /* ----------------------------- TITLE ----------------------------- */
 @Composable
@@ -43,61 +75,129 @@ fun TitleScreen(vm: CarmenViewModel) = VirtualScreen { v ->
     }
 }
 
-/* ----------------------------- SIGN ON ----------------------------- */
+/* --------------------------- HQ PRINTER (sign-on + briefing) ---------------------------
+ * Faithful to the original: the ACME HQ dot-matrix printer prints its messages onto one
+ * continuous sheet. On the first case it asks you to identify yourself, then — without ever
+ * switching to a different screen — keeps printing the case briefing on the same paper.
+ * The `hq_screen` art (printer body, header, sprocket-feed paper) is reused; we cover the
+ * baked-in prompt with a clean sheet and drive our own teletype so it can type + scroll.
+ */
+
+// Interior of the white paper sheet in the 320x200 canvas (measured from hq_screen.png:
+// the clean sheet spans x≈23..122, y≈97..146; the printer body begins at y≈148). We clip a
+// hair inside that so no printed line ever renders under the printer's front lip.
+private const val PAPER_X = 22f
+private const val PAPER_Y = 98f
+private const val PAPER_W = 98f
+private const val PAPER_H = 45f
+
+private val SIGN_ON_PROMPT = listOf("Detective at keyboard,", "please identify yourself:")
+
+private fun briefingLines(s: com.acme.carmen.game.GameState): List<String> = listOf(
+    GameData.FLASH,
+    GameData.TREASURE_STOLEN.replace("%s", s.currentCity),
+    GameData.TREASURE_ID.replace("%s", s.treasure),
+    "Your assignment: recover the",
+    "loot and arrest the thief.",
+    GameData.DEADLINE,
+    "Good luck, ${GameData.ranks[s.rankIndex]} ${s.detectiveName}.",
+)
+
 @Composable
-fun SignOnScreen(vm: CarmenViewModel) = VirtualScreen { v ->
-    var name by remember { mutableStateOf("") }
+fun SignOnScreen(vm: CarmenViewModel) = HqPrinterScreen(vm, promptForName = true) { vm.beginInvestigation() }
+
+@Composable
+fun BriefingScreen(vm: CarmenViewModel) = HqPrinterScreen(vm, promptForName = false) { vm.beginInvestigation() }
+
+@Composable
+private fun HqPrinterScreen(vm: CarmenViewModel, promptForName: Boolean, onBegin: () -> Unit) =
+    // While the name is being typed, keep the paper's bottom edge above the keyboard by panning
+    // the whole (full-size) scene up — the scene never shrinks.
+    VirtualScreen(keepVirtualYAboveIme = PAPER_Y + PAPER_H) { v ->
+    // Teletype state
+    val printed = remember { mutableStateListOf<String>() }
+    var typing by remember { mutableStateOf("") }
+    // stage: 0 typing prompt · 1 awaiting name · 2 typing briefing · 3 done (tap to begin)
+    var stage by remember { mutableStateOf(if (promptForName) 0 else 2) }
+    var input by remember { mutableStateOf("") }
+    val scroll = rememberScrollState()
+    val focus = remember { FocusRequester() }
+
+    suspend fun typeLines(lines: List<String>) {
+        for (ln in lines) {
+            typing = ""
+            for (ch in ln) { typing += ch; delay(16) }
+            printed.add(ln); typing = ""
+            delay(110)
+        }
+    }
+
+    // Segment 1: the identify-yourself prompt (first case only).
+    LaunchedEffect(Unit) {
+        if (promptForName) { typeLines(SIGN_ON_PROMPT); stage = 1 }
+    }
+    // Segment 2: the case briefing (both cases). For sign-on this runs after the name is entered.
+    LaunchedEffect(stage) {
+        if (stage == 2) { typeLines(briefingLines(vm.s)); stage = 3 }
+    }
+    // Keep the paper scrolled to the freshly printed line (and to the name as it's typed, and to
+    // the final "press any key" prompt when it appears at stage 3).
+    LaunchedEffect(printed.size, typing, input, stage) { scroll.animateScrollTo(scroll.maxValue) }
+    // Focus the (invisible) input so the keyboard appears when it's time to type a name.
+    LaunchedEffect(stage) { if (stage == 1) focus.requestFocus() }
+
+    val paperFont = v.text(7, color = Vga.Black)
+
     PixelImage("hq_screen", Modifier.fillMaxSize())
-    // input strip overlaid at the bottom
-    v.At(28, 150, 264, 44, Alignment.Center) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(v.w(4))) {
-            TextField(
-                value = name, onValueChange = { name = it.take(20) }, singleLine = true,
-                textStyle = v.text(10, color = Vga.Black),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                colors = TextFieldDefaults.textFieldColors(backgroundColor = Vga.White, cursorColor = Vga.Black),
-                modifier = Modifier.weight(1f).height(v.w(26))
-            )
-            DosButton("SIGN ON", fill = Vga.Green, textColor = Vga.White, style = v.text(9, bold = true)) {
-                vm.signOn(name)
-            }
-        }
+    // Whole screen is tappable once printing is done → begin the investigation.
+    if (stage == 3) {
+        Box(Modifier.fillMaxSize().clickable { onBegin() })
     }
-}
-
-/* ----------------------------- BRIEFING ----------------------------- */
-@Composable
-fun BriefingScreen(vm: CarmenViewModel) = VirtualScreen { v ->
-    val s = vm.s
-    Column(Modifier.fillMaxSize().padding(v.w(10)), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(GameData.FLASH, style = v.text(12, color = Vga.LightRed, bold = true))
-        Spacer(Modifier.height(v.w(6)))
+    // Clean sheet overlay covering the baked prompt, hosting the live printout.
+    v.At(PAPER_X, PAPER_Y, PAPER_W, PAPER_H) {
         Column(
-            Modifier.fillMaxWidth().weight(1f).background(Vga.Blue)
-                .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(6)),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            Modifier.fillMaxSize().background(Vga.White).padding(horizontal = v.w(2), vertical = v.w(1))
+                .verticalScroll(scroll)
         ) {
-            BText(v, GameData.TREASURE_STOLEN.replace("%s", s.currentCity))
-            Spacer(Modifier.height(v.w(4)))
-            BText(v, GameData.TREASURE_ID.replace("%s", s.treasure), Vga.Yellow)
-            Spacer(Modifier.height(v.w(6)))
-            BText(v, "Your assignment: recover the loot and arrest the thief.")
+            printed.forEach { Text(it, style = paperFont) }
+            if (typing.isNotEmpty()) Text(typing, style = paperFont)
+            when (stage) {
+                1 -> BasicTextField(
+                    value = input,
+                    onValueChange = { input = it.take(18).filter { c -> c != '\n' } },
+                    singleLine = true,
+                    textStyle = paperFont,
+                    cursorBrush = SolidColor(Vga.Black),
+                    // flagNoExtractUi: keep the keystrokes on the printer paper instead of
+                    // Android's fullscreen landscape text editor.
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Done,
+                        platformImeOptions = PlatformImeOptions("flagNoExtractUi"),
+                    ),
+                    keyboardActions = KeyboardActions(onDone = {
+                        val nm = input.trim().ifBlank { "Gumshoe" }
+                        printed.add(nm)
+                        input = ""
+                        vm.signOnStart(nm)   // generate the case, stay on the printer
+                        stage = 2
+                    }),
+                    modifier = Modifier.fillMaxWidth().focusRequester(focus)
+                )
+                3 -> BlinkingLine(v, "press any key to begin")
+            }
+            // Trailing gap so the freshly printed line always clears the printer's front lip.
             Spacer(Modifier.height(v.w(3)))
-            BText(v, GameData.DEADLINE, Vga.LightCyan)
-            Spacer(Modifier.height(v.w(3)))
-            BText(v, "Good luck, ${GameData.ranks[s.rankIndex]} ${s.detectiveName}.")
         }
-        Spacer(Modifier.height(v.w(6)))
-        DosButton("BEGIN INVESTIGATION", fill = Vga.Green, textColor = Vga.White,
-            style = v.text(10, bold = true)) { vm.beginInvestigation() }
     }
 }
 
+/** A printed line that ends in a blinking block cursor — the "waiting" prompt. */
 @Composable
-private fun BText(v: Virtual, t: String, c: androidx.compose.ui.graphics.Color = Vga.White) =
-    Text(t, style = v.text(8, color = c), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+private fun BlinkingLine(v: Virtual, text: String) {
+    var on by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) { while (true) { delay(450); on = !on } }
+    Text(text + if (on) " █" else "  ", style = v.text(7, color = Vga.Black))
+}
 
 /* ----------------------------- CITY ----------------------------- */
 @Composable
@@ -165,6 +265,27 @@ fun CityScreen(vm: CarmenViewModel) = VirtualScreen { v ->
     val s = vm.s
     val info = CityMeta.of(s.currentCity)
     var showVenues by remember(s.currentCity, s.progress) { mutableStateOf(false) }
+    // walking-to-venue animation: index of the venue being walked to, -1 = none
+    var walkingTo by remember(s.currentCity) { mutableStateOf(-1) }
+    var walkStep by remember { mutableStateOf(0) }
+    // burglar sighting animation offset (fraction 0..1 across the right panel)
+    var burglarT by remember(s.currentCity) { mutableStateOf(if (s.sighting) 0f else -1f) }
+
+    LaunchedEffect(walkingTo) {
+        if (walkingTo >= 0) {
+            walkStep = 0
+            while (walkStep < 8) { delay(140); walkStep++ }   // footsteps march toward the door
+            val t = walkingTo; walkingTo = -1; showVenues = false
+            vm.openVenue(t)
+        }
+    }
+    LaunchedEffect(burglarT >= 0f) {
+        if (burglarT >= 0f) {
+            while (burglarT < 1f) { delay(30); burglarT += 0.02f }
+            burglarT = -1f
+            vm.sightingShown()
+        }
+    }
 
     // menu bar
     v.At(0, 0, 320, 11) { GameMenuBar(v, vm) }
@@ -198,37 +319,60 @@ fun CityScreen(vm: CarmenViewModel) = VirtualScreen { v ->
         v.At(149, 13, 167, 145) {
             Box(Modifier.fillMaxSize().background(Vga.Black)
                 .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(4))) {
-                Text(if (s.onTrack) info.description
-                    else "You look around. Nothing here seems out of the ordinary...",
-                    style = v.text(8.5f, color = Vga.White))
+                if (burglarT < 0f) {
+                    Text(if (s.onTrack) info.description
+                        else "You look around. Nothing here seems out of the ordinary...",
+                        style = v.text(8.5f, color = Vga.White))
+                } else {
+                    // the culprit dashes across the panel — you're close behind!
+                    Box(Modifier.fillMaxSize()) {
+                        PixelImage("anim_burglar",
+                            Modifier.align(Alignment.BottomStart)
+                                .padding(start = v.w((155 * (1f - burglarT))), bottom = v.w(8))
+                                .size(v.w(44), v.w(34)), ContentScale.Fit)
+                    }
+                }
             }
         }
     }
-    // toolbar: the authentic 4-icon strip (SEE · DEPART · INVESTIGATE · CRIME) below the panel, with tap zones
-    v.At(150, 162, 166, 33) {
-        Box(Modifier.fillMaxSize()) {
-            PixelImage("toolbar_bar", Modifier.fillMaxSize())
-            Row(Modifier.fillMaxSize()) {
-                ToolZone(Modifier.weight(1f)) { vm.openOverlay(Overlay.Info(s.currentCity.uppercase(), listOf(info.description))) }
-                ToolZone(Modifier.weight(1f)) { vm.gotoTravel() }
-                ToolZone(Modifier.weight(1f)) { showVenues = true }
-                ToolZone(Modifier.weight(1f)) { vm.gotoCrime() }
-            }
-        }
-    }
+    GameToolbar(v, vm, selected = if (showVenues) 2 else 0,
+        onSee = { vm.openOverlay(Overlay.Info(s.currentCity.uppercase(), listOf(info.description))) },
+        onInvestigate = { showVenues = true })
 
-    // Investigate: pick one of 3 locations, shown as buildings + names (matches web_03)
+    // Investigate: pick one of 3 locations, shown as buildings + names (matches the original picker)
     if (showVenues && s.openClue == null) {
-        InvestigatePicker(v, s.venues, s.visited,
-            onPick = { i -> showVenues = false; vm.openVenue(i) },
-            onCancel = { showVenues = false })
+        InvestigatePicker(v, s.venues, s.visited, walkingTo, walkStep,
+            onPick = { i -> if (walkingTo < 0) walkingTo = i },
+            onCancel = { if (walkingTo < 0) showVenues = false })
     }
     OverlayHost(v, vm)
 }
 
+/** The authentic 4-icon toolbar strip (SEE · DEPART · INVESTIGATE · CRIME) with the green
+ *  selection border around the active icon, like the original. */
 @Composable
-private fun ToolZone(modifier: Modifier, onClick: () -> Unit) {
-    Box(modifier.fillMaxHeight().clickable(onClick = onClick))
+fun GameToolbar(v: Virtual, vm: CarmenViewModel, selected: Int,
+                onSee: (() -> Unit)? = null, onInvestigate: (() -> Unit)? = null) {
+    v.At(146, 163, 174, 32) {
+        Box(Modifier.fillMaxSize()) {
+            PixelImage("toolbar_bar", Modifier.fillMaxSize())
+            Row(Modifier.fillMaxSize()) {
+                ToolZone(Modifier.weight(1f), selected == 0, v) { onSee?.invoke() }
+                ToolZone(Modifier.weight(1f), selected == 1, v) { vm.gotoTravel() }
+                ToolZone(Modifier.weight(1f), selected == 2, v) { onInvestigate?.invoke() }
+                ToolZone(Modifier.weight(1f), selected == 3, v) { vm.gotoCrime() }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ToolZone(modifier: Modifier, selected: Boolean, v: Virtual, onClick: () -> Unit) {
+    Box(
+        modifier.fillMaxHeight()
+            .then(if (selected) Modifier.border(BorderStroke(v.w(2), Vga.Green)) else Modifier)
+            .clickable(onClick = onClick)
+    )
 }
 
 @Composable
@@ -245,16 +389,22 @@ private fun DialogPanel(v: Virtual, border: androidx.compose.ui.graphics.Color =
 }
 
 /* ------------------- INVESTIGATION: witness portrait + speech bubble ------------------- */
-private data class Look(val hair: Color, val skin: Color, val shirt: Color)
+/** "Sport Club" -> "sport_club" : maps a venue/occupation name to its drawable resource suffix. */
+private fun snake(s: String) = s.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')
+
+private data class Look(val hair: Color, val skin: Color, val shirt: Color, val style: Int)
 private fun witnessLook(occupation: String): Look {
     val h = occupation.hashCode()
-    val hair = listOf(Vga.Yellow, Vga.Brown, Vga.Black, Vga.LightGray, Vga.LightRed)[(h ushr 1).mod(5)]
+    val hair = listOf(Vga.Yellow, Vga.Brown, Vga.Black, Vga.LightGray, Vga.LightRed, Color(0xFF6B4A2A))[(h ushr 1).mod(6)]
     val skin = listOf(Color(0xFFF0C8A0), Color(0xFFE0A878), Color(0xFFC89058), Color(0xFF9C6B3F))[(h ushr 4).mod(4)]
     val shirt = listOf(Vga.LightRed, Vga.Cyan, Vga.Green, Vga.LightBlue, Vga.Magenta, Vga.Brown, Vga.LightGreen)[(h ushr 7).mod(7)]
-    return Look(hair, skin, shirt)
+    return Look(hair, skin, shirt, (h ushr 11).mod(4))   // style: 0 short · 1 full · 2 bald · 3 cap
 }
 
-/** Right-panel witness: a head-and-shoulders bust (facing right) + white speech bubble, matching carmen09. */
+/** Right-panel witness, matching the original (DOCENT capture): the witness stands at the
+ *  lower-left of the black panel at native sprite proportions, the occupation label in white
+ *  caps under them, and a white rounded speech bubble fills the upper-right with the clue in
+ *  black text, its tail pointing left toward the witness. */
 @Composable
 private fun WitnessPanel(v: Virtual, clue: Venue, onDone: () -> Unit) {
     val look = witnessLook(clue.occupation)
@@ -266,23 +416,32 @@ private fun WitnessPanel(v: Virtual, clue: Venue, onDone: () -> Unit) {
     v.At(149, 13, 167, 145) {
         Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White))
             .clickable { if (shown < clue.text.length) shown = clue.text.length else onDone() }) {
-            // witness bust, lower-left, facing the bubble
-            Canvas(Modifier.align(Alignment.BottomStart).padding(start = v.w(4), bottom = v.w(14)).size(v.w(50), v.w(58))) {
-                drawBust(size.width, size.height, look, (bob - 0.5f) * size.height * 0.03f)
-            }
-            // occupation label at the bottom
-            Text(clue.occupation.uppercase(), style = v.text(7.5f, color = Vga.White, bold = true),
-                modifier = Modifier.align(Alignment.BottomStart).padding(start = v.w(3), bottom = v.w(3)))
-            // white rounded speech bubble (upper-right) with a tail pointing down toward the witness
-            Column(Modifier.align(Alignment.TopEnd).padding(top = v.w(6), end = v.w(4), start = v.w(38)),
-                horizontalAlignment = Alignment.Start) {
-                Box(Modifier.background(Vga.White, RoundedCornerShape(v.w(5)))
-                    .padding(horizontal = v.w(4), vertical = v.w(3))) {
-                    Text(clue.text.take(shown), style = v.text(8, color = Vga.Black))
+            // witness portrait, lower-left, facing the bubble — drawn at native proportions
+            // (fixed 32 virtual px wide, height from the sprite's own aspect, like the original)
+            val portrait = "witness_" + snake(clue.occupation)
+            if (drawableId(portrait) != 0) {
+                val aspect = drawableAspect(portrait, 1.6f)
+                PixelImage(portrait,
+                    Modifier.align(Alignment.BottomStart).padding(start = v.w(10), bottom = v.w(14))
+                        .size(v.w(32), v.w(32 * aspect)), ContentScale.Fit)
+            } else {
+                Canvas(Modifier.align(Alignment.BottomStart).padding(start = v.w(10), bottom = v.w(14)).size(v.w(32), v.w(50))) {
+                    drawBust(size.width, size.height, look, (bob - 0.5f) * size.height * 0.02f)
                 }
-                Canvas(Modifier.padding(start = v.w(6)).size(v.w(9), v.w(7))) {
+            }
+            // occupation label under the witness (white caps, like "DOCENT")
+            Text(clue.occupation.uppercase(), style = v.text(7, color = Vga.White, bold = true),
+                modifier = Modifier.align(Alignment.BottomStart).padding(start = v.w(6), bottom = v.w(5)))
+            // white rounded speech bubble upper-right, tail pointing left toward the witness
+            Box(Modifier.align(Alignment.TopEnd).padding(top = v.w(8), end = v.w(4), start = v.w(46))) {
+                Box(Modifier.background(Vga.White, RoundedCornerShape(v.w(6)))
+                    .padding(horizontal = v.w(5), vertical = v.w(4))) {
+                    Text(clue.text.take(shown), style = v.text(7.5f, color = Vga.Black))
+                }
+                // tail: triangle sticking out of the bubble's lower-left toward the witness
+                Canvas(Modifier.align(Alignment.BottomStart).offset(v.w(-7), v.w(-6)).size(v.w(9), v.w(8))) {
                     val p = androidx.compose.ui.graphics.Path().apply {
-                        moveTo(0f, 0f); lineTo(size.width, 0f); lineTo(0f, size.height); close()
+                        moveTo(size.width, 0f); lineTo(size.width, size.height); lineTo(0f, size.height * 0.9f); close()
                     }
                     drawPath(p, Vga.White)
                 }
@@ -295,172 +454,341 @@ private fun WitnessPanel(v: Virtual, clue: Venue, onDone: () -> Unit) {
     }
 }
 
-/** Head-and-shoulders caricature facing right, in DOS-portrait style. */
+/** Head-and-shoulders caricature facing right, in the DOS witness-portrait style: a large round
+ *  head with an exaggerated nose over a collared shirt. Hair varies by look.style. */
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawBust(w: Float, h: Float, look: Look, bob: Float) {
-    val cx = w * 0.46f
-    val shoulderTop = h * 0.66f + bob
-    // shoulders (shirt)
-    drawRoundRect(look.shirt, topLeft = Offset(w * 0.04f, shoulderTop), size = Size(w * 0.92f, h - shoulderTop),
-        cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.14f, w * 0.14f))
-    // neck
-    drawRect(look.skin, topLeft = Offset(cx - w * 0.08f, shoulderTop - h * 0.10f), size = Size(w * 0.16f, h * 0.14f))
-    // head (facing right)
-    val headCx = cx + w * 0.05f; val headCy = h * 0.36f + bob
-    val hw = w * 0.30f; val hh = h * 0.27f
+    val ink = Vga.Black
+    val stroke = androidx.compose.ui.graphics.drawscope.Stroke(width = w * 0.025f)
+    // ---- shoulders + collar ----
+    val shTop = h * 0.72f + bob
+    drawRoundRect(look.shirt, topLeft = Offset(w * 0.02f, shTop), size = Size(w * 0.96f, h - shTop),
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.18f, w * 0.18f))
+    // collar V
+    val collar = androidx.compose.ui.graphics.Path().apply {
+        moveTo(w * 0.32f, shTop); lineTo(w * 0.50f, shTop + h * 0.10f); lineTo(w * 0.68f, shTop)
+    }
+    drawPath(collar, Vga.White, style = stroke)
+    // ---- neck ----
+    val headCx = w * 0.50f; val headCy = h * 0.36f + bob
+    val hw = w * 0.34f; val hh = h * 0.30f
+    drawRect(look.skin, topLeft = Offset(headCx - w * 0.10f, headCy + hh * 0.55f), size = Size(w * 0.20f, h * 0.16f))
+    // ---- head (big round, facing slightly right) ----
     drawOval(look.skin, topLeft = Offset(headCx - hw, headCy - hh), size = Size(hw * 2, hh * 2))
-    // nose bump on the right
-    drawOval(look.skin, topLeft = Offset(headCx + hw * 0.72f, headCy - h * 0.01f), size = Size(w * 0.13f, h * 0.09f))
-    // hair sweeping over the top and back-left
-    drawArc(look.hair, 175f, 200f, true, topLeft = Offset(headCx - hw * 1.05f, headCy - hh * 1.2f), size = Size(hw * 2.0f, hh * 2.0f))
-    drawRect(look.hair, topLeft = Offset(headCx - hw * 1.02f, headCy - hh * 0.3f), size = Size(w * 0.09f, hh * 1.0f))
-    // eye
-    drawOval(Vga.Black, topLeft = Offset(headCx + hw * 0.18f, headCy - hh * 0.28f), size = Size(w * 0.05f, h * 0.05f))
+    drawOval(ink, topLeft = Offset(headCx - hw, headCy - hh), size = Size(hw * 2, hh * 2), style = stroke)
+    // ear (left)
+    drawOval(look.skin, topLeft = Offset(headCx - hw * 1.06f, headCy - hh * 0.05f), size = Size(w * 0.10f, h * 0.09f))
+    // exaggerated nose (right profile)
+    val nose = androidx.compose.ui.graphics.Path().apply {
+        moveTo(headCx + hw * 0.70f, headCy - hh * 0.10f)
+        lineTo(headCx + hw * 1.12f, headCy + hh * 0.12f)
+        lineTo(headCx + hw * 0.70f, headCy + hh * 0.24f)
+    }
+    drawPath(nose, look.skin); drawPath(nose, ink, style = stroke)
+    // eyebrow + eye
+    drawRect(ink, topLeft = Offset(headCx + hw * 0.12f, headCy - hh * 0.44f), size = Size(w * 0.14f, h * 0.018f))
+    drawOval(ink, topLeft = Offset(headCx + hw * 0.20f, headCy - hh * 0.30f), size = Size(w * 0.055f, h * 0.06f))
     // smiling mouth
-    drawArc(Vga.Black, 15f, 55f, false, topLeft = Offset(headCx + hw * 0.05f, headCy - hh * 0.1f),
-        size = Size(hw * 1.0f, hh * 1.0f), style = androidx.compose.ui.graphics.drawscope.Stroke(width = w * 0.02f))
-}
-
-/** Investigation picker: the 3 locations shown as buildings + names in a popup (matches web_03). */
-@Composable
-private fun InvestigatePicker(v: Virtual, venues: List<Venue>, visited: Set<Int>, onPick: (Int) -> Unit, onCancel: () -> Unit) {
-    v.At(22, 46, 214, 140) {
-        Column(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(3))) {
-            // 3 building illustrations in a row
-            Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(v.w(4))) {
-                venues.forEachIndexed { i, _ ->
-                    Box(Modifier.weight(1f).fillMaxHeight().clickable { onPick(i) }, contentAlignment = Alignment.BottomCenter) {
-                        Canvas(Modifier.fillMaxWidth().fillMaxHeight()) {
-                            drawCivicBuilding(size.width, size.height, i, i in visited)
-                        }
-                    }
-                }
-            }
-            Spacer(Modifier.height(v.w(2)))
-            // location names (tap the building or the name to enter)
-            venues.forEachIndexed { i, venue ->
-                val done = i in visited
-                Box(Modifier.fillMaxWidth().clickable { onPick(i) }.padding(vertical = v.w(1)),
-                    contentAlignment = Alignment.Center) {
-                    Text((if (done) "✓ " else "") + venue.place,
-                        style = v.text(9, color = if (done) Vga.LightGray else Vga.White, bold = true),
-                        textAlign = TextAlign.Center)
-                }
-            }
-            Box(Modifier.fillMaxWidth().clickable { onCancel() }.padding(top = v.w(1)), contentAlignment = Alignment.Center) {
-                Text("Cancel", style = v.text(7, color = Vga.LightRed))
-            }
+    drawArc(ink, 20f, 50f, false, topLeft = Offset(headCx + hw * 0.02f, headCy - hh * 0.02f),
+        size = Size(hw * 1.0f, hh * 0.9f), style = stroke)
+    // ---- hair by style ----
+    when (look.style) {
+        2 -> {}  // bald: just a fringe over the ear
+        3 -> drawRect(look.hair, topLeft = Offset(headCx - hw * 1.02f, headCy - hh * 1.12f), size = Size(hw * 2.0f, hh * 0.55f)) // cap
+        else -> {
+            // hair sweeping over the crown and down the back-left
+            drawArc(look.hair, 160f, 230f, true,
+                topLeft = Offset(headCx - hw * 1.02f, headCy - hh * 1.12f), size = Size(hw * 2.0f, hh * 1.7f))
+            if (look.style == 1)  // fuller: sideburn down the left
+                drawRect(look.hair, topLeft = Offset(headCx - hw * 1.0f, headCy - hh * 0.2f), size = Size(w * 0.08f, hh * 1.1f))
         }
     }
 }
 
-private val bldgWalls = listOf(Color(0xFFD09084), Color(0xFFBCA488), Color(0xFFAEB0B8))
-private val bldgRoofs = listOf(Vga.DarkGray, Vga.Red, Vga.Brown)
-/** A classical civic building (columns + pediment), like the museum/library/bank icons in the game. */
+/** Investigation picker, faithful to the original dialog: a black white-bordered box at
+ *  (70,71)-(250,176) with the three buildings on a shared baseline and the location names
+ *  listed under them (selected name = white bar). Tapping a building/name starts the
+ *  footsteps walk animation, then the visit. Tap outside the dialog to cancel. */
+@Composable
+private fun InvestigatePicker(v: Virtual, venues: List<Venue>, visited: Set<Int>,
+                              walkingTo: Int, walkStep: Int,
+                              onPick: (Int) -> Unit, onCancel: () -> Unit) {
+    var selected by remember { mutableStateOf(-1) }
+    // full-screen scrim: tap outside cancels (the original cancels with Esc)
+    Box(Modifier.fillMaxSize().clickable { onCancel() })
+    v.At(70, 71, 180, 105) {
+        Column(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(2), Vga.White))
+            .clickable(enabled = false) {}.padding(v.w(3))) {
+            // 3 buildings on a shared baseline (bottom-aligned), native proportions
+            Row(Modifier.fillMaxWidth().height(v.w(52)), horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.Bottom) {
+                venues.forEachIndexed { i, venue ->
+                    val asset = "venue_" + snake(venue.place)
+                    Box(Modifier.width(v.w(52)).fillMaxHeight().clickable { selected = i; onPick(i) },
+                        contentAlignment = Alignment.BottomCenter) {
+                        if (drawableId(asset) != 0) {
+                            val aspect = drawableAspect(asset, 0.6f)
+                            val bw = 48f
+                            val bh = (bw * aspect).coerceAtMost(50f)
+                            PixelImage(asset, Modifier.size(v.w(bw), v.w(bh)), ContentScale.Fit)
+                        } else {
+                            Canvas(Modifier.size(v.w(48), v.w(40))) { drawCivicBuilding(size.width, size.height, i, i in visited) }
+                        }
+                    }
+                }
+            }
+            // footsteps: white dots marching from the centre toward the chosen building
+            Box(Modifier.fillMaxWidth().height(v.w(10))) {
+                if (walkingTo >= 0) {
+                    Canvas(Modifier.fillMaxSize()) {
+                        val slotW = size.width / 3f
+                        val targetX = slotW * walkingTo + slotW / 2f
+                        val startX = size.width / 2f
+                        for (d in 0 until walkStep.coerceAtMost(6)) {
+                            val t = d / 6f
+                            val x = startX + (targetX - startX) * t
+                            val y = size.height * (0.8f - 0.5f * t)
+                            drawRect(Vga.White, topLeft = Offset(x + (if (d % 2 == 0) -size.width*0.008f else size.width*0.008f), y),
+                                size = Size(size.width * 0.012f, size.height * 0.16f))
+                        }
+                    }
+                }
+            }
+            Spacer(Modifier.weight(1f))
+            // location names: selected = white bar with black text (like "Museum" in the original)
+            venues.forEachIndexed { i, venue ->
+                val done = i in visited
+                val isSel = i == selected || (selected < 0 && i == 0)
+                Box(Modifier.fillMaxWidth().padding(horizontal = v.w(24))
+                    .then(if (isSel) Modifier.background(Vga.White) else Modifier)
+                    .clickable { selected = i; onPick(i) }.padding(vertical = v.w(0.5f)),
+                    contentAlignment = Alignment.Center) {
+                    Text(venue.place,
+                        style = v.text(8.5f, color = if (isSel) Vga.Black else if (done) Vga.LightGray else Vga.White, bold = true),
+                        textAlign = TextAlign.Center)
+                }
+            }
+            Spacer(Modifier.height(v.w(2)))
+        }
+    }
+}
+
+/** Three venue buildings modelled closely on the original's investigate illustrations (the San
+ *  Marino set: a low purple Sport Club, a salmon columned Library and a green-towered Palace).
+ *  The game's full per-venue building set lives in the undecoded CARMEN.DAT; these are the closest
+ *  match reproducible from the reference art (reference_screens/dos_04). */
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCivicBuilding(w: Float, h: Float, idx: Int, visited: Boolean) {
-    val wall = if (visited) Vga.DarkGray else bldgWalls[idx % bldgWalls.size]
-    val roof = if (visited) Vga.Black else bldgRoofs[idx % bldgRoofs.size]
-    val trim = if (visited) Vga.DarkGray else Vga.LightGray
-    val facTop = h * 0.42f; val baseY = h * 0.86f
-    // steps
-    drawRect(trim, topLeft = Offset(w * 0.04f, baseY), size = Size(w * 0.92f, h * 0.14f))
-    drawRect(trim, topLeft = Offset(w * 0.16f, baseY - h * 0.05f), size = Size(w * 0.68f, h * 0.05f))
-    // facade wall
-    drawRect(wall, topLeft = Offset(w * 0.14f, facTop), size = Size(w * 0.72f, baseY - facTop))
-    // columns
-    val nCol = 4
-    for (c in 0 until nCol) {
-        val cx = w * 0.19f + c * (w * 0.62f / nCol)
-        drawRect(Vga.White, topLeft = Offset(cx, facTop + h * 0.03f), size = Size(w * 0.055f, baseY - facTop - h * 0.05f))
-    }
-    // door
-    drawRect(Vga.Black, topLeft = Offset(w * 0.44f, baseY - h * 0.15f), size = Size(w * 0.12f, h * 0.15f))
-    // pediment (triangular roof)
-    val p = androidx.compose.ui.graphics.Path().apply {
-        moveTo(w * 0.08f, facTop); lineTo(w * 0.5f, h * 0.16f); lineTo(w * 0.92f, facTop); close()
-    }
-    drawPath(p, roof)
-    // lit windows in the frieze
-    if (!visited) {
-        drawRect(Vga.Yellow, topLeft = Offset(w * 0.30f, facTop - h * 0.02f), size = Size(w * 0.06f, h * 0.05f))
-        drawRect(Vga.Yellow, topLeft = Offset(w * 0.64f, facTop - h * 0.02f), size = Size(w * 0.06f, h * 0.05f))
+    fun g(c: Color) = if (visited) Vga.DarkGray else c
+    fun rect(x: Float, y: Float, ww: Float, hh: Float, c: Color) =
+        drawRect(c, topLeft = Offset(w * x, h * y), size = Size(w * ww, h * hh))
+    val baseY = 0.90f
+    when (idx % 3) {
+        0 -> {  // Sport Club: low, wide, purple, with a railing and a stepped dome
+            val purple = g(Color(0xFF9A6FB0)); val dark = g(Color(0xFF5C3F73))
+            // thin white antenna poles
+            rect(0.06f, 0.30f, 0.015f, 0.30f, g(Vga.White)); rect(0.925f, 0.30f, 0.015f, 0.30f, g(Vga.White))
+            // wide base platform
+            rect(0.02f, 0.60f, 0.96f, 0.30f, purple)
+            // railing bars with lit gaps
+            for (i in 0 until 11) rect(0.06f + i * 0.082f, 0.56f, 0.02f, 0.14f, dark)
+            if (!visited) for (i in 0 until 5) rect(0.14f + i * 0.16f, 0.60f, 0.05f, 0.08f, Vga.Yellow)
+            // stepped centre block + dome cap
+            rect(0.30f, 0.44f, 0.40f, 0.18f, purple)
+            rect(0.36f, 0.36f, 0.28f, 0.10f, dark)
+            drawArc(purple, 180f, 180f, true, topLeft = Offset(w * 0.40f, h * 0.24f), size = Size(w * 0.20f, h * 0.24f))
+            if (!visited) for (i in 0 until 6) rect(0.37f + i * 0.043f, 0.45f, 0.02f, 0.03f, Vga.Yellow)
+        }
+        1 -> {  // Library: salmon classical temple, tiled gable, dark columns, white steps
+            val salmon = g(Color(0xFFC88878)); val col = g(Color(0xFF383038))
+            // gable roof (trapezoid) with a tiled band
+            val roof = androidx.compose.ui.graphics.Path().apply {
+                moveTo(w * 0.10f, h * 0.34f); lineTo(w * 0.5f, h * 0.14f); lineTo(w * 0.90f, h * 0.34f); close()
+            }
+            drawPath(roof, salmon)
+            rect(0.10f, 0.30f, 0.80f, 0.05f, g(Color(0xFF7A5A9A)))    // tiled frieze
+            // entablature
+            rect(0.10f, 0.35f, 0.80f, 0.05f, salmon)
+            // columns
+            for (c in 0 until 5) rect(0.14f + c * 0.16f, 0.40f, 0.05f, baseY - 0.40f, col)
+            rect(0.10f, baseY - 0.02f, 0.80f, 0.06f, salmon)          // stylobate
+            // central pediment + entrance
+            val ped = androidx.compose.ui.graphics.Path().apply {
+                moveTo(w * 0.38f, h * 0.46f); lineTo(w * 0.5f, h * 0.36f); lineTo(w * 0.62f, h * 0.46f); close()
+            }
+            drawPath(ped, salmon)
+            if (!visited) { rect(0.22f, 0.48f, 0.07f, 0.10f, Vga.Yellow); rect(0.71f, 0.48f, 0.07f, 0.10f, Vga.Yellow) }
+            rect(0.44f, 0.60f, 0.12f, 0.30f, salmon)
+            // white steps
+            rect(0.36f, 0.90f, 0.28f, 0.04f, g(Vga.White)); rect(0.40f, 0.86f, 0.20f, 0.04f, g(Vga.White))
+        }
+        else -> {  // Palace: two green towers, crenellated salmon centre, blue entrance
+            val green = g(Color(0xFF1E7A46)); val salmon = g(Color(0xFFD09890)); val blue = g(Color(0xFF3A46B0))
+            // side towers
+            for (tx in listOf(0.04f, 0.74f)) {
+                rect(tx, 0.30f, 0.22f, baseY - 0.30f, green)
+                if (!visited) for (r in 0 until 3) for (cc in 0 until 2)
+                    rect(tx + 0.04f + cc * 0.10f, 0.36f + r * 0.16f, 0.06f, 0.10f, Color(0xFF0E4028))
+            }
+            // centre wall + crenellations
+            rect(0.24f, 0.34f, 0.52f, baseY - 0.34f, salmon)
+            for (i in 0 until 5) rect(0.25f + i * 0.11f, 0.28f, 0.06f, 0.07f, salmon)
+            // blue gabled entrance
+            val gab = androidx.compose.ui.graphics.Path().apply {
+                moveTo(w * 0.40f, h * 0.44f); lineTo(w * 0.5f, h * 0.34f); lineTo(w * 0.60f, h * 0.44f); close()
+            }
+            drawPath(gab, blue)
+            rect(0.44f, 0.56f, 0.12f, baseY - 0.56f, g(Color(0xFF201828)))   // dark doorway
+            if (!visited) { rect(0.29f, 0.50f, 0.07f, 0.22f, Vga.Yellow); rect(0.64f, 0.50f, 0.07f, 0.22f, Vga.Yellow) }
+        }
     }
 }
 
 /* ----------------------------- TRAVEL ----------------------------- */
+// Normalised (0..1) pixel position of each city on world_map_clean.png. The map asset is the
+// authentic DEPART map interior recovered pixel-perfectly from original captures (median-combined
+// across cases to remove labels/routes); it sits at (10,85)..(309,191) in the 320x200 screen,
+// exactly where the original draws it.
+private object WorldMap {
+    const val WV = 300f     // map interior virtual width  (native asset size, no stretch)
+    const val HV = 107f     // map interior virtual height
+    val pos: Map<String, Offset> = mapOf(
+        "Athens" to Offset(0.5647f, 0.3268f), "Baghdad" to Offset(0.6259f, 0.3703f),
+        "Bamako" to Offset(0.4708f, 0.5406f), "Bangkok" to Offset(0.7922f, 0.5324f),
+        "Budapest" to Offset(0.5509f, 0.2324f), "Buenos Aires" to Offset(0.3215f, 0.7943f),
+        "Cairo" to Offset(0.587f, 0.3996f), "Colombo" to Offset(0.731f, 0.5813f),
+        "Istanbul" to Offset(0.5803f, 0.2976f), "Kathmandu" to Offset(0.7472f, 0.4199f),
+        "Kigali" to Offset(0.5835f, 0.639f), "Lima" to Offset(0.2663f, 0.6967f),
+        "London" to Offset(0.4941f, 0.1904f), "Mexico City" to Offset(0.2008f, 0.4887f),
+        "Montreal" to Offset(0.2765f, 0.2529f), "Moroni" to Offset(0.6226f, 0.6949f),
+        "Moscow" to Offset(0.6059f, 0.1444f), "New Delhi" to Offset(0.7232f, 0.4122f),
+        "New York" to Offset(0.2752f, 0.3005f), "Oslo" to Offset(0.5263f, 0.0979f),
+        "Paris" to Offset(0.5014f, 0.2184f), "Peking" to Offset(0.8393f, 0.3084f),
+        "Port Moresby" to Offset(0.9304f, 0.6827f), "Reykjavik" to Offset(0.4295f, 0.0489f),
+        "Rio de Janeiro" to Offset(0.3666f, 0.7491f), "Rome" to Offset(0.5315f, 0.2889f),
+        "San Marino" to Offset(0.5313f, 0.2686f), "Singapore" to Offset(0.802f, 0.6184f),
+        "Sydney" to Offset(0.9424f, 0.7918f), "Tokyo" to Offset(0.9081f, 0.3484f),
+    )
+}
+
 @Composable
 fun TravelScreen(vm: CarmenViewModel) = VirtualScreen { v ->
-    val options = remember(vm.s.currentCity, vm.s.progress, vm.s.onTrack) { vm.travelOptions() }
-    PixelImage("world_map", Modifier.fillMaxSize())
-    // DOS-style destination list on the right (black box, white border, white text rows)
-    v.At(150, 12, 166, 182) {
-        Column(Modifier.fillMaxSize().background(Vga.Black)
-            .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(4))
-            .verticalScroll(rememberScrollState())) {
-            Text("DEPART TO:", style = v.text(9, color = Vga.Yellow, bold = true))
-            Spacer(Modifier.height(v.w(3)))
-            options.forEach { city ->
-                val region = CityMeta.of(city).region
-                Box(Modifier.fillMaxWidth().clickable { vm.travelTo(city) }.padding(vertical = v.w(2))) {
-                    Text("$city", style = v.text(9, color = Vga.White, bold = true))
-                    Text(region, style = v.text(6.5f, color = Vga.LightCyan),
-                        modifier = Modifier.align(Alignment.CenterEnd))
-                }
-            }
-            Spacer(Modifier.height(v.w(3)))
-            Box(Modifier.fillMaxWidth().clickable { vm.gotoCity() }.padding(vertical = v.w(1))) {
-                Text("Cancel", style = v.text(8, color = Vga.LightRed))
+    val s = vm.s
+    val options = remember(s.currentCity, s.progress, s.onTrack) { vm.travelOptions() }
+    val info = CityMeta.of(s.currentCity)
+    val traveled = s.route.take(s.progress + 1)   // path flown so far, for the route line
+    val flying = s.flying
+    // flight animation: fraction of the current leg drawn (0..1)
+    var legT by remember { mutableStateOf(0f) }
+    LaunchedEffect(flying) {
+        if (flying != null) {
+            legT = 0f
+            while (legT < 1f) { delay(40); legT += 0.012f }
+            delay(350)
+            vm.arrive()
+        }
+    }
+
+    v.At(0, 0, 320, 11) { GameMenuBar(v, vm) }
+
+    // city name box (top-left) — during a flight the clock ticks hour by hour
+    v.At(4, 13, 141, 30, Alignment.Center) {
+        Box(Modifier.fillMaxSize().background(Vga.Black)
+            .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(2)), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(s.currentCity, style = v.text(9, color = Vga.White, bold = true))
+                val tick = if (flying != null) (legT * s.flightHours).toInt() else 0
+                Text(vm.clockLabel(tick), style = v.text(8, color = Vga.White))
             }
         }
     }
-}
-
-/* ----------------------------- CRIME COMPUTER ----------------------------- */
-private val MonitorBeige = Color(0xFFD8C4A0)
-private val MonitorBase = Color(0xFFCBB894)
-
-@Composable
-fun CrimeScreen(vm: CarmenViewModel) = VirtualScreen { v ->
-    val s = vm.s
-    val results = if (s.computed) vm.matches() else emptyList()
-    v.At(0, 0, 320, 11) { GameMenuBar(v, vm) }
-    // computer base peeking out below the monitor
-    v.At(56, 150, 208, 46) { Canvas(Modifier.fillMaxSize()) { drawComputerBase(size.width, size.height) } }
-    // CRT monitor: beige bezel + dark screen
-    v.At(18, 13, 284, 146) {
-        Box(Modifier.fillMaxSize().background(MonitorBeige, RoundedCornerShape(v.w(8))).padding(v.w(7))) {
-            Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Color(0xFF6B4A2A)))
-                .padding(v.w(3))) {
-                Row(Modifier.fillMaxSize()) {
-                    // attribute selectors
-                    Column(Modifier.weight(1.1f).fillMaxHeight()) {
-                        Text("CRIME COMPUTER", style = v.text(9, color = Vga.Yellow, bold = true))
-                        Spacer(Modifier.height(v.w(2)))
-                        CompRow(v, "SEX", s.compSex, GameData.sexes) { vm.setComp("sex", it) }
-                        CompRow(v, "HOBBY", s.compHobby, GameData.hobbies) { vm.setComp("hobby", it) }
-                        CompRow(v, "HAIR", s.compHair, GameData.hairColors) { vm.setComp("hair", it) }
-                        CompRow(v, "FEATURE", s.compFeature, GameData.features) { vm.setComp("feature", it) }
-                        CompRow(v, "VEHICLE", s.compVehicle, GameData.vehicles) { vm.setComp("vehicle", it) }
-                        Spacer(Modifier.height(v.w(2)))
-                        Row(horizontalArrangement = Arrangement.spacedBy(v.w(2))) {
-                            DosButton("COMPUTE", fill = Vga.Green, textColor = Vga.White, style = v.text(7, bold = true)) { vm.compute() }
-                            DosButton("Clues", fill = Vga.Cyan, textColor = Vga.Black, style = v.text(7)) { vm.autoFillFromClues() }
-                            DosButton("Exit", fill = Vga.Brown, textColor = Vga.White, style = v.text(7)) { vm.gotoCity() }
+    // city photo sliver above the map; during flight it becomes the sky gradient (plane view)
+    v.At(4, 45, 141, 148) {
+        Box(Modifier.fillMaxSize().border(BorderStroke(v.w(1), Vga.White))) {
+            if (flying != null) {
+                Canvas(Modifier.fillMaxSize()) {
+                    // light-blue sky gradient, palest at the horizon (like the original flight panel)
+                    val steps = 12
+                    for (i in 0 until steps) {
+                        val f = i / (steps - 1f)
+                        val c = Color(
+                            red = (0.55f + 0.35f * f), green = (0.65f + 0.3f * f), blue = 1f)
+                        drawRect(c, topLeft = Offset(0f, size.height * i / steps),
+                            size = Size(size.width, size.height / steps + 1f))
+                    }
+                }
+            } else {
+                CityPhoto(s.currentCity, v, Modifier.fillMaxSize())
+            }
+        }
+    }
+    // description panel (top-right, partly covered by the map below)
+    v.At(149, 13, 167, 145) {
+        Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(4))) {
+            Text(info.description, style = v.text(8.5f, color = Vga.White))
+        }
+    }
+    // world map (bottom) with dynamic dots, labels and the route line — authentic frame:
+    // white double border at (8,83), map interior at (10,85) 300x107 (same as the original).
+    v.At(8, 83, 304, 111) {
+        Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(2), Vga.White)))
+    }
+    v.At(10, 85, WorldMap.WV, WorldMap.HV) {
+        Box(Modifier.fillMaxSize()) {
+            PixelImage("world_map_clean", Modifier.fillMaxSize())
+            Canvas(Modifier.fillMaxSize()) {
+                fun px(city: String) = WorldMap.pos[city]?.let { Offset(it.x * size.width, it.y * size.height) }
+                val dashes = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
+                    floatArrayOf(size.width * 0.008f, size.width * 0.006f), 0f)
+                val stroke = size.height * 0.016f
+                // red dashed route through the cities flown so far (like the original)
+                for (i in 0 until traveled.size - 1) {
+                    val a = px(traveled[i]); val b = px(traveled[i + 1])
+                    if (a != null && b != null) drawLine(Vga.Red, a, b, strokeWidth = stroke, pathEffect = dashes)
+                }
+                // the leg being flown grows dash by dash
+                if (flying != null) {
+                    val a = px(s.currentCity); val b = px(flying)
+                    if (a != null && b != null) {
+                        val end = Offset(a.x + (b.x - a.x) * legT, a.y + (b.y - a.y) * legT)
+                        drawLine(Vga.Red, a, end, strokeWidth = stroke, pathEffect = dashes)
+                    }
+                }
+                val dot = size.height * 0.028f
+                fun marker(city: String, fill: Color) = px(city)?.let {
+                    drawRect(Vga.Black, topLeft = Offset(it.x - dot, it.y - dot), size = Size(dot * 2, dot * 2))
+                    drawRect(fill, topLeft = Offset(it.x - dot * 0.6f, it.y - dot * 0.6f), size = Size(dot * 1.2f, dot * 1.2f))
+                }
+                traveled.forEach { marker(it, Vga.Yellow) }
+                options.forEach { marker(it, Vga.Yellow) }
+                marker(s.currentCity, Vga.White)
+            }
+            // yellow labels for the current city + candidates (like the original)
+            (listOf(s.currentCity) + options + listOfNotNull(flying)).distinct().forEach { city ->
+                WorldMap.pos[city]?.let { p ->
+                    val leftSide = p.x > 0.78f
+                    val color = if (city == s.currentCity) Vga.White else Vga.Yellow
+                    MapLabel(v, city.uppercase(), p, leftSide, color)
+                }
+            }
+        }
+    }
+    // destination list overlay (over the name box + photo top, like the original drop-down);
+    // hidden while flying
+    if (flying == null) {
+        v.At(8, 13, 143, 66) {
+            Column(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(2), Vga.White))) {
+                Box(Modifier.fillMaxWidth().padding(vertical = v.w(1)), contentAlignment = Alignment.Center) {
+                    Text(s.currentCity, style = v.text(9, color = Vga.White, bold = true))
+                }
+                Box(Modifier.fillMaxWidth().height(v.w(1)).background(Vga.White))
+                Column(Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState())) {
+                    options.forEach { city ->
+                        Box(Modifier.fillMaxWidth().clickable { vm.travelTo(city) }, contentAlignment = Alignment.Center) {
+                            Text(city, style = v.text(8.5f, color = Vga.White, bold = true),
+                                modifier = Modifier.padding(vertical = v.w(1)))
                         }
                     }
-                    Spacer(Modifier.width(v.w(3)))
-                    // results (right of the CRT)
-                    Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
-                        when {
-                            !s.computed -> Text("Enter what the witnesses told you, then COMPUTE.",
-                                style = v.text(7.5f, color = Vga.LightGreen))
-                            !vm.anyFilterSet() -> Text("No clues entered yet.", style = v.text(7.5f, color = Vga.LightGreen))
-                            results.isEmpty() -> Text(GameData.ELIMINATES_ALL, style = v.text(7.5f, color = Vga.LightRed))
-                            else -> {
-                                Text("${results.size} suspect(s) match:", style = v.text(7.5f, color = Vga.Yellow, bold = true))
-                                Spacer(Modifier.height(v.w(2)))
-                                results.forEach { su -> SuspectCard(v, su, results.size == 1) { vm.issueWarrant(su) } }
-                            }
-                        }
+                    Box(Modifier.fillMaxWidth().clickable { vm.gotoCity() }, contentAlignment = Alignment.Center) {
+                        Text("Cancel", style = v.text(7, color = Vga.LightRed), modifier = Modifier.padding(top = v.w(1)))
                     }
                 }
             }
@@ -469,48 +797,169 @@ fun CrimeScreen(vm: CarmenViewModel) = VirtualScreen { v ->
     OverlayHost(v, vm)
 }
 
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawComputerBase(w: Float, h: Float) {
-    val topH = h * 0.28f
-    // stand/neck under the monitor
-    drawRect(MonitorBase, topLeft = Offset(w * 0.40f, 0f), size = Size(w * 0.20f, topH))
-    // base box
-    drawRoundRect(MonitorBase, topLeft = Offset(0f, topH), size = Size(w, h - topH),
-        cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.02f, w * 0.02f))
-    val bh = h - topH
-    // vents (left)
-    for (i in 0..6) drawRect(Color(0xFF8A7250), topLeft = Offset(w * 0.06f + i * w * 0.018f, topH + bh * 0.22f),
-        size = Size(w * 0.007f, bh * 0.5f))
-    // floppy-drive slot
-    drawRect(Vga.Black, topLeft = Offset(w * 0.52f, topH + bh * 0.24f), size = Size(w * 0.34f, bh * 0.2f))
-    drawRect(Color(0xFF3050A0), topLeft = Offset(w * 0.55f, topH + bh * 0.28f), size = Size(w * 0.28f, bh * 0.1f))
-}
-
+/** A city name printed on the map next to its dot (offset left or right to stay on-screen). */
 @Composable
-private fun CompRow(v: Virtual, label: String, value: String?, options: List<String>, onSet: (String?) -> Unit) {
-    val cycle = listOf<String?>(null) + options
-    Row(Modifier.fillMaxWidth().padding(vertical = v.w(1)), verticalAlignment = Alignment.CenterVertically) {
-        Text("$label:", style = v.text(7.5f, color = Vga.Yellow, bold = true), modifier = Modifier.width(v.w(46)))
-        DosButton(value ?: "— any —", Modifier.weight(1f),
-            fill = if (value == null) Vga.DarkGray else Vga.LightGreen,
-            textColor = if (value == null) Vga.LightGray else Vga.Black, style = v.text(8)) {
-            val idx = cycle.indexOf(value)
-            onSet(cycle[(idx + 1) % cycle.size])
-        }
+private fun BoxScope.MapLabel(v: Virtual, name: String, p: Offset, leftSide: Boolean, color: Color) {
+    val approxCharW = 4.6f
+    val dx = if (leftSide) -(name.length * approxCharW + 4f) else 4f
+    Box(Modifier.align(Alignment.TopStart)
+        .offset(v.w(WorldMap.WV * p.x + dx), v.w(WorldMap.HV * p.y - 3.5f))) {
+        // black outline for legibility over land/ocean, then the coloured text
+        Text(name, style = v.text(6.5f, color = Vga.Black, bold = true),
+            modifier = Modifier.offset(v.w(0.4f), v.w(0.4f)))
+        Text(name, style = v.text(6.5f, color = color, bold = true))
     }
 }
 
-@Composable
-private fun SuspectCard(v: Virtual, su: Suspect, canWarrant: Boolean, onWarrant: () -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(vertical = v.w(1.5f))
-        .background(Vga.Black).border(BorderStroke(v.w(1), Vga.DarkGray)).padding(v.w(2))) {
-        Text(su.name, style = v.text(8, color = Vga.Yellow, bold = true))
-        Text("${su.sex} · ${su.hobby} · ${su.hair}", style = v.text(7, color = Vga.White))
-        Text(su.auto, style = v.text(7, color = Vga.LightGray))
-        if (canWarrant) {
-            Spacer(Modifier.height(v.w(2)))
-            DosButton("ISSUE ARREST WARRANT", fill = Vga.Red, textColor = Vga.White, style = v.text(8, bold = true)) { onWarrant() }
+/* ----------------------------- CRIME COMPUTER -----------------------------
+ * Faithful to the original screen: the city name box stays top-left, the LEFT panel holds
+ * the HQ dot-matrix printer (results print onto its paper), and the RIGHT panel is the beige
+ * CRT computer listing SEX/HOBBY/HAIR/FEATURE/VEHICLE and COMPUTE. Tapping a row selects it
+ * (white bar, blue text — the DOS cursor) and cycles its value; COMPUTE prints the matching
+ * suspects on the printer, and a single match auto-issues the arrest warrant.
+ * Art: crime_printer.png / crime_computer.png cropped from an original capture.
+ */
+private val CRIME_ROWS = listOf("SEX", "HOBBY", "HAIR", "FEATURE", "VEHICLE")
+
+/** Wrap text to the printer paper width (~17 chars). */
+private fun paperWrap(text: String, width: Int = 17): List<String> {
+    val out = mutableListOf<String>(); var line = ""
+    for (word in text.split(" ")) {
+        line = when {
+            line.isEmpty() -> word
+            line.length + 1 + word.length <= width -> "$line $word"
+            else -> { out.add(line); word }
         }
     }
+    if (line.isNotEmpty()) out.add(line)
+    return out
+}
+
+@Composable
+fun CrimeScreen(vm: CarmenViewModel) = VirtualScreen { v ->
+    val s = vm.s
+    var selRow by remember { mutableStateOf(0) }
+    val paper = remember { mutableStateListOf("READY.") }
+    var printing by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    fun valueOf(row: Int): String? = when (row) {
+        0 -> s.compSex; 1 -> s.compHobby; 2 -> s.compHair; 3 -> s.compFeature; else -> s.compVehicle
+    }
+    fun optionsOf(row: Int): List<String> = when (row) {
+        0 -> GameData.sexes; 1 -> GameData.hobbies; 2 -> GameData.hairColors
+        3 -> GameData.features; else -> GameData.vehicles
+    }
+    fun keyOf(row: Int): String = when (row) {
+        0 -> "sex"; 1 -> "hobby"; 2 -> "hair"; 3 -> "feature"; else -> "vehicle"
+    }
+    fun cycle(row: Int) {
+        val cyc = listOf<String?>(null) + optionsOf(row)
+        val idx = cyc.indexOf(valueOf(row))
+        vm.setComp(keyOf(row), cyc[(idx + 1) % cyc.size])
+    }
+    fun runCompute() {
+        if (printing) return
+        printing = true
+        scope.launch {
+            paper.add("Wait...")
+            delay(900)
+            vm.compute()
+            val results = vm.matches()
+            paper.add("")
+            when {
+                !vm.anyFilterSet() -> paperWrap("Please enter the suspect's description first.").forEach { paper.add(it); delay(180) }
+                results.isEmpty() -> paperWrap(GameData.ELIMINATES_ALL).forEach { paper.add(it); delay(180) }
+                else -> {
+                    paper.add("Suspects:"); delay(220)
+                    results.forEach { paper.add(it.name); delay(220) }
+                    if (results.size == 1) {
+                        paper.add("")
+                        paperWrap(GameData.WARRANT_ISSUED.replace("%s", results.first().name))
+                            .forEach { paper.add(it); delay(180) }
+                    }
+                }
+            }
+            paper.add("")
+            paper.add("READY.")
+            printing = false
+        }
+    }
+
+    v.At(0, 0, 320, 11) { GameMenuBar(v, vm) }
+    // city name / date box (unchanged from the city screen)
+    v.At(4, 13, 141, 30, Alignment.Center) {
+        Box(Modifier.fillMaxSize().background(Vga.Black)
+            .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(2)), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(s.currentCity, style = v.text(9, color = Vga.White, bold = true))
+                Text(vm.clockLabel(), style = v.text(8, color = Vga.White))
+            }
+        }
+    }
+    // LEFT: the printer panel — paper grows upward from the platen as results print
+    v.At(2, 44, 146, 154) {
+        Box(Modifier.fillMaxSize()) {
+            PixelImage("crime_printer", Modifier.fillMaxSize())
+            // paper sheet: bottom fixed at panel y=102, top grows with content (min = original sheet)
+            val lineH = 7.4f
+            val shown = paper.takeLast(12)
+            val sheetH = (10f + shown.size * lineH).coerceAtLeast(29f).coerceAtMost(96f)
+            v.At(14, 102f - sheetH, 113, sheetH) {
+                Box(Modifier.fillMaxSize().background(Vga.White).border(BorderStroke(v.w(0.7f), Vga.Black))) {
+                    // sprocket hole columns: small holes every ~6 virtual px down both edges
+                    Canvas(Modifier.fillMaxSize()) {
+                        val unit = size.width / 113f          // 1 virtual px
+                        val hole = unit * 1.7f
+                        var y = size.height - unit * 4f
+                        while (y > unit * 2f) {
+                            drawRect(Vga.Black, topLeft = Offset(unit * 2.6f, y), size = Size(hole, hole))
+                            drawRect(Vga.Black, topLeft = Offset(size.width - unit * 4.3f, y), size = Size(hole, hole))
+                            y -= unit * 6.2f
+                        }
+                    }
+                    Column(Modifier.fillMaxSize().padding(start = v.w(8), end = v.w(7), top = v.w(2)),
+                        verticalArrangement = Arrangement.Bottom) {
+                        shown.forEach { Text(it, style = v.text(6.8f, color = Vga.Black), maxLines = 1) }
+                        Spacer(Modifier.height(v.w(3)))
+                    }
+                }
+            }
+        }
+    }
+    // RIGHT: the CRT computer with the attribute rows
+    v.At(150, 16, 170, 156) {
+        Box(Modifier.fillMaxSize()) {
+            PixelImage("crime_computer", Modifier.fillMaxSize())
+            // rows live inside the CRT: interior x=13..152, first row y=9, pitch 10 (image-relative)
+            CRIME_ROWS.forEachIndexed { i, label ->
+                val sel = selRow == i
+                v.At(13, 9f + i * 10f, 139, 9) {
+                    Box(Modifier.fillMaxSize()
+                        .then(if (sel) Modifier.background(Vga.White) else Modifier)
+                        .clickable { if (selRow == i) cycle(i) else selRow = i }) {
+                        Text("$label:", style = v.text(8, color = if (sel) Vga.Blue else Vga.Yellow, bold = true),
+                            modifier = Modifier.align(Alignment.CenterStart).padding(start = v.w(11)))
+                        valueOf(i)?.let {
+                            Text(it, style = v.text(8, color = if (sel) Vga.Blue else Vga.Yellow),
+                                modifier = Modifier.align(Alignment.CenterStart).padding(start = v.w(65)))
+                        }
+                    }
+                }
+            }
+            // COMPUTE row
+            v.At(13, 69, 139, 9) {
+                Box(Modifier.fillMaxSize()
+                    .then(if (selRow == 5) Modifier.background(Vga.White) else Modifier)
+                    .clickable { selRow = 5; runCompute() }) {
+                    Text("COMPUTE", style = v.text(8, color = if (selRow == 5) Vga.Blue else Vga.Yellow, bold = true),
+                        modifier = Modifier.align(Alignment.CenterStart).padding(start = v.w(11)))
+                }
+            }
+        }
+    }
+    GameToolbar(v, vm, selected = 3, onSee = { vm.gotoCity() }, onInvestigate = { vm.gotoCity() })
+    OverlayHost(v, vm)
 }
 
 /* ----------------------------- RESULT ----------------------------- */

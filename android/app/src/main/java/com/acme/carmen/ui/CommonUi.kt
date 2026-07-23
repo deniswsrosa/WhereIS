@@ -40,9 +40,19 @@ fun Virtual.At(x: Number, y: Number, wv: Number, hv: Number,
     Box(Modifier.offset(w(x), w(y)).size(w(wv), w(hv)), contentAlignment = align, content = content)
 }
 
-/** The whole screen: black letterbox with a centred 320x200 canvas. */
+/**
+ * The whole screen: black letterbox with a centred 320x200 canvas.
+ *
+ * @param keepVirtualYAboveIme when the soft keyboard is open, the canvas is panned upward
+ *   (at full size — never scaled down) just enough to keep this virtual-Y line above the
+ *   keyboard. Null (default) leaves the canvas centred. Used by the HQ printer so the paper
+ *   stays visible while you type your name, instead of the scene collapsing into a tiny box.
+ */
 @Composable
-fun VirtualScreen(content: @Composable BoxScope.(Virtual) -> Unit) {
+fun VirtualScreen(
+    keepVirtualYAboveIme: Float? = null,
+    content: @Composable BoxScope.(Virtual) -> Unit,
+) {
     BoxWithConstraints(Modifier.fillMaxSize().background(Vga.Black), contentAlignment = Alignment.Center) {
         val wv = maxWidth.value
         val hv = maxHeight.value
@@ -57,7 +67,24 @@ fun VirtualScreen(content: @Composable BoxScope.(Virtual) -> Unit) {
         if (!unit.value.isFinite() || unit.value <= 0f) return@BoxWithConstraints
         val density = LocalDensity.current
         val v = remember(unit) { Virtual(unit, density) }
-        Box(Modifier.size(unit * 320f, unit * 200f).background(Vga.Black)) { content(v) }
+
+        // Pan the canvas up so `keepVirtualYAboveIme` clears the keyboard (no scaling).
+        var shift: Dp = 0.dp
+        if (keepVirtualYAboveIme != null) {
+            val imeBottomPx = WindowInsets.ime.getBottom(density).toFloat()
+            if (imeBottomPx > 0f) with(density) {
+                val screenHpx = maxHeight.toPx()
+                val canvasHpx = (unit * 200f).toPx()
+                val canvasTopPx = (screenHpx - canvasHpx) / 2f            // vertical-centre offset
+                val unitPx = unit.toPx()
+                val margin = unitPx * 6f
+                val keepBottomPx = canvasTopPx + keepVirtualYAboveIme * unitPx
+                val kbTopPx = screenHpx - imeBottomPx
+                val overlapPx = keepBottomPx + margin - kbTopPx
+                if (overlapPx > 0f) shift = -overlapPx.toDp()
+            }
+        }
+        Box(Modifier.offset(y = shift).size(unit * 320f, unit * 200f).background(Vga.Black)) { content(v) }
     }
 }
 
@@ -81,6 +108,18 @@ fun PixelImage(name: String, modifier: Modifier = Modifier, scale: ContentScale 
             Text("NO SIGNAL", style = TextStyle(fontFamily = FontFamily.Monospace, color = Vga.Black))
         }
     }
+}
+
+/** Aspect ratio (h/w) of a drawable's intrinsic bitmap, or `fallback` if it is missing.
+ *  Used to draw sprites at a fixed virtual width with their native proportions, regardless
+ *  of the scale the asset was captured at. */
+@Composable
+fun drawableAspect(name: String, fallback: Float = 1f): Float {
+    val id = drawableId(name)
+    if (id == 0) return fallback
+    val painter = androidx.compose.ui.res.painterResource(id)
+    val s = painter.intrinsicSize
+    return if (s.width > 0f && s.height > 0f) s.height / s.width else fallback
 }
 
 /** A chunky DOS push-button (used outside the virtual canvas, e.g. dialogs). */

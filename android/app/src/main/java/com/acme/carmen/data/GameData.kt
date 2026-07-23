@@ -124,8 +124,25 @@ object GameData {
         "Urchin",
         "Under Secretary",
         "Attache",
-        "Ambassador",
-        "Ok"
+        "Ambassador"
+    )
+
+    /** Which witnesses staff each venue — matches the original game's pairings
+     *  (verified against DOSBox captures: Harbor→Customs officer/Sailor, Museum→Docent,
+     *  Library→Circulation clerk/Reference librarian/Archivist, Palace→Soldier, etc.) */
+    val venueOccupations = mapOf(
+        "Bank" to listOf("Vice President", "Bank Guard", "Teller"),
+        "Hotel" to listOf("Hotel manager", "Bellhop", "House detective"),
+        "Museum" to listOf("Museum guard", "Docent", "Curator"),
+        "Sport Club" to listOf("Tennis pro", "Waiter", "Bartender"),
+        "Library" to listOf("Circulation clerk", "Reference librarian", "Archivist"),
+        "Airport" to listOf("Pilot", "Flight attendant", "Baggage clerk"),
+        "Harbor" to listOf("Sailor", "Harbor Master", "Customs officer", "Stevedore", "Tugboat captain"),
+        "Riverfront" to listOf("Sailor", "Stevedore", "Urchin", "Tugboat captain"),
+        "Palace" to listOf("Palace guard", "Soldier", "Privy Councillor"),
+        "Stock Exchange" to listOf("Analyst", "Trader", "Messenger"),
+        "Marketplace" to listOf("Hawker", "Street merchant", "Urchin"),
+        "Foreign Ministry" to listOf("Under Secretary", "Attache", "Ambassador"),
     )
     val noInformation = listOf(
         "I'm sorry, I have never seen the person you are looking for.",
@@ -135,8 +152,7 @@ object GameData {
         "It's awfully busy around here; I haven't noticed anyone suspicious.",
         "Sorry, I haven't noticed anything suspicious around the harbor.",
         "There hasn't been another person around here all day.",
-        "No one like that has done business here today.",
-        "Ok"
+        "No one like that has done business here today."
     )
     val clueLeadIns = listOf(
         "My sources tell me",

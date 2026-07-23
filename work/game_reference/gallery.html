@@ -1,0 +1,299 @@
+<title>Carmen Sandiego — Venue & Witness Dossier</title>
+<style>
+:root{
+  --ink:#14171f; --panel:#1c2028; --panel2:#232833; --line:#333a47;
+  --paper:#e7dcc4; --text:#e8e3d6; --muted:#9aa2b1;
+  --accent:#c0392b; --brass:#c99a3b; --map:#2f6d7a;
+  --shadow:0 10px 30px rgba(0,0,0,.45);
+  --mono:"SF Mono",ui-monospace,"Cascadia Mono","Roboto Mono",Menlo,Consolas,monospace;
+  --sans:"Helvetica Neue",Arial,system-ui,sans-serif;
+}
+@media (prefers-color-scheme: light){
+  :root{ --ink:#e7dcc4; --panel:#f2ebda; --panel2:#ede3cd; --line:#cdbf9d;
+    --text:#241f16; --muted:#6d6047; --shadow:0 8px 24px rgba(80,60,20,.18);}
+}
+:root[data-theme="dark"]{ --ink:#14171f; --panel:#1c2028; --panel2:#232833; --line:#333a47;
+  --text:#e8e3d6; --muted:#9aa2b1; --shadow:0 10px 30px rgba(0,0,0,.45);}
+:root[data-theme="light"]{ --ink:#e7dcc4; --panel:#f2ebda; --panel2:#ede3cd; --line:#cdbf9d;
+  --text:#241f16; --muted:#6d6047; --shadow:0 8px 24px rgba(80,60,20,.18);}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--ink);color:var(--text);font-family:var(--sans);line-height:1.5;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:clamp(20px,5vw,56px) clamp(16px,4vw,40px) 80px}
+
+header.masthead{border:1px solid var(--line);background:
+  linear-gradient(180deg,var(--panel2),var(--panel));border-radius:6px;padding:clamp(20px,4vw,40px);
+  box-shadow:var(--shadow);position:relative;overflow:hidden}
+.stamp{position:absolute;top:14px;right:14px;border:2px solid var(--accent);color:var(--accent);
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  padding:6px 10px;border-radius:4px;transform:rotate(6deg);opacity:.9}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--brass);margin:0 0 10px}
+h1{font-family:var(--sans);font-weight:800;font-size:clamp(28px,5.5vw,52px);line-height:1.02;
+  letter-spacing:-.01em;margin:0;text-wrap:balance}
+h1 .thin{display:block;font-weight:400;font-size:.44em;letter-spacing:.02em;color:var(--muted);margin-top:12px}
+.summary{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.chip{font-family:var(--mono);font-size:12px;letter-spacing:.04em;border:1px solid var(--line);
+  background:var(--ink);border-radius:999px;padding:7px 13px;color:var(--text)}
+.chip b{color:var(--brass)}
+.chip.warn b{color:var(--accent)}
+
+.lead{color:var(--muted);max-width:64ch;margin:20px 0 0;font-size:15px}
+
+section{margin-top:clamp(40px,7vw,72px)}
+.sechead{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--line);
+  padding-bottom:12px;margin-bottom:26px}
+.sechead h2{font-size:clamp(19px,3vw,26px);font-weight:800;margin:0;letter-spacing:-.01em}
+.sechead .count{font-family:var(--mono);font-size:13px;color:var(--brass);letter-spacing:.06em}
+.sechead .rule{flex:1;height:1px;background:repeating-linear-gradient(90deg,var(--line) 0 6px,transparent 6px 12px)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;
+  display:flex;flex-direction:column;transition:transform .12s ease,border-color .12s ease}
+.card:hover{transform:translateY(-3px);border-color:var(--brass)}
+.bicon{width:100%;height:150px;object-fit:contain;image-rendering:pixelated;
+  background:radial-gradient(120% 120% at 50% 30%,#2a3140,#0c0e13);padding:14px;
+  border-bottom:1px solid var(--line)}
+:root[data-theme="light"] .bicon,@media (prefers-color-scheme:light){}
+.bicon.missing{display:flex;align-items:center;justify-content:center;font-family:var(--sans);
+  font-size:46px;font-weight:800;color:var(--line)}
+.card.is-missing{border-style:dashed;opacity:.72}
+figcaption{padding:13px 15px 16px}
+.card h3{margin:0;font-size:16px;font-weight:700}
+.detail{margin:5px 0 0;font-size:12.5px;color:var(--text)}
+.cities{margin:9px 0 0;font-family:var(--mono);font-size:11px;letter-spacing:.02em;color:var(--muted)}
+
+.wgroup{margin-bottom:26px}
+.wvenue{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--brass);margin:0 0 12px;padding-left:2px;border-left:3px solid var(--accent);
+  padding-left:10px}
+.wrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(126px,1fr));gap:14px}
+.wcard{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;
+  transition:transform .12s ease,border-color .12s ease}
+.wcard:hover{transform:translateY(-3px);border-color:var(--brass)}
+.wface{width:100%;display:block;image-rendering:pixelated;background:#0c0e13;
+  border-bottom:1px solid var(--line)}
+.wcard figcaption{padding:9px 10px;font-size:12.5px;font-weight:600;text-align:center}
+
+footer{margin-top:64px;border-top:1px solid var(--line);padding-top:20px;color:var(--muted);
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.03em;line-height:1.7}
+footer b{color:var(--text)}
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="stamp">Case File</div>
+    <p class="eyebrow">A.C.M.E. Detective Agency · Field Reference</p>
+    <h1>The Venue &amp; Witness Dossier
+      <span class="thin">Buildings and informants of the globe-trotting caper, captured frame-by-frame from the original VGA game</span>
+    </h1>
+    <div class="summary">
+      <span class="chip"><b>11</b> of 12 venue types</span>
+      <span class="chip"><b>17</b> witness portraits</span>
+      <span class="chip"><b>16</b> cities toured</span>
+      <span class="chip warn"><b>Riverfront</b> outstanding</span>
+    </div>
+    <p class="lead">Every icon and portrait below is an authentic 320&times;200 frame lifted straight from the running game and scaled up crisp — raw material for a perfect-score walkthrough site. Each venue lists the cities it was spotted in; each witness is filed under the venue that employs them.</p>
+  </header>
+
+  <section>
+    <div class="sechead"><h2>The 12 Venues</h2><span class="count">11 captured · 1 pending</span><span class="rule"></span></div>
+    <div class="grid">
+      <figure class="card">
+      <img class="bicon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMQAAACQCAIAAADY21PdAAADCklEQVR42u3dvXXbMBSAUY7kFVS69AgewStkBI/AEbKCRsgILlNkhKSjX070YoD/BO53UPFIMC3dAgeQrWF8u60yXm5P0xhCv5OGzvoY32ePWyibc4vr8eeW3OcAE0wwwQQTTA1jigjiuI9v08gAxcfAtC6gWkxrDZhgggkmmGCC6fFzI4hsZJhiMJVjql0Unw1Tev8wwQQTTDDB1CGmbKEdB0z/vuhHYfr183kaS67DBBNMMMEEE0zzF+BxfHu9TQOmeZi22LTcE9OiTUuYYIIJJphg6gSTTctzYrrMQS9MMMEEE0wwdfJ5Jgvw5ZhqF8Vnw5Qu3mGCCSaYYIKpc0wlm5bxMb1hytoT056bljDBBBNMMMEE09eAMkwfP+7TaBXTUZuKTR30wgQTTDDBBFPnH47LfuFWMTnohQkmmGCCCSaY5izAxxBMbR/0pq8JTDDBBBNMMDWMKeLIXsQIK25OxufatDwW0xbXYYIJJphgggmmz+sRQYbm/v19Gtn1Hj4cd+aD3j0xpYt3mGCCCSaYYGoYUwQRNx4zQCWjVUxr4Wv3oBcmmGCCCSaY2sVUCyVDc0VMR73ZW29abnGAXb1pCRNMMMEEE0wNY8pwZI+B6VhMf73Ow+vskc0JE0wwwQQTTDA9xhQ3LTNMY9LVMa11ILon1loctc9dtGkJE0wwwQQTTB1iKgF0xT/CbAlTvD4WVDIPTDDBBBNMMME0/3ywZGFu0/L/89fe29kwrfcGwAQTTDDBBFO7mLKbdtBrAQ4TTDDBBBNMMNUtzK+C6erVHu5uPQ9MMMEkmGCCacGNwiSYBJNgUsO93J4ejuzLenr4Ih7BJJgEE0z9VvuFzyUDJphgEkyCSb1jqp0fJphgEkyCSS1jWmt+mGCCSTAJJrWGaYv5YYIJJsEkmCSYBJNgEkwwCSbBJJgkmASTYBJMMAkmwSSYJJgEk7Yp/lMvmASTYBJMMOlrTGvBggkmmASTYFIvmJbAggkmmASTYFKPmGphwQQTTIJJMKl3TCWwYIIJJsEkmNRAfwB3dV/4G0nohAAAAABJRU5ErkJggg==" alt="Hotel venue icon">
+      <figcaption>
+        <h3>Hotel</h3>
+        <p class="detail">Neon marquee &amp; arched lobby doors</p>
+        <p class="cities">Kathmandu · Rome · New York · London · Montreal</p>
+      </figcaption>
+    </figure>
+<figure class="card">
+      <img class="bicon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAACQCAIAAADsopLBAAAB10lEQVR42u3asW3DMBBAUa3mMmNkhKySEbyKR3GZIoUGUJDGYGECpCnad/J7YGXIAil9ASKgZZng8vV5d5THnDqNnL/8/ffn4+5o+e+5sARQm8+MtT/zni6iFKUoRSlKUYpSlAeOci30rr02z5GbUZuPKEUpSlGKUpSiFKUoRflvK4hSlKIUpShFKUpRijJWlC2iRVkLtDfKkbWLUpSiFKUoRSlKUb57lCOiRdmyAZqxdlGKUpSiFKUoRSlKUR4zylqgohSlKEUpSlGKUpRHiDK76/n7Nl41h22AOyhKUSJKUYpSlFm1vOBHG70hrpPtFWVLoFnuiyhFKUpRilKUohRlphBHPoyNttHJHqgoRSlKUYpSlKIUZaYX55YQ1yeaHWWWQEUpSlGKUpSiFOX7RpnlA4sIH1tE+yAjyzURpSgRpShFKUpRRo9yDaAlyt5jaufP+KCKUpSIUpSiFKUoeXyjM7IxciURJaIUJaKERyIWJaIEUSJKECiiBFEiSlEiShAlogRRAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACQxVZwNRAliBJRQvQoPQCIElGKElHCnlEKFFGCKBEl2PQgShAlogQAANjJH73sEto7Beg9AAAAAElFTkSuQmCC" alt="Library venue icon">
+      <figcaption>
+        <h3>Library</h3>
+        <p class="detail">Colonnade &amp; pediment steps</p>
+        <p class="cities">Kathmandu · Budapest · Kigali · Baghdad</p>
+      </figcaption>
+    </figure>
+<figure class="card">
+      <img class="bicon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOAAAACQCAIAAACebfB3AAACjklEQVR42u3dwU3DQBBAUbfGkTJSAq1QQlqhFI45cEgBcEM+ZCRvdsbejd+XT5G1MeYFZVYBlq+Py/+xrFo/Hh1bzj/DOVlrVlxPRb9BJU8GKKCAAgoooIC+JNAexBU3bpZ1snD0rHkUVkABBRRQQAEFFNBMfFkDwZmP0e4VoA5AAQUUUEABnXVIkgAVoBKgAjSztw1F529ZJ+u5Rju/555Unw8ooIACCiiggAI6OtDv62fTEd2I1nVmPyIoo10boIACCiiggAIK6Ogb9Vu+yKOAVr/wsoD23NuecwAFFFBAAQUUUEABzUdwbWzPawMUUEABBRRQQAEF9PiN+qxriIBG67QCzXoB26gHFFBAAQUUUEABPabqwSgCEb1gqgem5cQBCiiggAIKKKCAvtqQtCdQQxKggAIKKKCAAgro8UNS1odFWjfJRwDac50+LAIooIACCiiggAI61pB0NqCGJEABBRRQQAEFFNCcwchG/XNAs34otK4DKKCAAgoooIACOtNG/c/t/eHRulE/8hv8Pf9wQ+vgFZ2z5fsCKKCAAgoooIACCujz3+x7cRXXDCiggAIKKKCAAgpobVlAl8Gq/gO21ZvtgAIKKKCAAgoooDMB3fOfye45DFUPTxFQH1gGFFBAAQUUUEABlQAVoIAKUGk8oOtfLlu/0W59PFr/PnnV9636cUABBRRQQAEFFFBDkgxJEqACFFABKgEqQCVAJUAFqASoAJUAlQAVoBKgAlQCVAJUgEqAClBABagEqACVABWggApQCVABKgEqASpAJUAFqASoBKgAlQAVoBKgEqACVAJUgAIqQCVABagEqAAFVIBKgApQCVAJUAEqASpAJUAlQAWoBKgAlQCVhgD6B7KrJK42pa2jAAAAAElFTkSuQmCC" alt="Foreign Ministry venue icon">
+      <figcaption>
+        <h3>Foreign Ministry</h3>
+        <p class="detail">Grand portico, flag of state</p>
+        <p class="cities">Kathmandu · Paris · Istanbul · London</p>
+      </figcaption>
+    </figure>
+<figure class="card">
+      <img class="bicon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMQAAACQCAIAAADY21PdAAAC4klEQVR42u3dvU3EMBiA4RvlRmCFKxmCghFYISNcSZkRWCEjMAIlBQUDQBcZ6QwO+fXn59VXRdaB4Cms5JKchr5ffE5JX5lOK/RZ0KmSuofnP+dwPxcmmGCCCSaYAmPqHp8Wn70w5WBFAnS0gQkmmGCCCaYWMd2dL4sMTPMBVfk7wwQTTDDBBFNgTCmC12G4OZeJwRRvo120GYcJJphgggmmwJhyaJb6w8HUUDAJJphggilwawCC6X99vN+PU+NxmGCCCSaYYIKpPkyyARdMMAkmtY4p6oXS6i/0wmRgMjDBFBjT2/AyTo2Yal8PE0wwwQQTTDDVtwFPYS2FbEtMuQuQtawPddISJphgggkmmIJhKrnZMocsd9MmTOXrm7gJEyaYYIIJJpiCYZr64IqSDTtMjW7AYYIJJphgginwScu03APj++t1nL0e9mUDXsGFXphgggkmmGAKhimFUrIZT+cHsq4bZy9MUddXE0wwwQQTTDA1eNJy6vp0Y74lJlPBhV6YDEwGJpiCYSq5ZpeDdbQXPmvnDThMgkkwqUFMuTVHwFTywmTHtzkOk+MwwQQTTK1gmnPS8giYqvwHHOwi96zPgQkmmGCCCabAmJb6ctyWD65Y44+19meuAWJt0JM/ByaYYIIJJpgCYyp5+ETuhsy9HvZVctLS7PyGApgMTAYmmBp8eWF6s0DJbIlJBwomwSSYYGoEU7q5zm3MSwYmmGASTIJJkTHNKff5MMEEk2ASTIrQ1C/ElQxMMMEkmASTbMCnbcZhggkmwSSYFKHczQJzBiaYYBJMgkkwwSSYBJNgggmm/44LvYJJMAkmmCI39P3iAxNMMAkmwaRWNuB358s46XGYBJNgEkwwtb4Bz2FK16fH+667OTDBBJNgEkyKvAFPoZRgKlkPE0wwCSbBpAhNxZFb46SlYBJMggkmmGzABZNgEkwwwQSTYBJMMMEEk34vPdmYfsENJsEkmAQTTBr7BhpkjwVvs4RWAAAAAElFTkSuQmCC" alt="Sport Club venue icon">
+      <figcaption>
+        <h3>Sport Club</h3>
+        <p class="detail">Low domed pavilion</p>
+        <p class="cities">Budapest · Mexico City</p>
+      </figcaption>
+    </figure>
+<figure class="card">
+      <img class="bicon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOAAAACQCAIAAACebfB3AAACb0lEQVR42u3dsa3CMBRA0axGSclalIzAapQUjACtkbCwsR+xk3OVyuLzSTjNiwwsh0xLUrp+u15+PpYJaznfkuu5Vi3X5Jkp5A0AFFBAAQUUUEA3CXQ5nz4fAUCL4Cav4ZoUsd4LYi3Qkmsesp57DKCAAgoooIACCuiAQHNv5ON+/HjUPiZ9/jdMAeWeP/q8AAUUUEABBRRQQAEdF2jJoNayXjIkrQb0nweggAIKKKCAAgoooF+HmF5ADUmAAgoooIACCiigNouMOCRFbBZ5ez2AAgoooIACCiiggBqS3KgHFFBAAQUUUEABtVlkr5tFDEmAAgoooIACCiighiRAAQUUUEABBRRQQG0WmXiziBv1gAIKKKCAAgoooIYkQxKggAIKKKCAAgoooDVDUtOPVtksAiiggAIKKKCAAgpo45CUy4fm3KgHFFBAAQUUUEBtFonaLFIL1I/JAgoooIACCiiggG4HaMlQVfK3IwxJvc4RUEABBRRQQAEFFND+QGv/1YxDUss5+tAcoIACCiiggAIKaJ9qoUQgiKjXa2u5PrMEKKCAAgoooIACGjYkdRpWahGk6+lN9Yj1vwIdYTDqNDABCiiggAIKKKCArgk0ZMPyYEPSpr60FlBAAQUUUEABBXRSoAq8zoACCiigAhRQQPcCVAJUgEqASoAKUAlQASoBKgEqQCVABagEqASoAJUAFaCAClAJUAEqASpAARWgEqACVAJUAlSASoAKUAlQCVABKgEqQCVAJUAFqASoAAVUgEqAClAJUAEKqACVABWgEqASoAJUAlSASoBKgApQCVABKgEqASpAJUAFKKDaH9AXn473NAMfrMoAAAAASUVORK5CYII=" alt="Palace venue icon">
+      <figcaption>
+        <h3>Palace</h3>
+        <p class="detail">Green wings, ornamental gateway</p>
+        <p class="cities">Budapest · Kigali · Oslo</p>
+      </figcaption>
+    </figure>
+<figure class="card">
+      <img class="bicon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMQAAACQCAIAAADY21PdAAAC20lEQVR42u3cwU3DMBSA4YzCKh2DI8swACNkBFbgyBiM0AHgVl6FTO06BOf5++VTVBFaPqTXpO7yFDqFeo4voc9Ci/IFk2ASTDAlbitA8fhRML2tq7XhgsmCCSaYYMqMaeYBvPiiePxdj4cJDphgggmmzJgM4L+/WFWDp8d7NwcHTDDBBFN6TG70yqcGBBNMMMGk2z2EjjiAu7060I1emCyYYIIJpkk+HFcqgis95r8G8KobkNonmAQTTDDBNAmmCKIEqAaWAdwADpMFkwUTTLPsm6sBVDruRq9PDcAkmASTXGe6fXwETDVvDk4dOdfPx8AEE0wwwQRTZkxZB/CaDYTxd359f7y5Ss9xtHOtoZ7jrc8LJphgggkmmDJjqtkgcMQBHKb7ggkmmGCCCSaY2gbwnguYMHk3BxNMMMEEE0wzXmdqHcxh8m4OJphgggkmmDJfZ+r5QNwRB3Dn2vhcMDkXTP7AMMGU+FzXA9TyvU7f63piv318ZEypvigidP6DWl9PmGCCCSaYYMqMKQIqbrprhfVPmD6fny/rY325rBGOb/Uc489fdqzuvDDBBBNMMMGUGFMcnA84gI8MqPQHiMdrVum5n3esDhlMMMEEE0wwJcZUGMB7ju+JaWRAPbCWQwYTTDDBBBNMeTFtBciXyvf/M5QwnQcOJphgggkmmKbEFC48Xm2qbD0O05zBJJgEE0ypNd1/Q3fkDQWCSTDBJJi0xwDetdEAJphgEkyCSRMO4K0bDWCCCSbBJJg0ywBeHLoH21AgmGCCCSbBpFEG8NYPysEEE0yCSTBplgHchgLBJJgEE0xqG8BtKBBMgkkwwTR7XYO2AVwwCSbBBNOEA/hWsGCCCSbBJJhkADeACybBJJhgMoAbwAWTYBJMMGnjAbzwZRUwwQSTYBJMmmUAL31JfOwptIZgggkmwSSYNMsA3goIJsEkmAQTTKkrXHhcKzKACybBJJhgmqQvKPRxr3UarQ4AAAAASUVORK5CYII=" alt="Museum venue icon">
+      <figcaption>
+        <h3>Museum</h3>
+        <p class="detail">Rooftop statuary, tall windows</p>
+        <p class="cities">Kigali · Paris · Istanbul · Cairo · New Delhi</p>
+      </figcaption>
+    </figure>
+<figure class="card">
+      <img class="bicon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMQAAACQCAIAAADY21PdAAADE0lEQVR42u3cvXHbMBiAYY7CEbKCB3CRIgNoBK+k0mVW8AgeRQMkqRiw+E6A+AMQeN5DpdPZEPWc7ztKxvQ4oCnpT9Ck/oJJMAkmmGBqCtPXx+3ldcQ1bG0/MMEEE0wwwQQTTHv26/3z5dXafmotmGCCCSaYYBoF0z3pLegqmNLXcuYb1tp+qsGCCSaYYIIJpo4xRS8+QhYBii7c0Zii3xs9fvRFbGE/MMEEE0wwwQTTabNjeDMzhTXN07JqDeD3jGph2ms/V7nBCxNMMMEEE0w9Y3p835YV/qQATQs3Lfd682rtJ+fNSx9/O7Gc/az/AsEEE0wwwQRTv5iyXnCCKecG5tUx5Vzc6PHS/ZS+eenzc37XlueX7gcmmGCCCSaYRsGUM4yXDm4wwQQTTDDBBBNMPWBKh+vVC/7HaVnBMB4N5jDBBBNMMMEEE0w9D+AhLJhgggkmmGCCCabRB/Bk0I5grVYGLJjqYtpy3WCCCSaYYIIJpueYoo2GmCJYF8d05n6irjKAr4MJJphgggmmjjFl3ITMgnVxTFc5uKIFTPE+YYIJJphggmk8TJtgwQQTTDDBBBNMMA2IKRq0c2DBtC+mWsEEE0wwwQTT8JjSf7YshRV9sa5hTEfX2n7ODSaYYIIJJpj6xRQeVpHzgW4DmEoPHzu61vYDE0wwwQQTTDDtP4BnHfYVgQuefwSm+4ZqDd1jDOMwwQQTTDDB1C+mTRfixAH86+O2+9py3VrbT61W+4cJJphgggkmmJ4fonriAK5OBnCYBJNg0ij3mebnh9DDBBNMgkkwqYsCEFtgwQQTTIJJMMkAXvaFL5hggkkwCSb10OP7tqwURPQ4TIJJMAkmmIZs/r9SQOlBCxGs1WEMs5uWgkkwCSaYxsC024IJJpgEk2DSgJh+/v5RtGCCCSbBJJg0CqYQSsbzYYIJJsEkmNRbWQN1hAYmwSSYBBNMg2Mq/XAXJsEkmAQTTHo9mASTYBJMMoAbwAWTYBJMMI2NyQe9gkkwCSaYlDT7hwLBJJhgggkmvYrJwRWCSTAJJpi09Bew7hzxx/ss/wAAAABJRU5ErkJggg==" alt="Bank venue icon">
+      <figcaption>
+        <h3>Bank</h3>
+        <p class="detail">Twin towers, vault-solid facade</p>
+        <p class="cities">Oslo</p>
+      </figcaption>
+    </figure>
+<figure class="card">
+      <img class="bicon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAACQCAIAAADsopLBAAABvklEQVR42u3cwa2CQBCAYdqzjFeCLViK7b2DJeDNcNlkCTMwy35fOBkDcfhNYDEuS5DX3/O3ff4fIdt2n9tjvTdar7dEvb/12Vvb3hn27KfyHI6c90WUohSlKEUpSlGK8oQoq+mJ6Ui4I85BlKIUpShFKUpRivLKE5N9gb9Xz3EzrBut91SbQ/aXU5SiFKUoRSlKUYryzlFmXOCvDaIUpShFKUpRilKUs0Q58+J5dpQ9N0AWz0UpSlGKUpSiFKUoc3/kO/qNzt4boNHnIEpRilKUohSlKOeN8qrF82xnLhqvB9xpDqIUpShFKUpRilKUWVH2DCvjAr/ns0cdaw0SNZ8zGxClKEUpSlGKUpSinH3xvFqUUYF6oiNKUYpSlKIUpShnibLConHlKKMW2EUpSlGKUpSiFKUo7/B7ymqqRVlhDp7oiFKUohSlKEUpSlFefzJ6ghOlKEUpSlGKUpSivFuUxNob2Sh/goUoRYkoEaUoGSNiUSJKECWiBIEiShAlohQlogRRIkoQJQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwBS+89Jko+Itf88AAAAASUVORK5CYII=" alt="Airport venue icon">
+      <figcaption>
+        <h3>Airport</h3>
+        <p class="detail">Control tower &amp; terminal glazing</p>
+        <p class="cities">Oslo · Paris · Cairo · London · New Delhi</p>
+      </figcaption>
+    </figure>
+<figure class="card">
+      <img class="bicon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAACQCAIAAADsopLBAAABrUlEQVR42u3cwa0CIRRAUVqzBJe2ZBmWYBuWYwG6M2xIYB4yMHNOZkVGxpCrycv/MaWJPTIz7zmzd0Hpnpp9Wu+peQ/LEKUoRSlKUYpSlMuFOFI6mfdAyx+WKEUpSlGKUpSiPMxwU7Meee1s5/DJJEQpSkQpSlGKElEGo2wN9Pm6/a50v/6u0PrA/UUpSlGKUpSiFKUoRfnfKKsCDYRS2qd1PfRcUYpSlKIUpShFKUpRDouyFGivIKoGnV4fDFGKUpSiFKUoRSlKdo+yOADl8dVcnQad0HMRpSgRpShFKcrKIWZFq0TZLdB/xDfbt6MoRSlKUYpSlKIUpSj3H4BEKUpRilKUohSlKEV5qihDgR71LzeiFKUoRSlKUYpSlKLc/IMFQ6OcmShFKUpRilKUovQPvKNlB33JdFuviLL1ntJzmwNtvSdybohSlKIUpShFKUq6DzqRwchJIkpEKUpECVsiFiWiBFEiShAoogRRIkpRIkoQJaIEUQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJzCF50nRIItMCJ4AAAAAElFTkSuQmCC" alt="Harbor venue icon">
+      <figcaption>
+        <h3>Harbor</h3>
+        <p class="detail">Dockside crane hauling a freighter</p>
+        <p class="cities">Rome · Istanbul · New York</p>
+      </figcaption>
+    </figure>
+<figure class="card">
+      <img class="bicon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOAAAACQCAIAAACebfB3AAACoklEQVR42u3dMVLDMBBAUV+NkutxhFyNkoKCA0DrRoM22nVk6f1JxZAQrx/FesA5jqQ+Hx+hR/T1H8Fme/9Zx1vxPdF+Gx0zByiggAIKKKCATgX0PPTzAVx5MlatNc8sKK8KUEABBRRQQAEF9IohtrD2LBBvNy96vCPzPP/cnueOfB1QQAEFFFBAAQV09iWpdWDRE1Z9AbniAnj0eEfmeQZagTJr8QUUUEABBRRQQAHNPGE9iEeARn9WxWME7sgvZM88XagHFFBAAQUUUEB3ARo9eVknrBriCNysJSk6z+oL9YACCiiggAIKKKC7LEkzo8x6/1nzrL5QDyiggAIKKKCAArrLkrQbUEsSoIACCiiggAIKaGxJqvinubugHDmWrHm2lqTqJRhQQAEFFFBAAQX0uOkNbJVb6+YRPx1FlzZABagABVSAvnJJGqniNWer+hh7gH5/vf/7WHaLBxRQQAEFFFBAAb34pl+zdRegliRAAQUUUEABBXRloNGbwfZ8aMFsz71yCbMkAQoooIACCiigOwIdAb0z0Ky5td5btGWXJEABBRRQQAEFdMn7g/b8MSygdXOruIkDoIACCiiggAIK6OxAoxeBAc2dW8XNbAEFFFBAAQUUUEABBfSuf/QNKKCAAgoooIACWgU0+lxAc+fWulBf/UERgAIKKKCAAgoooCv809yq7Tw3QAEF1KDNDVBAAd3l5M3QIUABBRRQQAEFFFAJUAlQASoBKkAlQCVABagEqAAFVIBKgApQCVABCqgAlQAVoBKgEqACVAJUgEqASoAKUAlQASoBKgEqQCVABSigAlQCVIBKgApQQAWoBKgAlQCVABWgEqACVAJUAlSASoAKUAlQCVABKgEqQAEVoBKgAlQCVIACKkAlQAXoc/0B3kqxLuuBmEEAAAAASUVORK5CYII=" alt="Stock Exchange venue icon">
+      <figcaption>
+        <h3>Stock Exchange</h3>
+        <p class="detail">Domed trading hall, columned front</p>
+        <p class="cities">Rome · Mexico City · Cairo · New Delhi</p>
+      </figcaption>
+    </figure>
+<figure class="card">
+      <img class="bicon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOAAAACQCAIAAACebfB3AAACXUlEQVR42u3avW0DIRiA4VsxA6TwCFkhhYuMkNKreCQP4HQRkYL0IX4M3POK6oTsO+5xgcXxvF6NhcYxQc9Mfb7MWwcUUANQQAEF9CQvAFZAAQUUUEABBRTQrkBz3T8uXcdsOF61Dr3XE1BAAQUUUEABBXR2oJ/v37/jzJuSQ4ACCiiggAIKKKBdgeZQptd7wLX5qO+WBCiggAIKKKCAAroq0Bqs6WKlc161iL3XKvK8I68DCiiggAIKKKCAngVoKdZ0ziMpsmkr/VM9Mj/348nd207IAAUUUEABBRRQQGcEGsFaupkoRdAbaM2PpwfKVQ6+AAoooIACCiiggI4GGsEUKYegBlzN/Jp7q3rZCx7EBhRQQAEFFFBAAR3dLZNNUvx6+pkrHr4GFFBAAQUUUEABbVkETQSowyJ7HAoBFFBAAQUUUEABXQmoTVLb67nnAhRQQAEFFFBAAQW0zXfN0Mz3BiiggAIKKKCAAgoooE37evt/RIBm5gMKKKCAAgoooIDuBvRQW5QRrKUDUAEKKKCAAgroBkCJatuftR240QFUgAIKKKCAAjo7UI3ZJKVYHx0CVIACCiiggAI6I1DNs0kCVIACKkAFKKAajRVQAQqoABWggGp0gApQQAWoAAVUAlSASoAKUAlQCVABKgEqQK2MAJUAFaASoAIUUAEqASpAJUAFKKACVAJUgEqASoAKUAlQASoBKgEqQCVABagEqASoAJUAFaCAClAJUAEqASpAARWgEqACVAJUAlSASoAKUAlQCVABKgEqQCVAJUAFqASoAAVUgEqAClBpK6A/BNQk+b66ymcAAAAASUVORK5CYII=" alt="Marketplace venue icon">
+      <figcaption>
+        <h3>Marketplace</h3>
+        <p class="detail">Awninged stalls &amp; pennant flags</p>
+        <p class="cities">New York · Baghdad</p>
+      </figcaption>
+    </figure>
+<figure class="card is-missing">
+      <div class="bicon missing">?</div>
+      <figcaption>
+        <h3>Riverfront</h3>
+        <p class="detail">Quayside promenade (rare city set)</p>
+        <p class="cities">— not yet located —</p>
+      </figcaption>
+    </figure>
+    </div>
+  </section>
+
+  <section>
+    <div class="sechead"><h2>The Witnesses</h2><span class="count">17 occupations</span><span class="rule"></span></div>
+    <div class="wgroup">
+      <h3 class="wvenue">Hotel</h3>
+      <div class="wrow"><figure class="wcard">
+      <img class="wface" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJwAAAE4CAIAAAAhIA1WAAAEQ0lEQVR42u3csXHbMBiAUa+WcTyEWw+QMmVKly6zQgbJABrALnTiJcYF9wMEQQB871jRMW3z0wUCSOrpCQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMI+HpwKURGVU6KqKyqicm7UtO7760vbzWkXFVH5CEjrfnuQ+awouTdDoooq6ipR1R0woaiiinqpqGY7A7YUVVRRLxVV3XFaiiqqqNeMelxdUf8+q6GWoooq6rpRLbWftkafHKf9CwdROTtq5EubP28/7luHL105amSPqKKKOmnUuv+iO7RMJzmRPaKKKqqog0eNnN9TBtfF6raKWjnPFFVUUWeI2mpwPc6Vx1RRRRV19qh141Mkat2Rj9sjqqiiijrmmNrqTGl5RNTKi6+iiirqDFERFVEZNuq27J7Ztn98e0iPc0tEfsTH71/3LbJHVFFFFXXwqHU37WXOeOS0FkUtapnZI6qoooo6VNTMH//zIbMncjYjp7VVufHriiqqqKJ+GVMzf3xmT9HZjEyE0h/RvO7UUSNHFlVUUaeIGjmJdas8mYGz55i6fbzp1GNq0beLKqqoc0U9ZU2n7melnSIvxDVWlCIHFFVUUeeKelzLyGSp+Xad66mhKY2oooo6XtTIsLTYms7UU5rQmCqqqKLOEDUz4J0ypu49Ze4mFFVUUSeJmtFhTG0edfzxW1RRRRX1y5Sm50wmcwt4XYzMaD1aXVFFFVXU/01pOtwznWlZt0Xuj1ljRSn0/khUUUWdIepx5U652Dn+VYTmd7G0n4yKKqqoXaL2fIYw85pIHynPPG0eeRB9sScYMy27vlESVVRR20U9peVxZ3z5JxhFFVXUZaJGZiDj1438zlMv35etKIkqqqhTRa07U8ftqXtyZrGWoooq6hWiZpZpzh13x5/J9LzrU1RRRb1C1Ejm0WZEq46plRdfRRVV1IGj3vbZPtKoqHeHq7nX+chmUUUV9ZpRd/Zuvno17OcoiSqqqKLGV/aPy5wqmiNFEha9pEQVVVRRh4p6bu+i3yf99sgq2Kp1RRVV1IWjHpe5+a+xWNTIkUUVVdQpoh63BFPXsm5QTEfixaIWfbuoooo6RdT315f7ttXd9nTInGnZ4SrCGmOqqKKKOmnUtGWHujtbRl43w9btcJ+3qKKKOkXUTMuedYsmQkXHWWxKs/eNkqiiijpM1M1odVut0V/wwqqoooo6RdTvz8/3bfy6dZ1EFVVUUVcaU0ermyk3bNQOa0yiiirqyFF3tiyq+/Z2+7Lt/FIk4fhRm9cVVVRRp4jaqmXkrsQ0T9029Uymx+q/qKKKOkPU5mNq0d3hrRLyD1FFFXUGzVtG6tZNacQSVVRRjbI715h6Rh3/2XJRRRX1mlG321nS+1pajbuRqJFpj6iiiirqQj4B6xX6SltJi1YAAAAASUVORK5CYII=" alt="House Detective portrait">
+      <figcaption>House Detective</figcaption>
+    </figure>
+<figure class="wcard">
+      <img class="wface" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJwAAAE4CAIAAAAhIA1WAAAETUlEQVR42u3dzXHbMBCAUbWaEtJOjjm6sRSgApKDxjqEHhgAlyAWeN/oZNkch8+eDcEfPx6SJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSdGt/u7LfoAqqBhBChSqoutcSKlRB1S2WUKEKqsJRm7Zj30IVVIWP0prt2MlQBVVQoUKFChWqoAoqVKhQoUIVVEEVVKjOp0KFClVzzlRXE0IVVEEVVKhQoUKFKqiCChUqVKhQBVVQdQa18OXHt+xkqIIqqFChQoUKVVAFFSpUqFChKgVq0001djJUQVU4qpkKVVA1yUx1OQtUQdUtMxUqVEEVVKhQoUKFKqiCKitKUKFCLXwO56QztSQIFapSodLNNVOhQtV6qHTnQa353YMKVeuh0l1wpkKFqlSodCdcUapa0IcKVaug0oUqqFDvRaULVVCh3otKd/CKElSoUPdEZQNVUKFeh1rzlsagNm0ZKlSoSVGbvqH3W38+fr1ez8/4TTRToUKFOjHqsbdTDerb8qh73A5UqFChQi1YHl9RujvP3etQq35BoUKFOh9qwfJoUHNs0/RP3ecn4Lrz1l+8BRUq1JyoUfv3WVHhqwof2Rm1yhsqVKipUJuOSQoT9CThcctQoUKFuiRqjW7UKC18TmFlyiENVKhQ10Y9uRIUdUiz6lnYm0+SQ4UKdRrUptWiAedKl78aBipUqFD/Q71O97qP7IPatGWoUKGmQD0Os5oZFrX6X3MNzWLeQ49ToUKFmmpFqaD7+7M+3aifidTeUKFChfrtf5ULe+Gt27c3m1aLFtO95wYpqFChpkKt2QtNe7NA2HRAtfNMbbuXBipUqBOj1lyNHT7Vwl/7nE+t8oYKFWoG1EnOjJ68bwcqVKhQ887URLpQoUKFugBqzdpQ+LUmfU5mKlSoUJdErVl/n+SYJLUuVKhQodY/RfTklSV9V1kstsZ03bM5oEKFmh31uj1urf8x5CJCqFChLoxqHf+uAxioUKHuiRqlG7Wn5n+8/nWLRFChQt0BtfBc+xrdmg1mBLt5jf7kihJUqFAnRi08Ybnmtpa+53ecZN55pkKFCjU7as0D7sMtw/9G4IYrSlChQl0Y9aSuexrHHPZAhQp1c1TXtQw+yCkt6EOFCjUDKt0UumdPzkCFCnUnVLpjUIfOVKhQocahfnw8X68Burd4p0Zt2jJUqFCzoybS7fsrsDvOVKhQoWZA/fHz+Xr16UYxe4Y+VKhQoTbphjM/lggqVKhQv12pOKL2rTr1MT9W75b7HqFChboM6kndNf4qCVSoUKGOR4067NmZGSpUqFBjUaMOe/q8M/6UQIUKFeoZ1KjLYmrAalamUj8VGipUqHuiHjuJGj7wCtcyph6uQ4MKFerd1RycjDzsiRquhXELFSpUqHOi1kzHvrl7cmW/70IZMxUqVKh5UaPmbpRu05TdMahQoc7bP/DhkQQFHLdYAAAAAElFTkSuQmCC" alt="Hotel Manager portrait">
+      <figcaption>Hotel Manager</figcaption>
+    </figure>
+<figure class="wcard">
+      <img class="wface" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJwAAAE4CAIAAAAhIA1WAAAEKUlEQVR42u3dzXHbMBCAUbWWUlyC28nBhxxdQlpIISlABSgHj5kZI0IWJChhgfeGJ9n6CT/OrAnS8eUCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACzv/f26Y7PfREVUIsF+fOr+iJ0sKqKu5rxOTY8IISqiKqeuqKKKKuo6LZ3biCqqqFaCdBJVVFEZbaY+4N1VE1VUUVebqd07vbxe/7upKyqiLjJTDx4BkU7bFjkCKpnlE1VUUReZsr067dvK40YsUUUVdYKEkenYdP7T67di/JqNqIg6d9TIdDz4m4e/379/2crvuRY0EhVRp1TOy4MzrCxX2cqWlcyV97r9+vmxCSqqqKLmPaWpJLwGVPZ4pUH59MgrqyuqqKLOLXKaUX6p0rIyUyOHS6Vc5WQJUUUVdXBNe7wStWmmRkRex0wVVVRR0yU8b/I11W16VuQziyqqqKIOrteeOthg+9Lt7e1j+/us8hETVFRRRZ3oBKbXVDtYN9LSBBVVVFEniBpqcH//bl8qnxU5a+p1bAkqqqiizn1u0zTnmm4rrBxtTSv7iCqqqOkW9M87Szk445uOP1FFFVXUdFG7rQSdtsbUdA049883u4gqqqi5op43L59ylKyTUFRRRc0e9eC+a1ot6n+lIfNMvfUmqqiipojafRUicj1133/2MdlMvZ1GVFFFTRr1AfcOPmB1erKokWf1/8FEVFFFfUjUR15h3Td3F2wpqqiiLhX1vLsjRpvWiU5gIi8oqqiizhf14JXRp/wm5KxRI4+IKqqo80V97jrUgi0jpzT9P7Soooo6XtTK/7PffW0osuq04B0q3VaURBVV1FRRX75dP7byb/vtW5nad1/L9AlFFVVUUe/N1Erd8/7adKK/Wn17KlFFFTVX1EiM7ZGt5VZ328rvaepd+Z7tLS55iCqqqKLei1ppsD1S2ePls8rMlVduOm6ajoCV64oqqqgpoh7c45FHyszlVi5aRVavDs7vRFGbXkdUUUVNEbWpU2S5p6n3vk7bN+97r4x1RRVV1Pmi7tsv5dlOROR1IkfSwc+cOmrkBUUVVdQUUQ/ul/OOgF7TuvvnGW2mll8SVVRRU0R9QMva6v/r1+2R7y6qqKKKushM/cdafxG17Zi4f4XAD0qiiipqlpla2UGjzdSm67JL/6AkqqiiDhy1aQcNMlMrHzXymae/v1BUUUVNGrWygwaZqZVbD8t/xSBnMqKKKqqo926TiOyg0VaU9l2FvQxGVFFFXTNqZNLMcT217D1rXVFFFTVF1NTXU/fdOzjauU3/1X9RRRU1Q9R17iYcf6Z2I6qoomYw/Uwdf2VfVFFFXTPq9DO18i8VVVRRRTVTzVRRRRV1sah/AOjh3KMIJRH9AAAAAElFTkSuQmCC" alt="Bellhop portrait">
+      <figcaption>Bellhop</figcaption>
+    </figure></div>
+    </div><div class="wgroup">
+      <h3 class="wvenue">Library</h3>
+      <div class="wrow"><figure class="wcard">
+      <img class="wface" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJwAAAE4CAIAAAAhIA1WAAAD/UlEQVR42u3d3W0cIRSAUfdfQkpIAfuQFlJICkgBjhRL+4KEgeHvwvk0T7Z3NuGMhRfG3o8PSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSf/7bMq4QRVUTSCEClVQtdYSKlRB1RJLqFAFVTNXi6BCFVRNsCz5lEGGKqiCChUqVKhQBVVQoY5Yo4cKVVBlToUKFSpUqIIqqPoYeRMhVKiCKqhQoUKFClVQBVVQoUKFChWqoAoq1Cf7qSyhKjoqcKiCqrWodEOgFn03QoWqmKh0oQoq1LWodPdBrXsJChWqTkGluwq1UQcqVB2HSheqoEJdi5qe6G+noEKFChXqkln2VOZxhFChQr0BdclwnMEMFSpUqN+ilnxqbRF1x/3IAhUq1OiomSGjuwq16nsPKlSosVDb/kG7Ddn+ulChQoX6LUpmgOhChQoVai/UqlEIdFvhbtsAU1eUoEKFGgH1ntbqTr2bECpUqBFQu/9X//z88XWwhAoVKtQJc+rbcgnq/r+cAxUqVKhRUNMTrr1uoEKFCnVz1M/fv76ONqf0eJ8woiVUqFChDkLNDP3DKTBj+X658v6a9DgDteThM75BoUKFujFqqpuO7xsj86iMbvqRzHPtpgsVKlSo0+bUqimwbVKsuhSgQoUK9STUNvjuupnp9owVpfQ8mY9AhQoV6reo4/YMTl3Qz5wQKlSoV6GWvKQpWXUqYU6fYtvl+3Goi/dToUKFuh9qZqDTdfzUsmTzteQCOmw/FSpUqFC76Ga+uMQy9HQLFSpUqPM3Vh8uzT+883sTXahQoUIdvaBfMr5VBr0eBRUqVKiXoD607H5tRbSsOjNUqFAvR304F6bbACVVLfpHRK26vxAqVKiXo7bpPjTYZEVpwr2Di28RhQoVagTUh7pVzGdYQoUKFero2nRL9lMPW6OHChUq1PmWba9/lvxV/c+lQYUKFWr5VuvM+wJnvqkJVKhQoe6A2van83vtgx7/tqlQoUKFusPEuYnlhCX+9CmgQoV6FWqvN4XqdTvLbm+b2ks3c55dfgiCChXqANS2NfFec+qr4Ni/CRurUKFCjY5aQtg20G1z6qvpOAO16sxQoUKNhVo1X76eHTfrTp1ToUKFujHqBMLM+Lb9Cg1UqFChXrKi9Bp2ZFadJszoUKFChbon6mv8sfZKCq0LFSpUqDscEfdcoUKFCjWuZZvuYTe4QIUK9XLU3a6Jm3WhQoUaC3Xmi4qZl0LmKfYPKlSoUEerTLh1JiLq06BChQp1yxNChQoVajjLtXPhqStKUKFChRoXNeJ9LVChQr0S9R/5vPPUdtM9FAAAAABJRU5ErkJggg==" alt="Circulation Clerk portrait">
+      <figcaption>Circulation Clerk</figcaption>
+    </figure>
+<figure class="wcard">
+      <img class="wface" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJwAAAE4CAIAAAAhIA1WAAAFB0lEQVR42u3dPXLbSBCAUV3N19zAB1DgcANfwQfxARQ4tKtMiw5G7uoeDH5m8L5ixCUJCs9bLQwB6uVFkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJ0u9+dmW/QRVUHUAIFaqg6lxLqFAFVadYQoUqqBqOWnod+xaqoGr4KM28jp0MVVAFFSpUqFChCqqgQoUKFSpUQRVUQYXq81SoUKHqmjPV2YRQBVVQBRUqVKhQoQqqoEKFChUqVEEVVG1BDZ7e/ic7GarmQuUMVVB1LipdqIIK9VxUulAFFeq5qHRPRy1dVAMVqtZDpXs66viZChWqpkL94BV//Lm9vfe8J/OY4FlQ4/+dosdAhQp1XdRA99n/X/7cPnhDPwo3qGV4qFCh3gC1pNsyBwO4vT0HMFSoUKHeDXXjD1bSLcFDhQoV6gKoqTWLDMa3r49bn25gGaxVWVGCChXqdKjRvktso+X5u1jfpds3Uy87Zc/5PBUqVKgXRk1Nx3+/YsayT3fUYc+qMxUqVKizo5Z2R7CxjGVGNwNWOiK6yNHOsdfSQIUK9bqopfWa1EtXLIN7Srq1N3/qlD1ipkKFCnXd336DNlqW5m7fov+dPk+FChXqdVFrRzKjnYYf/yw/U6FChXqLmfq+E0vrPvsdyQT/tl7mCSpUqFAfqMHnoBvf/ah1/D7dVQ9pMq8DFSrUKVAPmIUZy+FHO5YJoUKFOs0hzW5yw1aLKu9wMdTM62zdZVChQj0JddTxxn5nE9b+Jd3vkAYqVKiTorb75a0ps3/7VpRKmwi2BRUqVKhm6tVm6tTX0kCFCvUOM7XdU5ldf8SZglaUwheEChXqpKgZy++v/z1umQOhzs9BK/f4PLX8ITlUqFCvh/rBnvr8+XFr72nhgwOGzrNYtm0dKlSoUOebqe2++/c9o859GbX15VeUoEKFuvBMzezNYKptvGfj1s1UqFCh3m2mltbfoyk7autQoUKFuuKK0sZv4ti4olT6hruLoI4Hy5zXAhUq1BlQS2eNDL/u8YDrxs9dUTpggkKFCnVS1A/+Csho3eHfK1pCPWWm7ni4kjmtECpUqHOiDtfdb1pfDfWAwdk5U6FChToD6n5TdqNl5i+qZubuRGv0w2YqVKhQ50Q9Ujd49xnUc1eUfp4aVKhQ10MNmPu8MzsoNexvs6IEFSpUqI+e15YHF5kHlu3TP723BurJhz1QoUJdF7W9rKXVbXs+JvNVTVChQoUKtS24FrGdl4FlsNyzBuqRulChQp0dtR2cr69vj9t+K/vPV263BbV8LQ1UqFDnRA0sg5k6/EzBdus3RM0QQoUKdRnUi8zU1NfrQ4UKFeq0qCXL/XSDmVo6CQYqVKhQL46aOW5pHzP8b0r1bWvj3F1jRQkqVKiTopYsg73Zt+o0alul93ORdvweJahQoc6A2vcn9PrmburbPyvbytzTd0R0/WOb6CAHKlSoM6BmVovaPjVlPgctnbPSbit4Vt/cXWy4QoUKdS7UzE/YErbPyjBnvkrj+fTaatGEM3XHgxyoUKHOgNrOnlZu4wzLzN3StoIpO+NMHX/YAxUq1BlQM7Nn1GMy8/LI97NsUKFCnaH9Pr888jGln3R9XahQoZqpO68EtV8IkvliJr8oQYUK9W4zdeOKUsky0PWLElSoUC/QL/L9M0su1HbiAAAAAElFTkSuQmCC" alt="Reference Librarian portrait">
+      <figcaption>Reference Librarian</figcaption>
+    </figure>
+<figure class="wcard">
+      <img class="wface" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJwAAAE4CAIAAAAhIA1WAAAD8klEQVR42u3dwa0TMRRA0bRGKbTFkmVKoAUKoYAU8FlEP0iYmPdsZzK2z1FW/BBBbiTz7JlwuQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEDYxydvhaiIyluiqisqovLeqOqKiqi8N6q6Z45SyySqqKwSVd0TJhRVVFG3ihqp+70QeU7lyVqKKqqoolZe6Nf12/3Rlrl8spaiiiqqqG11P37+uD/Kv1j5nMpnYueoqdcRVVRRF44a+kMXLctybc/ZeSmNvI6oooo6e9TQj17WadW6oooqqqjPorb967nSoK3KqtOOqKKKKuqzgrXVMbN/1Nkg8ikRVVRRRZ03auSMs63uqHKLzTaiiiqqqM/W1FDmvi3+R57Io/Lb94naNmeKKqqoc0WtZB41nFTKpfaYNlxTh93pJKqoop44aqRlZJ2LtLwVIpOVqKKKKuraa2rnTFIJX2n59cvt/qh8OEQVVVRR145aaZn6UaVlGbX8lTUOVkUVVVRR/xs19d6ljj8jUSNr6oyXvIgqqqiiNkTtrJuKGtmQmvEimOHBRBVV1EmjpnbtO29BTH0mhrc8Sd3XraCiiirqXFHL09PIVd2VVXbUOx7ZtOp8nTXWVFFFFXX2qKnLWVJv2dlazrimRqZSUUUVdfaolZ301LZRZ7m2M4MNd5REFVXUSaNer7e/HqnL+CpvWec7Pmol3vE8VVRRRZ0h6iPh41Fmriyuo1a+yzZEFVVUUXuiHrC33nnbuaiiiirqvCNNZLY54PTUlzhnLysUVVRRl4laWVyPbOlLnIMHq6KKKuoUUSMjzfC7CrV8RdTcnCqqqKJOHnV4Ff9tavMXrogqqqhzRU2NNKNmmz9/jtXPUw+4cbFxQ19UUUVdJarZ5phDU1FFFXWZqKmRZtRsU66pqTsYN7xCRVRRRRW1Z2c/1bLtS/Q2zCyqqKJOGrVtpBl1wrr8eaqooooq6pDbLl53wqquqKKKulvU1Pb9605Yl697wEaSqKKKKqq7HIfXFVVUUdeL2jnSRG53VHdg1MgLiiqqqKK+8Vs/9llTyx+JKqqoU0QdNdJUPgrOXEUVVVRR3xK187+mTj023FESVVRRjTTPPgq35y77mXJHSVRRRZ0qamVxLaOmMq/xmTjvJaKiiirqIVFfN9JUFte25XaxJVlUUUUV9ZxRU9QVVVRRp4t6wEgTmW1SnVbdmRJVVFFFnS7qqicEoooq6sJRDxhpUiesbTv7Ox/Q/oOooooqakfUnWcbUUUVdQenHWnMNqKKKqqoo6KabUQVVVRRP/0GXdRljih1qZQAAAAASUVORK5CYII=" alt="Archivist portrait">
+      <figcaption>Archivist</figcaption>
+    </figure></div>
+    </div><div class="wgroup">
+      <h3 class="wvenue">Foreign Ministry</h3>
+      <div class="wrow"><figure class="wcard">
+      <img class="wface" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJwAAAE4CAIAAAAhIA1WAAAEjUlEQVR42u3dQY7TMBSA4bkax5lDsOUALFmyZMmSK3AQDjAHGCQqdYE1T36O48T296urwjhTf5WM06S8vEiSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEn613tT5g2qoGoAIVSogqprLaFCFVRdYgkVqqCqO2pqHHMLVVDVfSmtGcckQxVUQYUKFSpUqIIqqFChQoUKVVAFVVCh+jwVKlSouuea6mpCqIIqqIIKFSpUqFAFVVChQoUKFaqgCqqOoAY/Xv6RSYaquVA5QxVUXYtKF6qgQr0WlS5UQYV6LSrdy1FTN9VAhar1UOlejtp/TYUKVVOhBrpvmaAen/Do70CFCnVd1HKgT5k2hB96NSFUqFA3QG3Tff/96/FIwUOFChXqtqg1v32N5Z8f3x6PGtQ1mKFChQq1/mrCXhuY0jJ4pm1r5IwSVKhQ50UtwQ7qpiyX173m81SoUKHeGDXgSaG2ye2jO/RqQqhQod4YNTVTVfuf3pZtuouhpnaeUKFCXQb1OZs1Q59nWXP2//66d1lToUKFemPUYH6joStUql78onubEZ+nQoUKdU7UNoMalV7jTL23gQoVKtT/UGvWy1Splbht5A1P6EOFCnUZ1OeLDwzabg4P1tS2AVNraq8VHSpUqFBPv+2iwqD8FVMGBwesObPf63wWVKhQoQ5DHWDQ/V1SogZy3XdWl1zOUjMgVKhQ50Jt+/T0vM9TA8uaNTUYZ2rU5A1SUKFCnQA1mLufXz4/HsEzNeM8n6kZsHwmdcXhqmsqVKhQt1pTe1mWx+puGRzLP5SgQoU63ZoazEv3GR/wzNanCaFChTrVud/zVC7RXWxNhQoV6uyoI9fU7uPc/zw+VKhQoXZZU9u+UyO4+mSxfUt31G6XiEKFCvV+qN2/x/PgT62qex4hVKhQJ0Vtszzv+0DXOH8EFSpUqEfW1Lb7tGvO8gzQXcyy5hBQoUKdC7Wc8QHfjpG6O3HnnUzj1YRQoUKdCrWc39QKWvNI6U69kzlv3wIVKtT1UMs1NbgXsfuaWnP0fSyhQoW6FWrqnsajL37j67OHnlGCChXqDKjBjJdrYZvuefdGrrqm9oKHChXqFKgj7zxsG/nl9kGFChVqA+oA3VUtb7vtgQoV6lyo583vGtdnD0BNjQwVKtRlUEd+x9xilr10j36eChUq1DlRr9UNvjkaKlSoUDdBLed3wAr6PGjqfxZcFbXblgYqVKhToQ7QDSyD/4d1It3uaypUqFC3Qg2YU97BOKmfmkgXKlSoUBtQu89d+VZoO7MPFSpUqEuivn1cjVPN4+DVhPvsbaBChbonamqZHHldC1SoUKFugvr19fXxuORcf6/336q6UKFCnQL1+8fVoAa651kGRy9/1fLlLK8LFSrUrVAD3WcH7xKvOWiAOpHu0bP/UKFC3RI1xdxGeBB1Rt1cUKFC3Qm1F9iANRUqVKhQZ0E9uOCVU596xpoKFSrUtUu9+IOo521per1roUKFCvXk/gLbbNPYvDqFJQAAAABJRU5ErkJggg==" alt="Ambassador portrait">
+      <figcaption>Ambassador</figcaption>
+    </figure></div>
+    </div><div class="wgroup">
+      <h3 class="wvenue">Sport Club</h3>
+      <div class="wrow"><figure class="wcard">
+      <img class="wface" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJwAAAE4CAIAAAAhIA1WAAAErklEQVR42u3dMXLbMBBAUV7Xh0ibA6RM4SKlylwqB3CRUik0YQMbA4AggQXfH1WySdl8yqwJUdG2SZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSdLQnk05blAFVRcQQoUqqBprCRWqoGqIJVSogqruqFX7cWyhCqq6j9KS/TjIUAVVUKFChQoVqqAKKlSoUKFCFVRBFVSoXk+FChWq5pypriaEKqiCKqhQoUKFClVQBRUqVKhQoQqqoOoIambz9EsOMlRBFVSoUKFChSqoggoVKlSoUBUCtepNNQ4yVEFVd1QzFaqgapKZ6nIWqIKqITMVKlRBFVSoUKFChSqogiorSlChQs18D+egMzUnCBWqQqHSjTVToULVeqh050Et+bcHFarWQ6W74EyFClWhUEt2/VFQ2+ZQq3WgQoW6HGq6fdWhv7M3VKhQoXZBzUzZ9IhXyVUdqUC6UKFChdoX9YJVp4wcVKhQoVpRGtv8ulChQoVafjUh1OGoJZsXPRhUqFAnRq36gTZBFVSox1D3Ho+P1+35d3vdSlDTrcbeAxUqVKhRUKuO1Py66UnOJGc7vVaLit5LAxUq1IlR06NQcqRyDzb9TB2r233V/pMvQYUKNQLqJ/OyZmK1/RV95UxdFTXnDRUq1Aio92mNUxqoUKEug/rj7e2k2/5rVH2pbYeZb77jTIUKFWqomfrn8fN1+/392+u2f2m/Z/+ekp8+3eq8/aQ/M1SoUKFGQa0yqPrPks7bT8mzpO2ZBBUqVKgDZ2pmYlW9qfu8/ZTM1IMTfRLUks23ql8eKlSo06C2zdQSjPP2k9lzyRkaVKhQoc45UzPfU/VrtK37lBi0ya0xUzP3QIUKNQRq1Tp+29p61eSruqftbGeNmQoVKtToqJmj8Hx/f90y9xx8TmRU2h697TkRCLXo7yOoUKFGQG07mpnje3DOHXz0XtfixH49FSpUqBFQD87U9J4rZ2rJc2u2oEKFCvWkmXpwRan7o0OFChXqTWbqwSv8zNTmpSWoUKHGQu11fA++wnre6wproOYI0yV+qFChRkDtdWVJ1dV7Ve88DPRa6QWjtP9bGaFChToa9Tzd7lM2kGX3haSiUxqoUKHGRO0+587bs1dPS98pBRUq1Jio3Q1YXrSiBBUq1FVQD57/HHyW3Hlw9j+lgQoVanDUC+buFrDn0KBChXpP1La5m25V9akkdKFChQq17VOdMlvNv340/2kPVKhQ74C6Gxz8/L/M3N0/rLrtBhUqVKgLoKZHKnPekiG8ckVpeV2oUKGuh1oyqM67QiX9UJO2e0Kf25TsECpUqMugVp0n9LLc97yrdL8nEGoJIVSoUJdBbVummW2CzjZloUKFCrXvTK3SHTJBzVSoUKHOiVri1Et37ASNOFMbV5SgQoU6MWqbU6/LR66coJPM1AteWIUKFSrUBt3lZypUqFChNqD2Gq5DJuhsM/U8XahQoUL96tiNnaCzXV/YXRcqVKhQv0I1U8998RUqVKj3Rp12/WjamdrvuQAVKtQ7ou79+p+ZChUqVKjnoaaWVpSgQoUKtTtqiaUVJahQoUL9un/ob7/dKVjpLQAAAABJRU5ErkJggg==" alt="Tennis Pro portrait">
+      <figcaption>Tennis Pro</figcaption>
+    </figure></div>
+    </div><div class="wgroup">
+      <h3 class="wvenue">Palace</h3>
+      <div class="wrow"><figure class="wcard">
+      <img class="wface" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJwAAAE4CAIAAAAhIA1WAAAER0lEQVR42u3d3XEaMRSAUVpzKS4h7biElJAWUkgKoADywAx5EFautFqtfs43PGHAnj32XO8F7NtNkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJg/WoynGDKqjqQAgVqqDqWkuoUAVVl1hChSqoao7qcEEVVI22NvIdAFVQBRUqVKgVqJyhCqquRaULVVChXotKF6qgQr0WNaL7+XE/+wIVKlSo26Kmd0sP/Z+fX89L5pqD94Ia/dmDChXqcqjp/ZvLZW4DFSpUqFAjuuddAxUqVKhQW53tLH9u0+rdiVChQt0TNfLVd9gxbThToUKFugNq5EMd9kdmKlSoUDdBTXdDRbrn7Y+gFr8tFSpUqDOgZjbykQfquceHChUq1AVQ6zY4HV7XYqMEFSrUTVAjR/OScxunNPlfgt7cGCpUqFOhFs3CojOi86bshjM19B0AFSrUGVB77t+9txwqVKhQM6c0B51uggoVKtSqmdoKLD3/uSel90o/9Hqcx+9fz0vkzGrVjRJUqFCXQT0ol7l7K9TUMnINVKhQoQ6OmilikOoWoWY+RZ3l+N49nk+FChXqVKhFhAeHa+5LPM1yEN3zXkQIFSrUuVDrCIuGa3o0M5eeulChQoU6wkxttVvPDNfI8a2bfGYqVKhQF5ipRZaZ+ZQ5t8kc3yLvDTdKUKFC3WGmFs251CCyYyp65KlfxXIQtdX2HypUqOOgRjZKRbOwbsc0/iYIKlSoUEeYqZH9e92Oqeg8akZvqFChQo1vlIpmYdFTrXU7pql1oUKFCrXi+dRImePbasdU9/VAhQoV6nQztUg3otJ8xzT+lD3vhw8qVKiToh6coHXb/7pXHE692W+FWvkGKahQoQ6M2mqmRs5t6nZMB7dOU5/AFD0gVKhQJ0U979ym1Y5p/HOb8zZ/UKFC3QG1yPLgX/+cesfU84kXqFChboVaNGXrzkla7ZgGeU/j49KgQoW6Hmory8iOaY3/iQIVKlSobVGb730iulP/2z+oUKFCbYu62Gv+oEKFCnW3mbrGf4cabfsPFSrUhVF7Wvo7Sm/BoEKFugNqZinTc4JOveu/5r00UKFCXQX1dcQ7HN/0c0FteUoDFSrUqVAzuj2vgdpypkKFCnXO336Lrsn8q+zIbTZE7bFRggoV6gyoB3UjYJnbrNEoz6dChQr1ItTPH/f/XiJbnqJrItP6tnpQoUKF+rz8M0ivCWzSz9sf5UZ74PtvQ12oUKFOgZpaFg3Xa6MLFSrUeVGLDsd57+4++FbwxXQPMkOFCnUK1DcH6HVE0iP1/bEruwSeEK2b8YuhtvvtAypUqAMTdrgklvfvq9NddbhChQoV6uCohitUqFA3Qa18nEanNKHhmkxZqFChQh2gv2Vv+fjmwYRJAAAAAElFTkSuQmCC" alt="Soldier portrait">
+      <figcaption>Soldier</figcaption>
+    </figure></div>
+    </div><div class="wgroup">
+      <h3 class="wvenue">Museum</h3>
+      <div class="wrow"><figure class="wcard">
+      <img class="wface" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJwAAAE4CAIAAAAhIA1WAAAD/ElEQVR42u3dy3HbMBRAUbWWwrJNESkhyyzcUgpIAc7CY2+Q4eDhRzzw3NFKEmWFRzMIQFJ6vSRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkrRZ703Zb1AFVQsIoUIVVN1rCRWqoOoWS6hQBVUrV4ugQhVULbCsechOhiqoWoBqTIWq7KicUywkxaY0UKEqFSrdnVFjUxqoUJUTlW76FSWoUJUcle45UxqoUJUTtdzsb1NQpwYVKtSDUS90a/5hT4aHChUq1CGo82Y7p+pChQoV6ljUNt3fP75/3P78+vlxK++BChUqVKjz5J6jCxUqVKj1ZxOGUDvljted918WqFChZkcNvaGQ5aiR+IGooc2hQoWaC7XtDXUaHL9+tGBMhQoV6hNQQ7qh2U7or6f+BCy9lBEqVKhPQi33eGiUrTm/sHNlKvWU5p4xFSpUqNughka+i71Zcw53+VDq4wFLj6dChQr1ONRRe7MN9YFjKlSoUKE2jGqheUvomsZEllChQoU6dkrTtjfbCDOOoFChQoU6CXXe/k09b4EKFSrUZQv6866cOUx36bU0UKFCfQAq3amooc2hQoX6TNRRK0Gn6u57LQ1UqFCPQy117/U+bEVpxZQGKlSoE1A3+a7k53z70opraaBChZoBlaXjqVChQn0g6rzjAa9dgwoVKtSTxtTylbf9RUCoUKFCvRH11DMFoUKFCjXvmBraPOPPYEOFChVqljE1tOp0/Eym5pWhQoUKddLcpnP1PyNqDSFUqFCh1jdqRWnbdah5Z2zvO0+FChXqxqi+rePAMRUqVKgZUA+7kvx9YYcsE0KFCvVJV5IfdtB0lykNVKhQW1HL447Dj0SOOlbq96KgQoV6EuqFZUh33pWHrmCEChXq2aj3rsjvr3Ivas3rbHeYBSpUqJeob5+3b5/V3EN3sS5UqFDPQw1Z0oUKFSrUe8fUBbqhPfVW3KBChQr17DF1uG6n5ddBiG11oUKFCnXsmNqp22l5oXv8yv5/7oEKFWoG1OGFdDv/RMj7DNTQxY1QoULdGbXc9cN3dOcL1vA8Z25T5Q0VKtQMqJ3TlZqHQrfQ5m1PhgoVKtStxtROy3k7ev9DpLvpQoUKNQXqKMuLJ5ezi07vRCev3LPYBBUq1AyooyxH6daMqaeijmKGChVqCtSayUnbeS2dq+1t60eqnXFChQr17moGxdBHIaRbvo3QwEkXKlSoR46pFzyhD8fF5m2fgK9Ca1VQoUKFmmVMDS0bzRt3a+Y/5XPaVq+gQoUKdVX/ACy64lgEHNZQAAAAAElFTkSuQmCC" alt="Docent portrait">
+      <figcaption>Docent</figcaption>
+    </figure>
+<figure class="wcard">
+      <img class="wface" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJwAAAE4CAIAAAAhIA1WAAAEDUlEQVR42u3dwXHbMBBAUfdfQo46uoS0kEJSgApIZuKJDoGNLECQxALvjU62LIv8mlmDpOS3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAj79ZddISqicktUdUVFVO6Nqq6oiMq9UdWdOUotk6iiskpUdSdMKKqoom4VVd0JW4oqqqhbRS0f6HGMlqKKKqqo6s4TNfI4VyySRBVV1LujRp70YxCj9NM9H4oiqqii5owa+dbjfKIGo4SWNKKKKurEUctgt9S1khFVVFE3iVrJ0/ZndCBzaON/fP+4/Xz/9nETVVRRRV0pat+cq/yySIPXfcpyka+IKqqooq4dtemZVWbhhuWGR21rIaqoouaMWk6+8ta3JjnvK/vM1NArQFRRRU0VdVTLUesWR5REFVVUUa8sF2n5us/rJqqoooq65JJm+DnOytiOPLKooooq6pJRD07Zco+Xu/5gVEsaUUUVdbeokRnW13L4isj5VFFFFXXyqKWmRc7BBcyV51wn6X3eG8hFFVXUXFEr2/zJNdzFnjq4ONmwrqiiiirqPzM1ss1950EP3mexaxBFFVVUUb9a0oza402H781UUUUVddslTWXd0veV4Yefdp6pba8AUUUVNWfU8+qOuorlYG9RRRVV1BmiznaU54KRvP7VhKKKKmqGqMMn6AW93zITVVRRRf3v+dSDR8l9jpKooooqalPUvk63XCmYKOqwToFHFlVUUXNFrf1Y1zUrTUd5mo7RbzhKj16jJKqoomaIeu8R+chLYcMFjKiiirpw1AvOjA5/A+S0n99x3kEiUUUVdeGos509PXjt4GrH6EcdJhRVVFHnizr/dS1953eb/nl2opkqqqiiLhNV3VxHlEQVVdSkUSOfmL9G3dcGvr8/P26LXUQoqqii5opabuFsn3aUeqaedzWhqKKKmj3qawuXr3vvTL3gskJRRRU1V9TXFlYmzfBznDu//1xUUUUVNf5emoOZ772VT37VmXr0mYkqqqjXRq1sYeU/+WUU+etBVFFFFfX6mVrWfRaadsfjmKZfESlXOXYmqqiiinrjTC33wvNrTZsR+alRj1yWq9RNFLXpAUUVVdQUUZsmzfxRy5aTrGSGD9fOk+SiiirqNFGbZmrfs59kps5WV1RRRd08amWm9i1pnqMNn6n3HlG6oK6oooqaImrTpHnOKuNMPa+uqKKKmiJqZdJE9sKoMTnqcTK2HH/0X1RRRc0Qten6j8iqoK9KX8JRz3k1oooqagZNM7VvYl0wL/vuI6qoooqad6aOmruRV1vTlYLTXk0oqqiiinrSTO2bu6NeN/O/l0ZUUUUV9Y/fjNisXz5/trQAAAAASUVORK5CYII=" alt="Curator portrait">
+      <figcaption>Curator</figcaption>
+    </figure></div>
+    </div><div class="wgroup">
+      <h3 class="wvenue">Airport</h3>
+      <div class="wrow"><figure class="wcard">
+      <img class="wface" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJwAAAE4CAIAAAAhIA1WAAAEmklEQVR42u3cMXLbMBBAUV08bQ6RMqXKXMoHcOHSmYnGKgwbWRAQiIXeH1ayTDF4ysAEKV0ukiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkv71fijjBlVQNYEQKlRB1bmWUKEKqk6xhApVUDUctWk/xhaqoGr4VBrZj0GGKqiCChUqVKhQBVVQoUKFChWqoAqqoEJ1PRUqVKhac051NyFUQRVUQYUKFSpUqIIqqFChQoUKVVAFVUNQIzs0yFCVC5Vz0jm1JggVqlKh0s01p0KFqv1Q6a6DGvm/BxWq9kOlu+GcChWqUqFGdn29vsY3qI+9ngoVKtTtUMvfL52aHnkeZqhQoUIdgkoXKlSoUM9FpQsVKlSo564oVdaY6EKFChVq092EEdROuefRPfl2FqhQoS6MWhnf2h7fPm/ljypPLrdddaFChQr1u3OTypCFPtj81rB1nhFl1IUKFSrU2yOVATqm24RaYd71bAcqVKhQP6E2jWbbZzwGzaB76M74LA1UqFAzoHaOZtMZkdX/y+TvUYIKFerCqBPG99xHVtMdPqd+8RyoUKFmQI2MS2Tdp2ltKHL1tOkKayLdqXcTQoUKdWHUyGhGzkki3k2/FblSO/x8LBFq2zIhVKhQ10PttHzcnDpcdw/UtmsqUKFCXRj1mErTiDfdTRi6mpv5zu/HoX7xhxJUqFAzoEa+6/Nx5wnH1oYyflHp8LtYauepUKFCXRi1acTP3Y69OfZAbZtToUKFugtqoqBChQoV6rn9+fnjtr1cf902qFChQl0T9T4K9219sMqh3i1X0516iyhUqFAzoJajENlmypVbxal8ziJvVqhQoUL9bk7tnHsmvCciTuZUqFChLo4amXtePyoPsfxRZG4ux7fpJSLHvOucGtkhVKhQU6BW5p6mUYjsp3OeO7bnPebUGmHxI6hQoaZAHTVSyz6y2VTae0oDFSrUZVB3tdzsLpbxpzRQoUI9G7VzpB5nMGrPz3NNBipUqLlQR4145xXNx+nuYTl+mRAqVKhno46an5pWcI49edk59X1i409poEKFehKqFaXszFChQk2KOmHsmp4zXHf7FSWoUKEmRV32fujOO7Z3vZ4KFSrUbVCXnY1GrTHtgdq0Q6hQoaZAPXbe0vRx8WNb59nOsu/ICXd1Q4UKNQVq5/rRaparncnMRO29BA0VKtS5qKuN3R7r+Jn+UIIKFWqqv34jn9xu2ra3hAoVKtSx5zaLPHLJE1SoUKF+c53uMmHmGzVbXxI26npqucPQJWioUKEujBphfsLvoVttcj32DoAKFWoK1Mr32k+4r+XY8UCFChVqFtT3t89bOYiVhv9Tm160PPimbVddqFChpkDtHN+y3x9V9nx/zrGXuGwaVKhQnwq1aaYZPuKdO9xjTh2/+g8VKtSc1+mu19fbFlnKGTXPNb1EeYT6T1ChQk1lWdEtB7pzTo28ROQI749ENqhQoUJd3DKiGzknOfZbx44QKlSoUJ9W99hC0ijLiC5UqFChntdfOZ3VlpSXz58AAAAASUVORK5CYII=" alt="Pilot portrait">
+      <figcaption>Pilot</figcaption>
+    </figure>
+<figure class="wcard">
+      <img class="wface" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJwAAAE4CAIAAAAhIA1WAAAEaklEQVR42u3du3EbOxSAYbXGUhSqCKcuwKEDFcDQoVtwIS5ABdABR9SMIUJ4nF0C2O+fjTjmQ/h07xHBJfn0JEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJElScZf3LAVUQdVDUOlCFVQ9FrVE9/n0du/I/BurDVVQVYKa6mYsS1AxB6Lk/iOEChXqKqhVulWodJsJoUKFeijUEt021AMyX6KDChXqEVAzulGoqzJfNgsqVKiHQs3s/oejrqHbuaqZ24EKFerCqFWPHmrgKC25HahQoc6OWvR/7aagboFaN2+hQoU6HmrbX88/Xl7Kjyh4qKUzFSpUqAOjpqUGUahR8FChQoW6AGrVQu+gW3KDUKFChTov6m2Bfn3/9uVRgppeK9xyat2oV6lzFlChQp0BtcQyo5vWZpnhWUz3sn1QoUJdGDUziTstL39+X4+/55/XYzFdqFChQg1BjRqcqWWU7uk9qFChQp0XNWqqZeS204UKFSrU6VAfItepm3nwUKFChToCaudY2kEuc8kBUeteJIcKFerAqHUP6P5Uq7pWqtI5m1Pdkr8M1pip6S1DhQp1CtTMj/rYedn53KbkGdoaMxUqVKjroVZNvs5nO40LVDNTp0YteQIDFSrUZVDTFW9jjrJM733Gnf1R/lCCChXqDH/9tu0fVe0ode4x3U4ZdDoLVKhQF0CNmoWj3Q5UqFChTjdTh70k85TGTIUKFeq8MzU92la86kyXzCXpsTxq1dWhQoU6O+on6/v6ej1yl/TtKH3yC3T/To8zU6FChWqmfmkZfknmTieaqTu8jAoVKtRlUDtn6naWM87U8DfM9J4iChUq1IFRp34vzSC6271fESpUqAujtu0EtZ3wHXVfg6Du8HZxqFChrofaprvhAgVZboe6xxkqUKFCXQ615J1+VeesfGz3NB1VZ7oMgvoQ5txvAFSoUCdH7dQNn6CdllPvKEGFCvWYqIPs9bdZDvJBHlChQoXag9r5DXw7WFZ9IwtUqFChjoDa9nV9mR8jyrIEte17sGY8rRAqVKhHQG3bbIr6bKOqmXoc1JIbhAoV6hSoVV+51PZNfm1H2zkrUV/+OvWJhlChQl0P9Xb98/nteuy5o9T5Mupx3lIOFSrUKVBLViq1TFF3+ITQ9E7HJ4xCrTuZGypUqFOhZkot0/UN1y15GE8TtutMhQoV6gyoz6e3/44q1MxCh1um95U++PSnWEy3CB4qVKgDo2aWI1y3rU7UYb2hQoUKNRY1o9t5SZTlaOMWKlSoUMfUbUO9fTLIRM92oEKFCrVHt9OybZRWfVTT+JtNvS++QoUK9ZCoD3km87EKBR+QNxFqY1ChQl0XtWq47rl/lOqW/CpAhQoV6nSoUbrh2/cl14IKFSrUg6C2XRL1CKFChQp1pP4BBZEk5uBTHPAAAAAASUVORK5CYII=" alt="Flight Attendant portrait">
+      <figcaption>Flight Attendant</figcaption>
+    </figure></div>
+    </div><div class="wgroup">
+      <h3 class="wvenue">Harbor</h3>
+      <div class="wrow"><figure class="wcard">
+      <img class="wface" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJwAAAE4CAIAAAAhIA1WAAAD7klEQVR42u3dwXETMRSA4bRGKRxzpACuFEABKYIjLVAOBZhDhjATgdBK2l29p+8bnzyxk+zv8GaltXl6AgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgGaP3xwKURGVW6KqKyqicm/UWXV/nk8+UUUVNWXUlrr3HvGsvR9dRBVV1HxRy4fNOnbl8/Td0/LMyRKKKqqoW0WdfrZz5dzN2lJUUUXdKup5U7Zv7gaK+jiNqKKKulXUQLuwi9SddVRFFVXUraKGDnZv1Fl/MycuE4oqqqh3R236V7vB1+fn19u3L59fb4P3DNYVVVRRRV0zauWXrzx+erlD9wQ6pRFVVFFF7Tg3qTz+lpZ9c1dUUUUVNVzUWSc5g5P40DOLKqqoou4WdZEpG3obdXQ/VVRRRQ0e9dBUW2T96NDqf6CZOm23W1RRRY0QtWW9pm/Xc3A6tryBfLW6oooqqqj/jTq4kn7o0Pc9c8tqUd+eq6iiiirqjVHPW8GpTL5Z16yYqaKKKuq2M/XKHdbzXhOiiiqqqGdHXeQqwEOvmytfbYtEPbafKqqooi4cdbVyfWtMgeqeN0FFFVXUWFEjthysm2ymiiqqqEGjLvvOw74GWWdqy1mpqKKKGivqLWvrgT71I+RMFVVUUSNEfby8/OuWtW7+/VRRRRU1S9RkM/XeuqKKKqqoa87UWcdu2XMbUUUVVdSOD/KIONWyztTOZUJRRRU1ZtQrP2G5T/qZ2rKxKqqoouaLeuWZzGDU1VaUzrt0e7lTGlFFFbUtastHG5dRrSitcxXLX05pRBVV1AhRyxkWuu5q61kXvHGx9goQVVRRI0Rdtm7EXYQL9kpFFVXUfFGz1g19hYqoooq6VdSWtfXyi12xfXFmUUUVNXHUe699ifhJzffWFVVUUTePuv4Rz1pXVFFFFfW/a0yiiiqqqKJeMFMjnpNErCuqqKKKOmWHVdSZ26iiiipquqiV93KbsqKKKqqos6IeusBlsG7ldbNz1Mo9oooq6p5Rp9etfNM/v9iP7+9uoooqqqhxo5ZHqjxk0+uWt0ODvPIzL9J71hp95x+oqKKKukzUlqMwGHWw7vSooes2vQJEFVXUvFFn1Z0VdZ/hKqqoooo6EvXQlM0a9by6oooq6g5RK3U/fnp/66ubPur0uqKKKqqo7VFbLlXpm9aBok5b/RdVVFF3ijp9rb/8X7SnD9enrEQVVVRRjw/Ot5aVW0tmUUUVVdQEUQcvFikP9IdCX9Ty4aKKKqqoopbf661B+cUtdSs/RvlwUUUVVdS1/QK8FhAJfiYf1QAAAABJRU5ErkJggg==" alt="Customs Officer portrait">
+      <figcaption>Customs Officer</figcaption>
+    </figure>
+<figure class="wcard">
+      <img class="wface" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJwAAAE4CAIAAAAhIA1WAAAEXklEQVR42u3d0ZHTMBRA0bS2pWwJtEMJlEALFEIBKSB8ZDY7swbzJD3LknzO5MtZnKyvZ4RlYW43AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACHt8cChERVROiaquqIjKuVHVFRVROTdqVt33b/f/voQojbKXSVRRRV0lal3dtyoSVhNVVFEXjrr98+9v9+frVaVuywXrPrKJKqqoV4h6XN2dLVqKKqqooqp72mzRv/cjqqiiLhz1uImk5es2toy8Jaqoos4eNfJWVpWiOaadz7pg1LIxVVRRRR046jZYUd0OVzJTz/6nzRYVXdKIKqqoA0f9nAn6WNhXFLVny6mvbY6bvhdVVFEnjbptubPA+pR/bxOqO/yi8K4zSqKKKurAUYtaRnb9+8f35+vx6+fz1bglMurX/RbLXtKIKqqoU00+bI9C5Pj+5TNKyhXtJzTuLjqmVoYXVVRRZ4i6VTcWRuqmnwE7X377ElVUUUUdIerOr1o3qhWdE0X7qWsZeUtUUUUVtX/UyDj3euseUDSmFu0wEiPyM3WDtKiiiirqQWNqZATdHuidtyJ7Ltrhzp4jURuvkUQVVVRRD5pRSm9QNKY2niWRM7LxCu3cqHX3tkUVVdQpotYdqZ4zSo2z/1OPqZGEoooq6lxR61b4Re5WNu4na1XiIBNJoooqqqhfou7cd0xfxdJhS9EVmqiiiirqCGNqXZWsK5CimaC6c+s2BlFFFVXUihmlyP3LnqNj1srvZe+niiqqqJOvfIgc8ay7no1j6mgjqKiiiipq7phatK665xWRMVVUUUVde0xNP5odnr4kqqiiirrSmDrsFlFFFVXUi8wopVd5PQ90jTG1w4OvRBVV1EmjDtLylGfejR+1aD+iiirqXFHTW6bfK607/xa7gIl8hKiiijpX1KznMr9sn8Sx84i6rHPrOtNGrYu5RRVV1GGi1pXbaVkUdSdz4/qY1eboi8ZUUUUVdaqoox27C84f5Z8Boooq6gxRG49m1phq7aCoooq6dtTXqpGs2fbjZpQq/0fVt/vz9fk/W39sWXaOSVRRRZ0hauQ3PG49X9aet+W2tj8zY9TIDkUVVdQpohb9znUrDrOe+Fw0Xka2zHiRI6qooi4TNXIUGus2jql1LSMmilq0Z1FFFXWKqEXXANvD0eFp+EXj5apRK/+iJKqoos4ZtW4uJuu5G+ktz51RElVUUUWtiNphdqbos+q+4fIzSntHU1RRRR0vaodjl74l6/tMvb6wdZpQVFFFPTtqhyuHrHJZ4+65UTusLxRVVFGniNqzQZ3jvo+ooooq6ghj6mjXLR3OpNsYRBVVVFH7X7f0bDnIjFKPySZRRRV13ajDGv9+ao+V36KKKuoMUc+dLTp31um2KlFFFXUGE80fpV//iCqqqKKOEPU6LUUVVVRRx4x6HaKKKqqo5/kDe0trRNGWfuIAAAAASUVORK5CYII=" alt="Sailor portrait">
+      <figcaption>Sailor</figcaption>
+    </figure></div>
+    </div><div class="wgroup">
+      <h3 class="wvenue">Stock Exchange</h3>
+      <div class="wrow"><figure class="wcard">
+      <img class="wface" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJwAAAE4CAIAAAAhIA1WAAAEv0lEQVR42u3dvW3cMBiAYa2a0mUGSJsBUqbwAClTZoUMkgEygAPkABXh+QtJUT8f9bxQZd+dfXoMEORR8rJIkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJ+ttbV84bVEHVAYRQoQqqzrWEClVQdYolVKiCqiNXi6BCFVQdYFnzLScZqqAKKlSoUKFCFVRBhbrHGj1UqIIqYypUqFChQhVUQdWy5yZCqFAFVVChQoUKFaqgCqq2o9a8jpMMVVAFFSpUqFBToza9spMMVblQOU84pkKFqlSodKEKKtRzUenmQm37YSSgKgNqn+7vQUFtvZ0oVKhQ50Ot0V0xvn/+NOSYTPfQ3YRQoUKdDrV8fpNlOXDeRxcqVKhQh6CWL9Qnt/HBUKFChXpb1EB340xmMuarfJ4KFSrUnKg1v32N3JeXl8exET7R/AcqVKhQ63cTblxIKuXWrwRHMF4Gjwm+lRq16ZWhQoWaFLUcFGt0A8sArEm35sHlMQfqsAukoEKFej3UtfK81KDWYPRZ1jxr+jEVKlSo86GWc5Lg/PbpHnnceUVpCSaaUKFCvR5qsCgzanANjrefPx7Hr29fH8fGecv0qFXX0kCFCjUVatNJDH7p4FmrXGk5Svc+qJE3VKhQM6DuN7uokWv6SmpLqFChQt0JtZxUlCptb75llE10UQ1UqFChdqA2bRksVdY3tnGUTa0LFSpUqFvG1JrV/9KyHC9HjbL3uZYGKlSopjT1q/YbLYOROOO9R4d/jPrk81SoUKGmQt2497p8VjAnKfcyBio1r5Oo/fZwQ4UKNRdqzeSkPJs1d+KoseybySyZ228TIVSoUJOilk59O0uCZ/WhjtoNs/Hz3cuuKD2Z0kCFCjUDavARadMOv6aZzA0tR01pqsZUqFChJkcdfjY3GtT8lVzW8tDPU6FChZoKNVjHP1e3HGVTrzpBhQoVasd2lqYRaz/dUftjoEKFCvXiY2rNTsEPH3//cxywNpTxE1aoUKFCfe82dn3XyQSop8x/oEKFCjXvgn7NbZ371tZHzYie/NDX18cxq+XWz1OhQoV6GdTgv0T37fM+cq/JSlgek6FGhOVuQqhQoWZALauxbNpxmHHP32WH0s6th1ChQk2FGqz1r485cjdh+Rte9v4dB1ww0zmmQoUK9cKogW5w7k7Rvc8afduKElSoUJOjlrrBY865uub9FaVzl5beTg0qVKjToDZ1im7AfJ/hFipUqElRm07Hen5rtvHZTXjatAcqVKizoAZnMzhOGXfvgxot6EOFCjUV6nCDGmar/1ChQoV65Jxk+IxouXz7LQFChQp1PtQDZiBz/HuS/VBrNq9AhQp1PtQDdJfbBBUqVKj/RS3viDRcd7lfUKFChboFdZTuk/d81TtxTLKiBBUq1Jyow1edbog6SrdtNyFUqFDnRW3Sjd5q19AOFSpUqOlQg1NWg9q36gR1V12oUKHeHDXQhbqrLlSoUO+JunFJ6IAfMT0zVKhQk6JGF9V0nfGmQRHqgKBChTod6n7TniP/bqBChQo1C+pwFahQoULVxlNWPhgqVKhQoVb0B5Dg1juY+O9HAAAAAElFTkSuQmCC" alt="Trader portrait">
+      <figcaption>Trader</figcaption>
+    </figure></div>
+    </div><div class="wgroup">
+      <h3 class="wvenue">Marketplace</h3>
+      <div class="wrow"><figure class="wcard">
+      <img class="wface" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJwAAAE4CAIAAAAhIA1WAAAEVElEQVR42u3csXkTMRiA4azGKJQpGYCWASgpKCgpKVmBQRggAxyFY1MoCEknnfTfve/jyjZOcp8ffkt3ydMTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFNvuHApREZUpUdUVFVGZG1VdURGVuVHVFRVRmRtVXVERlblRS+q+FHDYRUVUtn0yLR1bURGVcVFL6lZRRFREFbVtR+nz83PDTXhREVXUkofayvXqrZqooop6pqjpmmS1umlm+UQVVdQTSI/dslEzdfUWVVRRF5euEzLHLmJdUUUVVdQoEzR01JNtPzWe0hZVVFFPFzWtu/P/88wrX3C4druiSFRRRT1d1APKVe1wlXw/69fdehNVVFFDRC3ZSGobpTsf+v39y+2WPrnkOetH3YYRVVRRQ0Rtm4WPo7n9+nm7ZQ79j08fb7fMc97YtCp45cxz1q/b61f3RRVV1EtFfRzNdKqlMs9Jq3SfqatF3dmy5CFRRRX1xFHTmXrAPSXviQtGHfhBSVRRRV0vaqZB7uc5sHeaOXTUOUsaUUUVdXbUqpZHTtmS7+dkUbstaUQVVdRQUdtalvyobfOybYfLjpKooooaLmrbVCv5O3SZKlV/z67qDIEljaiiiholalvL9PtIH8q8ctvrLDt3t/FEFVXU80Wt2luvipG+TlvUkplatdYSVVRRRR0UNXMhyM6VTNtOUNt1ilXXvpx/pooqqqgRopZcD73audKq99Zqe/2iiiqqqLeomVm4yDXcmSqZe+auW0QVVVRRy5c0bauC7evX19v9occ9mV2endcg/v1X96+Vfj87r49ZtmXJlxBVVFFjRW2bc2nLXO9h+1BVU3ZK3e5XbBeFF1VUUReOWrVyyMzUnce32z01UzbiAqboakJRRRU1QtTGlvuO5pTzskfO1O1AbyxpRBVV1AhRq64RGXeOs+Q3cEoeGve+WWWPvmSmiiqqqBGifrubUvcAp5+poooqatCoO49L9+tRupeb+94SVVRRRf1v1PfvXv5161X3gDm3yI7SIntMoooq6spRMy3H1b3g79KM274XVVRRg0bNqMo8t1zVFYdziSqqqKK+ztQPL7dbZmc/0/LIfajVrlk5MmrVK4sqqqghoj5apnUf97QlnNL7aXlHzFRRRRU15qffkntKlhBTDn3bO1JUUUUVdc2Z2jZ3u4/JzMZWr08GoaPm3tqiiirqelF3tiyZu70WJ20tqz4ZRDyxWrRNKKqooq4Xddz/wztPtRad6I3TclzdQ4erqKKK2vG638Valuw6vbGqidNSVFFFFXX03u8iM/X0Z1hFFVXUoFHHtdx5OUv3mXqdKSuqqKKGiHpky15yv95ziim7M7OooooaImqglifbURp5gEQVVdQArjNTRRVVVFHjztRFJpaZKqqool52pi7SW0tRRRU1rD8T6YE5Vwc9MwAAAABJRU5ErkJggg==" alt="Urchin portrait">
+      <figcaption>Urchin</figcaption>
+    </figure></div>
+    </div>
+  </section>
+
+  <footer>
+    <b>How it reads.</b> In each city you investigate up to three venues; each holds one witness whose tip — a flag, a landmark, a currency, a food — points to the crook's next stop. Chase the trail city to city, file the warrant on the right suspect, and make the arrest before the Sunday 5&nbsp;p.m. deadline.<br>
+    Captured live from DOSBox-X · art &copy; its original publisher, shown here as a research reference for a fan walkthrough.
+  </footer>
+</div>

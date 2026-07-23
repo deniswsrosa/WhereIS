@@ -9,7 +9,7 @@ import com.acme.carmen.data.GameData
 import com.acme.carmen.data.Suspect
 import kotlin.random.Random
 
-enum class Phase { TITLE, SIGN_ON, BRIEFING, CITY, TRAVEL, CRIME, RESULT }
+enum class Phase { INTRO, TITLE, SIGN_ON, BRIEFING, CITY, TRAVEL, CRIME, RESULT }
 
 enum class ClueKind { DESTINATION, TRAIT, DANGER, NONE }
 
@@ -18,7 +18,8 @@ sealed interface Overlay {
     data object About : Overlay
     data object Roster : Overlay
     data object HallOfFame : Overlay
-    data object Dossiers : Overlay
+    /** One suspect's dossier — the white typed-on window from the original's Dossiers menu. */
+    data class Dossier(val suspect: Suspect) : Overlay
     data class Info(val title: String, val lines: List<String>) : Overlay
 }
 
@@ -42,7 +43,7 @@ object Treasures {
 }
 
 data class GameState(
-    val phase: Phase = Phase.TITLE,
+    val phase: Phase = Phase.INTRO,
     val detectiveName: String = "",
     val rankIndex: Int = 0,
     val casesSolved: Int = 0,
@@ -69,6 +70,11 @@ data class GameState(
     val compVehicle: String? = null,
     val warrantFor: Suspect? = null,
     val computed: Boolean = false,
+    // travel animation: destination while the red route line is being drawn (null = not flying)
+    val flying: String? = null,
+    val flightHours: Int = 0,
+    // the culprit was sighted on arrival (close behind) — city screen runs the burglar animation
+    val sighting: Boolean = false,
     // result
     val won: Boolean = false,
     val resultLines: List<String> = emptyList(),
@@ -88,6 +94,7 @@ class CarmenViewModel : ViewModel() {
         private set
 
     // ---------- flow ----------
+    fun introDone() { if (s.phase == Phase.INTRO) s = s.copy(phase = Phase.TITLE) }
     fun start() { s = s.copy(phase = Phase.SIGN_ON) }
 
     fun signOn(name: String) {
@@ -96,18 +103,31 @@ class CarmenViewModel : ViewModel() {
         newCase()
     }
 
+    /**
+     * Sign-on used by the HQ printer teletype: register the detective name and generate the
+     * first case, but stay on the SIGN_ON screen so the same printer keeps printing the
+     * briefing (faithful to the original — the computer never switches to a different UI).
+     */
+    fun signOnStart(name: String) {
+        val nm = name.trim().ifBlank { "Gumshoe" }
+        s = GameState(phase = Phase.SIGN_ON, detectiveName = nm)
+        newCase()                          // newCase() flips phase to BRIEFING...
+        s = s.copy(phase = Phase.SIGN_ON)  // ...keep the printer on-screen until "begin"
+    }
+
     fun beginInvestigation() { s = s.copy(phase = Phase.CITY) }
 
     // ---------- navigation ----------
     fun gotoCity() { s = s.copy(phase = Phase.CITY) }
     fun gotoTravel() { s = s.copy(phase = Phase.TRAVEL) }
-    fun gotoCrime() { autoFillFromClues(); s = s.copy(phase = Phase.CRIME) }
+    // The player fills in the suspect's description themselves — the computer is not pre-populated.
+    fun gotoCrime() { s = s.copy(phase = Phase.CRIME) }
 
     // ---------- menu bar ----------
     fun openOverlay(o: Overlay) { s = s.copy(overlay = o) }
     fun dismissOverlay() { s = s.copy(overlay = null) }
     fun menuNewCase() { s = s.copy(overlay = null, phase = Phase.BRIEFING); newCase() }
-    fun menuQuitToTitle() { s = GameState() }
+    fun menuQuitToTitle() { s = GameState(phase = Phase.TITLE) }
     fun toggleSound() {
         val on = !s.soundOn
         s = s.copy(soundOn = on, overlay = Overlay.Info("SOUND",
@@ -180,7 +200,10 @@ class CarmenViewModel : ViewModel() {
     private fun buildVenues() {
         val st = s
         val places = GameData.venues.shuffled().take(3)
-        val occs = GameData.occupations.shuffled()
+        // each venue is staffed by one of its own witnesses (Harbor -> Sailor etc., like the original)
+        val occs = places.map { p ->
+            (GameData.venueOccupations[p] ?: GameData.occupations).random()
+        }
         val list = mutableListOf<Venue>()
         val onTrack = st.currentCity == st.route.getOrNull(st.progress) && st.onTrack
 
@@ -269,7 +292,8 @@ class CarmenViewModel : ViewModel() {
         if (index !in s.visited) {
             var st = s
             if (v.kind == ClueKind.TRAIT) st = st.copy(revealedCount = st.revealedCount + 1)
-            st = st.copy(clock = st.clock + 1, visited = st.visited + index)
+            // a venue visit costs 2 hours (original: Monday 1 p.m. -> 3 p.m.)
+            st = st.copy(clock = st.clock + 2, visited = st.visited + index)
             s = st
         }
         s = s.copy(openClue = v)
@@ -277,6 +301,9 @@ class CarmenViewModel : ViewModel() {
     }
 
     fun closeClue() { s = s.copy(openClue = null) }
+
+    /** The sighting animation has been shown once; don't repeat it. */
+    fun sightingShown() { s = s.copy(sighting = false) }
 
     // ---------- travel ----------
     fun travelOptions(): List<String> {
@@ -287,14 +314,25 @@ class CarmenViewModel : ViewModel() {
         return (decoys + correct).shuffled()
     }
 
+    /** Start the flight: the travel screen animates the red route line, then calls arrive(). */
     fun travelTo(city: String) {
+        if (s.flying != null) return
+        // flights cost a few hours (original: New Delhi -> Kathmandu = 2h); scale with distance a little
+        val cost = Random.nextInt(2, 6)
+        s = s.copy(flying = city, flightHours = cost)
+    }
+
+    /** Flight animation finished: apply the arrival. */
+    fun arrive() {
+        val city = s.flying ?: return
         val correct = s.route.getOrNull(s.progress + 1)
-        val cost = Random.nextInt(10, 25)
-        var st = s.copy(clock = s.clock + cost)
+        var st = s.copy(clock = s.clock + s.flightHours, flying = null, flightHours = 0)
         if (city == correct) {
             st = st.copy(progress = st.progress + 1, currentCity = city, onTrack = true)
+            // the culprit is sighted when you arrive close behind (last cities of the trail)
+            st = st.copy(sighting = st.progress >= st.route.size - 2 && city != st.hideout)
         } else {
-            st = st.copy(currentCity = city, onTrack = false)
+            st = st.copy(currentCity = city, onTrack = false, sighting = false)
         }
         s = st
         if (s.deadlinePassed) { escaped("time"); return }
@@ -321,25 +359,27 @@ class CarmenViewModel : ViewModel() {
         (s.compVehicle == null || su.tVehicle == s.compVehicle)
     }
 
-    fun compute() { s = s.copy(computed = true) }
+    /**
+     * Run the crime computer. Faithful to the original: the printer prints the matching
+     * suspects, and when the description narrows to exactly one, Interpol automatically
+     * issues the arrest warrant ("You now have a warrant to arrest X.").
+     */
+    fun compute() {
+        var st = s.copy(computed = true, clock = s.clock + 1)
+        val m = GameData.suspects.filter { su ->
+            (st.compSex == null || su.tSex == st.compSex) &&
+            (st.compHobby == null || su.tHobby == st.compHobby) &&
+            (st.compHair == null || su.tHair == st.compHair) &&
+            (st.compFeature == null || su.tFeature == st.compFeature) &&
+            (st.compVehicle == null || su.tVehicle == st.compVehicle)
+        }
+        if (m.size == 1 && anyFilterSet()) st = st.copy(warrantFor = m.first())
+        s = st
+        checkDeadline()
+    }
 
     fun anyFilterSet(): Boolean =
         listOf(s.compSex, s.compHobby, s.compHair, s.compFeature, s.compVehicle).any { it != null }
-
-    fun issueWarrant(su: Suspect) { s = s.copy(warrantFor = su, phase = Phase.CITY) }
-
-    /** Pre-fill the computer with what witnesses have revealed. */
-    fun autoFillFromClues() {
-        var st = s
-        s.revealedTraits.forEach { (cat, v) ->
-            st = when (cat) {
-                "sex" -> st.copy(compSex = v); "hobby" -> st.copy(compHobby = v)
-                "hair" -> st.copy(compHair = v); "feature" -> st.copy(compFeature = v)
-                else -> st.copy(compVehicle = v)
-            }
-        }
-        s = st.copy(computed = true)
-    }
 
     // ---------- endings ----------
     private fun checkDeadline() { if (s.deadlinePassed) escaped("time") }
@@ -401,8 +441,8 @@ class CarmenViewModel : ViewModel() {
     fun toBriefingForNext() { s = s.copy(phase = Phase.BRIEFING); newCase() }
 
     // ---------- time formatting ----------
-    fun clockLabel(): String {
-        val total = 9 + s.clock
+    fun clockLabel(offsetHours: Int = 0): String {
+        val total = 9 + s.clock + offsetHours
         val day = (total / 24).coerceIn(0, 6)
         val hour = total % 24
         val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
