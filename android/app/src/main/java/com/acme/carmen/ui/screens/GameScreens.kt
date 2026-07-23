@@ -93,32 +93,36 @@ private const val PAPER_H = 45f
 
 private val SIGN_ON_PROMPT = listOf("Detective at keyboard,", "please identify yourself:")
 
-private fun briefingLines(s: com.acme.carmen.game.GameState): List<String> = listOf(
-    GameData.FLASH,
-    GameData.TREASURE_STOLEN.replace("%s", s.currentCity),
-    GameData.TREASURE_ID.replace("%s", s.treasure),
-    "Your assignment: recover the",
-    "loot and arrest the thief.",
-    GameData.DEADLINE,
-    "Good luck, ${GameData.ranks[s.rankIndex]} ${s.detectiveName}.",
-)
-
 @Composable
 fun SignOnScreen(vm: CarmenViewModel) = HqPrinterScreen(vm, promptForName = true) { vm.beginInvestigation() }
 
 @Composable
 fun BriefingScreen(vm: CarmenViewModel) = HqPrinterScreen(vm, promptForName = false) { vm.beginInvestigation() }
 
+/* Sign-on + briefing stages, following the original beat for beat:
+ * identify yourself → (new name) "There is no record ... Are you new here? (Y/N)" with
+ * Yes/No buttons → "You have been identified ... Your current rank is Rookie." →
+ * FLASH / treasure segment → assignment / deadline segment → city. Between segments the
+ * game waits with "Press any key or button to continue." printed under the right panel. */
+private const val ST_PROMPT = 0      // typing the identify-yourself prompt
+private const val ST_NAME = 1        // awaiting name input
+private const val ST_NEW_Q = 2       // typing the no-record + are-you-new question
+private const val ST_YESNO = 3       // waiting on the Yes/No buttons
+private const val ST_IDENT = 4       // typing the identified + rank lines
+private const val ST_GATE1 = 5       // press any key -> flash segment
+private const val ST_FLASH = 6       // typing FLASH + treasure
+private const val ST_GATE2 = 7       // press any key -> assignment segment
+private const val ST_ASSIGN = 8      // typing assignment + deadline
+private const val ST_BEGIN = 9       // press any key -> investigation
+
 @Composable
 private fun HqPrinterScreen(vm: CarmenViewModel, promptForName: Boolean, onBegin: () -> Unit) =
     // While the name is being typed, keep the paper's bottom edge above the keyboard by panning
     // the whole (full-size) scene up — the scene never shrinks.
     VirtualScreen(keepVirtualYAboveIme = PAPER_Y + PAPER_H) { v ->
-    // Teletype state
     val printed = remember { mutableStateListOf<String>() }
     var typing by remember { mutableStateOf("") }
-    // stage: 0 typing prompt · 1 awaiting name · 2 typing briefing · 3 done (tap to begin)
-    var stage by remember { mutableStateOf(if (promptForName) 0 else 2) }
+    var stage by remember { mutableStateOf(if (promptForName) ST_PROMPT else ST_FLASH) }
     var input by remember { mutableStateOf("") }
     val scroll = rememberScrollState()
     val focus = remember { FocusRequester() }
@@ -132,26 +136,49 @@ private fun HqPrinterScreen(vm: CarmenViewModel, promptForName: Boolean, onBegin
         }
     }
 
-    // Segment 1: the identify-yourself prompt (first case only).
-    LaunchedEffect(Unit) {
-        if (promptForName) { typeLines(SIGN_ON_PROMPT); stage = 1 }
-    }
-    // Segment 2: the case briefing (both cases). For sign-on this runs after the name is entered.
     LaunchedEffect(stage) {
-        if (stage == 2) { typeLines(briefingLines(vm.s)); stage = 3 }
+        when (stage) {
+            ST_PROMPT -> { typeLines(SIGN_ON_PROMPT); stage = ST_NAME }
+            ST_NEW_Q -> {
+                typeLines(listOf("", "There is no record of", "your name on Interpol", "files.",
+                    "", "Are you new here?", "(Y/N)"))
+                stage = ST_YESNO
+            }
+            ST_IDENT -> {
+                typeLines(listOf("", "You have been", "identified, ${vm.s.detectiveName}.",
+                    "", "Your current rank", "is ${GameData.ranks[vm.s.rankIndex]}."))
+                stage = ST_GATE1
+            }
+            ST_FLASH -> {
+                val s = vm.s
+                typeLines(listOf(GameData.FLASH, "",
+                    GameData.TREASURE_STOLEN.replace("%s", s.currentCity), "",
+                    GameData.TREASURE_ID.replace("%s", s.treasure)))
+                stage = ST_GATE2
+            }
+            ST_ASSIGN -> {
+                val s = vm.s
+                val her = if (s.culprit?.sex == "Female") "her" else "his"
+                val herObj = if (s.culprit?.sex == "Female") "her" else "him"
+                typeLines(listOf("", "Your assignment:",
+                    GameData.ASSIGNMENT.replaceFirst("%s", s.currentCity)
+                        .replaceFirst("%s", her).replaceFirst("%s", herObj),
+                    "", GameData.DEADLINE))
+                stage = ST_BEGIN
+            }
+        }
     }
-    // Keep the paper scrolled to the freshly printed line (and to the name as it's typed, and to
-    // the final "press any key" prompt when it appears at stage 3).
     LaunchedEffect(printed.size, typing, input, stage) { scroll.animateScrollTo(scroll.maxValue) }
-    // Focus the (invisible) input so the keyboard appears when it's time to type a name.
-    LaunchedEffect(stage) { if (stage == 1) focus.requestFocus() }
+    LaunchedEffect(stage) { if (stage == ST_NAME) focus.requestFocus() }
 
     val paperFont = v.text(7, color = Vga.Black)
 
     PixelImage("hq_screen", Modifier.fillMaxSize())
-    // Whole screen is tappable once printing is done → begin the investigation.
-    if (stage == 3) {
-        Box(Modifier.fillMaxSize().clickable { onBegin() })
+    // gate stages: whole screen tappable to advance (like "press any key or button")
+    when (stage) {
+        ST_GATE1 -> Box(Modifier.fillMaxSize().clickable { stage = ST_FLASH })
+        ST_GATE2 -> Box(Modifier.fillMaxSize().clickable { stage = ST_ASSIGN })
+        ST_BEGIN -> Box(Modifier.fillMaxSize().clickable { onBegin() })
     }
     // Clean sheet overlay covering the baked prompt, hosting the live printout.
     v.At(PAPER_X, PAPER_Y, PAPER_W, PAPER_H) {
@@ -161,42 +188,58 @@ private fun HqPrinterScreen(vm: CarmenViewModel, promptForName: Boolean, onBegin
         ) {
             printed.forEach { Text(it, style = paperFont) }
             if (typing.isNotEmpty()) Text(typing, style = paperFont)
-            when (stage) {
-                1 -> BasicTextField(
-                    value = input,
-                    onValueChange = { input = it.take(18).filter { c -> c != '\n' } },
-                    singleLine = true,
-                    textStyle = paperFont,
-                    cursorBrush = SolidColor(Vga.Black),
-                    // flagNoExtractUi: keep the keystrokes on the printer paper instead of
-                    // Android's fullscreen landscape text editor.
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Done,
-                        platformImeOptions = PlatformImeOptions("flagNoExtractUi"),
-                    ),
-                    keyboardActions = KeyboardActions(onDone = {
-                        val nm = input.trim().ifBlank { "Gumshoe" }
-                        printed.add(nm)
-                        input = ""
-                        vm.signOnStart(nm)   // generate the case, stay on the printer
-                        stage = 2
-                    }),
-                    modifier = Modifier.fillMaxWidth().focusRequester(focus)
-                )
-                3 -> BlinkingLine(v, "press any key to begin")
-            }
+            if (stage == ST_NAME) BasicTextField(
+                value = input,
+                onValueChange = { input = it.take(18).filter { c -> c != '\n' } },
+                singleLine = true,
+                textStyle = paperFont,
+                cursorBrush = SolidColor(Vga.Black),
+                // flagNoExtractUi: keep the keystrokes on the printer paper instead of
+                // Android's fullscreen landscape text editor.
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    platformImeOptions = PlatformImeOptions("flagNoExtractUi"),
+                ),
+                keyboardActions = KeyboardActions(onDone = {
+                    val nm = input.trim().ifBlank { "Gumshoe" }
+                    printed.add(nm)
+                    input = ""
+                    vm.signOnStart(nm)   // generate the case, stay on the printer
+                    stage = ST_NEW_Q
+                }),
+                modifier = Modifier.fillMaxWidth().focusRequester(focus)
+            )
             // Trailing gap so the freshly printed line always clears the printer's front lip.
             Spacer(Modifier.height(v.w(3)))
         }
     }
+    // "Press any key or button to continue." under the right panel, like the original
+    if (stage == ST_GATE1 || stage == ST_GATE2 || stage == ST_BEGIN) {
+        v.At(150, 163, 166, 30, Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Press any key or", style = v.text(9.5f, color = Vga.Black, bold = true))
+                Text("button to continue.", style = v.text(9.5f, color = Vga.Black, bold = true))
+            }
+        }
+    }
+    // Yes / No buttons (yellow, red text) for "Are you new here?"
+    if (stage == ST_YESNO) {
+        v.At(152, 176, 76, 14) {
+            YellowButton(v, "Yes") { printed.add("Y"); stage = ST_IDENT }
+        }
+        v.At(243, 176, 62, 14) {
+            // "No" re-asks for the name, like the original
+            YellowButton(v, "No") { printed.add("N"); printed.add(""); stage = ST_PROMPT }
+        }
+    }
 }
 
-/** A printed line that ends in a blinking block cursor — the "waiting" prompt. */
 @Composable
-private fun BlinkingLine(v: Virtual, text: String) {
-    var on by remember { mutableStateOf(true) }
-    LaunchedEffect(Unit) { while (true) { delay(450); on = !on } }
-    Text(text + if (on) " █" else "  ", style = v.text(7, color = Vga.Black))
+private fun YellowButton(v: Virtual, label: String, onClick: () -> Unit) {
+    Box(Modifier.fillMaxSize().background(Vga.Yellow).border(BorderStroke(v.w(1), Vga.Black))
+        .clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+        Text(label, style = v.text(9, color = Vga.Red, bold = true))
+    }
 }
 
 /* ----------------------------- CITY ----------------------------- */
