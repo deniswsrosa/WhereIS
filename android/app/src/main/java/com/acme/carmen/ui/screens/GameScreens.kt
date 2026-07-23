@@ -1012,14 +1012,20 @@ fun CrimeScreen(vm: CarmenViewModel) = VirtualScreen { v ->
  * "Press any key or button to continue." advances to the next case.
  */
 @Composable
-fun ResultScreen(vm: CarmenViewModel) = VirtualScreen { v ->
+fun ResultScreen(vm: CarmenViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f) { v ->
     val s = vm.s
     val printed = remember { mutableStateListOf<String>() }
     var typing by remember { mutableStateOf("") }
-    var done by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        for (line in s.resultLines) {
-            for (piece in paperWrap(line, 20)) {
+    // 0 typing report · 1 typing quiz · 2 quiz input · 3 typing verdict/ready · 4 Yes/No
+    var stage by remember { mutableStateOf(0) }
+    var input by remember { mutableStateOf("") }
+    val quiz = remember { GameData.promotionQuiz.random() }
+    val focus = remember { FocusRequester() }
+    val done = stage >= 4
+
+    suspend fun typeAll(lines: List<String>, width: Int = 20) {
+        for (line in lines) {
+            for (piece in paperWrap(line, width)) {
                 typing = ""
                 for (ch in piece) { typing += ch; delay(14) }
                 printed.add(piece); typing = ""
@@ -1027,10 +1033,42 @@ fun ResultScreen(vm: CarmenViewModel) = VirtualScreen { v ->
             }
             printed.add("")
         }
-        done = true
+    }
+    LaunchedEffect(Unit) {
+        typeAll(s.resultLines)
+        if (s.pendingPromotion) {
+            typeAll(listOf(
+                "Use the World Almanac and Book of Facts to help you find the missing word in the following sentence:",
+                quiz.first,
+            ))
+            stage = 2
+        } else {
+            typeAll(listOf("Ready for your next case, ${s.detectiveName}?"))
+            stage = 4
+        }
+    }
+    LaunchedEffect(stage) {
+        if (stage == 3) {
+            val correct = input.trim().equals(quiz.second, ignoreCase = true)
+            vm.resolvePromotion(correct)
+            if (correct) {
+                typeAll(listOf(
+                    "Your new rank is: ${GameData.ranks[vm.s.rankIndex]}.",
+                    "${vm.casesToNextPromotion()} more cases until your next promotion.",
+                ))
+            } else {
+                typeAll(listOf(
+                    "I'm sorry, that is not correct.",
+                    "Your promotion will have to wait, ${s.detectiveName}.",
+                ))
+            }
+            typeAll(listOf("Ready for your next case, ${s.detectiveName}?"))
+            stage = 4
+        }
+        if (stage == 2) focus.requestFocus()
     }
     val scroll = rememberScrollState()
-    LaunchedEffect(printed.size, typing) { scroll.animateScrollTo(scroll.maxValue) }
+    LaunchedEffect(printed.size, typing, input, stage) { scroll.animateScrollTo(scroll.maxValue) }
 
     v.At(0, 0, 320, 11) { GameMenuBar(v, vm) }
     // city name box
@@ -1065,6 +1103,22 @@ fun ResultScreen(vm: CarmenViewModel) = VirtualScreen { v ->
                     Column(Modifier.fillMaxSize().padding(start = v.w(8), end = v.w(7), top = v.w(2)),
                         verticalArrangement = Arrangement.Bottom) {
                         shown.forEach { Text(it, style = v.text(6.8f, color = Vga.Black), maxLines = 1) }
+                        // promotion-quiz answer typed directly onto the paper
+                        if (stage == 2) BasicTextField(
+                            value = input,
+                            onValueChange = { input = it.take(18).filter { c -> c != '\n' } },
+                            singleLine = true,
+                            textStyle = v.text(6.8f, color = Vga.Black),
+                            cursorBrush = SolidColor(Vga.Black),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Done,
+                                platformImeOptions = PlatformImeOptions("flagNoExtractUi"),
+                            ),
+                            keyboardActions = KeyboardActions(onDone = {
+                                if (input.isNotBlank()) { printed.add(input); stage = 3 }
+                            }),
+                            modifier = Modifier.fillMaxWidth().focusRequester(focus)
+                        )
                         Spacer(Modifier.height(v.w(3)))
                     }
                 }
@@ -1077,14 +1131,10 @@ fun ResultScreen(vm: CarmenViewModel) = VirtualScreen { v ->
             if (s.won) PixelImage("jail_cell", Modifier.fillMaxSize())
         }
     }
+    // "Ready for your next case?" -> the original's yellow Yes/No buttons
     if (done) {
-        v.At(150, 174, 168, 24, Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Press any key or", style = v.text(9.5f, color = Vga.White, bold = true))
-                Text("button to continue.", style = v.text(9.5f, color = Vga.White, bold = true))
-            }
-        }
-        Box(Modifier.fillMaxSize().clickable { vm.toBriefingForNext() })
+        v.At(152, 176, 76, 14) { YellowButton(v, "Yes") { vm.toBriefingForNext() } }
+        v.At(243, 176, 62, 14) { YellowButton(v, "No") { vm.menuQuitToTitle() } }
     }
     OverlayHost(v, vm)
 }

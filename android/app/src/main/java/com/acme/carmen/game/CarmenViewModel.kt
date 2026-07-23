@@ -78,6 +78,8 @@ data class GameState(
     // result
     val won: Boolean = false,
     val resultLines: List<String> = emptyList(),
+    // a promotion was earned and awaits the almanac quiz (original: "one more clue to unravel")
+    val pendingPromotion: Boolean = false,
     // ui
     val overlay: Overlay? = null,
     val soundOn: Boolean = true,
@@ -428,16 +430,27 @@ class CarmenViewModel : ViewModel() {
         }
         lines += "We here at Interpol thank you for your good work on this case."
         val newCases = s.casesSolved + 1
-        var newRank = s.rankIndex
-        // promotions come quickly at first (a promotion after the very first case, like the
-        // original), then every other case
-        val promote = newRank < GameData.ranks.lastIndex && (newCases == 1 || newCases % 2 == 1)
+        // promotion cadence observed in the original: after case 1, then "four more cases
+        // until your next promotion" — thresholds 1, 5, 9, 13
+        val promote = s.rankIndex < GameData.ranks.lastIndex && newCases in setOf(1, 5, 9, 13)
         if (promote) {
-            newRank++
             lines += "Good job, ${s.detectiveName}, you have earned a promotion."
-            lines += "Your new rank is: ${GameData.ranks[newRank]}."
+            lines += "Before you are promoted you have one more clue to unravel."
         }
-        s = s.copy(phase = Phase.RESULT, won = true, casesSolved = newCases, rankIndex = newRank, resultLines = lines)
+        s = s.copy(phase = Phase.RESULT, won = true, casesSolved = newCases,
+            resultLines = lines, pendingPromotion = promote)
+    }
+
+    /** The promotion quiz was answered: bump the rank only when correct (like the original). */
+    fun resolvePromotion(correct: Boolean) {
+        val newRank = if (correct && s.rankIndex < GameData.ranks.lastIndex) s.rankIndex + 1 else s.rankIndex
+        s = s.copy(rankIndex = newRank, pendingPromotion = false)
+    }
+
+    /** Cases remaining until the next promotion threshold (1, 5, 9, 13). */
+    fun casesToNextPromotion(): Int {
+        val next = listOf(1, 5, 9, 13).firstOrNull { it > s.casesSolved } ?: return 0
+        return next - s.casesSolved
     }
 
     private fun escaped(reason: String) {
