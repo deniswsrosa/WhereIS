@@ -21,3 +21,7 @@ work/witness_variations/raw/
 work/witness_variations/raw_v1_rejected/
 work/witness_variations/processed_v1_rejected/
 generated_imgs/
+
+# Burglar-verification raw frame dumps (~600 near-duplicate screenshots per burst);
+# the curated evidence (FILMSTRIP.png, distinct_poses/, native_frames/) is tracked
+work/burglar_snapshots/*/f[0-9]*.png
