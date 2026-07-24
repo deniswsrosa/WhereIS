@@ -213,7 +213,7 @@ private fun DossierWindow(v: Virtual, su: Suspect, onClose: () -> Unit) {
                                 val slug = "suspect_" + su.name.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')
                                 // 61x75: the capture's bottom 5 rows were baked page-rule bars,
                                 // cropped out of the assets
-                                if (drawableId(slug) != 0)
+                                if (spriteExists(slug))
                                     PixelImage(slug, Modifier.size(v.w(61), v.w(75)))
                                 else Box(Modifier.size(v.w(61), v.w(75)).background(Vga.DarkGray))
                             }

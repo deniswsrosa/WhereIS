@@ -602,7 +602,7 @@ private fun WitnessPanel(v: Virtual, clue: Venue, onDone: () -> Unit) {
                 // DOS witness bust ≈ 30-40 virtual wide × ~46 tall (measured from
                 // dos_witness_waiter_layout). Fit the portrait inside that box so the
                 // (taller-than-wide) art doesn't render oversized and eat the panel.
-                if (drawableId(portrait) != 0) {
+                if (spriteExists(portrait)) {
                     PixelImage(portrait, Modifier.size(v.w(40), v.w(48)), ContentScale.Fit,
                         alignment = Alignment.BottomStart)
                 } else {
@@ -707,7 +707,7 @@ private fun InvestigatePicker(v: Virtual, venues: List<Venue>, visited: Set<Int>
                     Box(Modifier.width(v.w(52)).fillMaxHeight().clickable { selected = i; onPick(i) }
                         .padding(bottom = v.w(lift)),
                         contentAlignment = Alignment.BottomCenter) {
-                        if (drawableId(asset) != 0) {
+                        if (spriteExists(asset)) {
                             val aspect = drawableAspect(asset, 0.6f)
                             val bw = 48f
                             val bh = (bw * aspect).coerceAtMost(50f)

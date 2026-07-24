@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -88,20 +89,59 @@ fun VirtualScreen(
     }
 }
 
-/** Look up a drawable by resource name; returns 0 if absent. */
+/** Game sprites live under assets/sprites/<category>/<name>.png — real folders, one per
+ *  sprite family (cities, witnesses, suspects, venues, sightings, animations, screens,
+ *  intro, ui). Categories are organisational only: names stay globally unique and every
+ *  lookup goes through this index, so callers keep using bare names. */
+private object Sprites {
+    @Volatile private var index: Map<String, String>? = null
+    private val bitmaps = HashMap<String, androidx.compose.ui.graphics.ImageBitmap?>()
+
+    private fun indexFor(ctx: android.content.Context): Map<String, String> =
+        index ?: synchronized(this) {
+            index ?: buildIndex(ctx).also { index = it }
+        }
+
+    private fun buildIndex(ctx: android.content.Context): Map<String, String> {
+        val m = HashMap<String, String>()
+        val am = ctx.assets
+        for (dir in am.list("sprites").orEmpty()) {
+            for (f in am.list("sprites/$dir").orEmpty()) {
+                if (f.endsWith(".png")) m[f.removeSuffix(".png")] = "sprites/$dir/$f"
+            }
+        }
+        return m
+    }
+
+    fun exists(ctx: android.content.Context, name: String) = indexFor(ctx).containsKey(name)
+
+    fun bitmap(ctx: android.content.Context, name: String): androidx.compose.ui.graphics.ImageBitmap? =
+        synchronized(bitmaps) {
+            bitmaps.getOrPut(name) {
+                indexFor(ctx)[name]?.let { p ->
+                    ctx.assets.open(p).use { s ->
+                        android.graphics.BitmapFactory.decodeStream(s)?.asImageBitmap()
+                    }
+                }
+            }
+        }
+}
+
+/** True if a sprite with this name exists in assets/sprites/<any category>/. */
 @Composable
-fun drawableId(name: String): Int {
+fun spriteExists(name: String): Boolean {
     val ctx = LocalContext.current
-    return remember(name) { ctx.resources.getIdentifier(name, "drawable", ctx.packageName) }
+    return remember(name) { Sprites.exists(ctx, name) }
 }
 
 @Composable
 fun PixelImage(name: String, modifier: Modifier = Modifier, scale: ContentScale = ContentScale.FillBounds,
                alignment: Alignment = Alignment.Center) {
-    val id = drawableId(name)
-    if (id != 0) {
+    val ctx = LocalContext.current
+    val bmp = remember(name) { Sprites.bitmap(ctx, name) }
+    if (bmp != null) {
         Image(
-            painter = androidx.compose.ui.res.painterResource(id),
+            bitmap = bmp,
             contentDescription = name, modifier = modifier, contentScale = scale, alignment = alignment,
         )
     } else {
@@ -111,16 +151,15 @@ fun PixelImage(name: String, modifier: Modifier = Modifier, scale: ContentScale 
     }
 }
 
-/** Aspect ratio (h/w) of a drawable's intrinsic bitmap, or `fallback` if it is missing.
+/** Aspect ratio (h/w) of a sprite's bitmap, or `fallback` if it is missing.
  *  Used to draw sprites at a fixed virtual width with their native proportions, regardless
  *  of the scale the asset was captured at. */
 @Composable
 fun drawableAspect(name: String, fallback: Float = 1f): Float {
-    val id = drawableId(name)
-    if (id == 0) return fallback
-    val painter = androidx.compose.ui.res.painterResource(id)
-    val s = painter.intrinsicSize
-    return if (s.width > 0f && s.height > 0f) s.height / s.width else fallback
+    val ctx = LocalContext.current
+    val bmp = remember(name) { Sprites.bitmap(ctx, name) }
+    return if (bmp != null && bmp.width > 0 && bmp.height > 0)
+        bmp.height.toFloat() / bmp.width.toFloat() else fallback
 }
 
 /** A chunky DOS push-button (used outside the virtual canvas, e.g. dialogs). */
