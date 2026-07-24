@@ -55,7 +55,7 @@ class EndingsTest {
             assertEquals(Phase.RESULT, vm.s.phase)
             assertFalse("no warrant cannot arrest", vm.s.won)
             assertEquals(SoundCue.WRONG_ARREST, vm.soundCue?.second)
-            assertTrue(vm.s.resultLines.any { it.contains("without a warrant") })
+            assertTrue(vm.s.resultLines.any { it.contains("no warrant in hand") })
             assertEquals("a lost case does not count", 0, vm.s.casesSolved)
         }
     }
@@ -72,7 +72,7 @@ class EndingsTest {
             vm.confrontAtHideout()
             assertFalse(vm.s.won)
             assertEquals(SoundCue.WRONG_ARREST, vm.soundCue?.second)
-            assertTrue(vm.s.resultLines.any { it.contains("false arrest") })
+            assertTrue(vm.s.resultLines.any { it.contains("wrongful arrest") })
         }
     }
 

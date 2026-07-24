@@ -107,7 +107,7 @@ private const val PAPER_Y = 98f
 private const val PAPER_W = 98f
 private const val PAPER_H = 45f
 
-private val SIGN_ON_PROMPT = listOf("Detective at keyboard,", "please identify yourself:")
+private val SIGN_ON_PROMPT = listOf("Detective on duty,", "please enter your name:")
 
 @Composable
 fun SignOnScreen(vm: ClaraViewModel) = HqPrinterScreen(vm, promptForName = true) { vm.beginInvestigation() }
@@ -156,13 +156,13 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
         when (stage) {
             ST_PROMPT -> { typeLines(SIGN_ON_PROMPT); stage = ST_NAME }
             ST_NEW_Q -> {
-                typeLines(listOf("", "There is no record of", "your name on Interpol", "files.",
-                    "", "Are you new here?", "(Y/N)"))
+                typeLines(listOf("", "Interpol has no file", "under that name.",
+                    "", "First day on the", "job? (Y/N)"))
                 stage = ST_YESNO
             }
             ST_IDENT -> {
-                typeLines(listOf("", "You have been", "identified, ${vm.s.detectiveName}.",
-                    "", "Your current rank", "is ${GameData.ranks[vm.s.rankIndex]}."))
+                typeLines(listOf("", "Identity confirmed,", "${vm.s.detectiveName}.",
+                    "", "You currently hold the", "rank of ${GameData.ranks[vm.s.rankIndex]}."))
                 stage = ST_GATE1
             }
             ST_FLASH -> {

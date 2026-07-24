@@ -171,10 +171,10 @@ object GameData {
         "No"
     )
     val dangerMessages = listOf(
-        "All I know is that something suspicious is going on in town.",
-        "Rumor has it that the gang is in town somewhere.",
-        "The word is out: You're getting too close, gumshoe...",
-        "The only thing I can tell you is to watch your step!",
+        "All I can say is that something shady is happening around town.",
+        "Word on the street says the gang is hiding somewhere in town.",
+        "The whisper going around: you're closing in, snoop...",
+        "My only advice: mind where you walk!",
         "Yes",
         "No",
         ":"
@@ -220,81 +220,81 @@ object GameData {
     val suspects = listOf(
         Suspect(
             name = "Clara San Diego", sex = "Female",
-            occupation = "Former spy for the Intelligence Service of Monaco",
+            occupation = "Once a secret agent for Monaco's intelligence bureau",
             hobby = "Tennis", hair = "Reddish-brown", auto = "1939 Packard convertible",
-            feature1 = "Never appears in public without her ruby necklace.", feature2 = "Great fondness for tacos.",
+            feature1 = "Won't be seen anywhere without her ruby necklace.", feature2 = "Adores tacos above all foods.",
             tSex = "female", tHobby = "tennis", tHair = "red",
             tFeature = "jewelry", tVehicle = "convertible",
         ),
         Suspect(
             name = "Merey LaRoc", sex = "Female",
-            occupation = "Freelance aerobic dancer",
+            occupation = "Self-employed aerobics performer",
             hobby = "Mountain climbing", hair = "Brown", auto = "Fancy limousine",
-            feature1 = "Has an absolute mania for fancy jewelry.", feature2 = "Loves spicy foods.",
+            feature1 = "Utterly obsessed with expensive jewelry.", feature2 = "Craves fiery, spicy dishes.",
             tSex = "female", tHobby = "mt. climbing", tHair = "brown",
             tFeature = "jewelry", tVehicle = "limousine",
         ),
         Suspect(
             name = "Dazzle Annie Nonker", sex = "Female",
-            occupation = "Yogurt bar owner",
+            occupation = "Runs her own yogurt bar",
             hobby = "Tennis", hair = "Blond", auto = "Bugatti Limousine",
-            feature1 = "Reported to have a tattoo.", feature2 = "Has an incredible craving for shellfish.",
+            feature1 = "Said to carry a tattoo.", feature2 = "Can never get enough shellfish.",
             tSex = "female", tHobby = "tennis", tHair = "blond",
             tFeature = "tattoo", tVehicle = "limousine",
         ),
         Suspect(
             name = "Lady Agatha Wayland", sex = "Female",
-            occupation = "Reader of upper-class English mystery stories",
+            occupation = "Devours high-society English detective novels",
             hobby = "Tennis", hair = "Red", auto = "Denghby Roadster",
-            feature1 = "Has a diamond ring the size of a grapefruit.", feature2 = "Speeds through the countryside looking for great Mexican restaurants.",
+            feature1 = "Wears a diamond ring as big as a grapefruit.", feature2 = "Races around the countryside hunting for good Mexican food.",
             tSex = "female", tHobby = "tennis", tHair = "red",
             tFeature = "ring", tVehicle = "convertible",
         ),
         Suspect(
             name = "Len \"Red\" Bulk", sex = "Male",
-            occupation = "Ex-professional hockey player and gambler",
+            occupation = "Retired pro hockey player turned gambler",
             hobby = "Mountain climbing", hair = "Red", auto = "Convertible",
-            feature1 = "Tattoo of mermaid on his right thumb.", feature2 = "Loves seafood.",
+            feature1 = "A mermaid tattoo marks his right thumb.", feature2 = "Seafood is his favorite.",
             tSex = "male", tHobby = "mt. climbing", tHair = "red",
             tFeature = "tattoo", tVehicle = "convertible",
         ),
         Suspect(
             name = "Scar Graynolt", sex = "Male",
-            occupation = "Folk guitarist",
+            occupation = "Guitarist on the folk circuit",
             hobby = "Croquet", hair = "Red", auto = "Limousine with shaded windows",
-            feature1 = "Wears a five-carat pinky ring.", feature2 = "Has a 6'8\" man servant named \"The Asp\"; can eat his own weight in tacos.",
+            feature1 = "Sports a five-carat ring on his pinky.", feature2 = "Keeps a 6'8\" valet called \"The Asp\" and can down his own weight in tacos.",
             tSex = "male", tHobby = "croquet", tHair = "red",
             tFeature = "ring", tVehicle = "limousine",
         ),
         Suspect(
             name = "Nick Brunch", sex = "Male",
-            occupation = "Ex-private eye",
+            occupation = "Former private investigator",
             hobby = "Mountain climbing", hair = "Black", auto = "\"Black Mamba\" motorcycle",
-            feature1 = "Prefers soiled trenchcoats and snap-brimmed fedoras.  Has brown eyes and a moustache.", feature2 = "Loves Mexican food; always wears Crimefighter's ring.",
+            feature1 = "Favors rumpled trenchcoats and snap-brim fedoras. Brown-eyed, with a moustache.", feature2 = "Big on Mexican food; his Crimefighter's ring never leaves his finger.",
             tSex = "male", tHobby = "mt. climbing", tHair = "black",
             tFeature = "ring", tVehicle = "motorcycle",
         ),
         Suspect(
             name = "Fast Eddie B.", sex = "Male",
-            occupation = "World class croquet player",
+            occupation = "Croquet player of world rank",
             hobby = "Croquet", hair = "Raven-haired or black", auto = "Convertible",
-            feature1 = "Always leaves a diamond stickpin at the scene of his crimes.", feature2 = "Fast Eddie is an impeccably dressed jet-setter and likes Mexican food.",
+            feature1 = "His calling card: a diamond stickpin left at every crime scene.", feature2 = "A flawlessly dressed jet-setter with a taste for Mexican food.",
             tSex = "male", tHobby = "croquet", tHair = "black",
             tFeature = "jewelry", tVehicle = "convertible",
         ),
         Suspect(
             name = "Ihor Ihorovich", sex = "Male",
-            occupation = "Pretender to the Czarist throne",
+            occupation = "Claims the old Czarist throne as his own",
             hobby = "Croquet", hair = "Blond", auto = "Limousine",
-            feature1 = "Strange Ukranian tattoo on right shoulder.", feature2 = "Loves eating lobsters, watching cartoons and is fascinated by large marsupials.",
+            feature1 = "An odd Ukrainian tattoo covers his right shoulder.", feature2 = "Enjoys lobster dinners, cartoons, and everything about large marsupials.",
             tSex = "male", tHobby = "croquet", tHair = "blond",
             tFeature = "tattoo", tVehicle = "limousine",
         ),
         Suspect(
             name = "Katherine \"Boom-Boom\" Drib", sex = "Female",
-            occupation = "Motorcycle racer",
+            occupation = "Races motorcycles competitively",
             hobby = "Mountain climbing", hair = "Brunette or brown", auto = "Honcho-1250 motorcycle",
-            feature1 = "Has a tattoo of an eagle on her left bicep.", feature2 = "Gourmet seafood cook; fascinated with health and fitness.",
+            feature1 = "An eagle tattoo spreads across her left bicep.", feature2 = "Cooks gourmet seafood; devoted to health and fitness.",
             tSex = "female", tHobby = "mt. climbing", tHair = "brown",
             tFeature = "tattoo", tVehicle = "motorcycle",
         ),
@@ -302,27 +302,27 @@ object GameData {
 
     // Case-flow templates (byte-exact from CARMEN.EXE)
     const val FLASH = "*** FLASH ***"
-    const val TREASURE_STOLEN = "National treasure stolen from %s."
-    const val TREASURE_ID = "The treasure has been identified as %s."
-    const val ASSIGNMENT = "Track the thief from %s to %s hideout and arrest %s!"
-    const val DEADLINE = "You must apprehend the thief by Sunday, 5 p.m."
-    const val WARRANT_ISSUED = "You now have a warrant to arrest %s."
-    const val NO_WARRANT = "No warrant has been issued."
-    const val ELIMINATES_ALL = "The information provided eliminates all possible suspects."
-    const val CAUGHT_UP = "You have caught up with %s."
-    const val NO_WARRANT_ESCAPE = "However, without a warrant we cannot make a legal arrest!"
-    const val GOT_AWAY = "It looks like Clara's gang has gotten away with another caper!"
-    const val TRAILED_CORRECTLY = "You have trailed %s correctly."
-    const val FALSE_WARRANT = "Unfortunately, you have a warrant for %s."
-    const val FALSE_ARREST = "Be careful, we could all be sued for false arrest!"
-    const val APPREHENDED = "Thanks to your help, the %s police have apprehended %s."
-    const val LOOT = "%s had the loot, %s, which will be returned to the grateful residents of %s."
-    const val THANKS = "We here at Interpol thank you for your good work on this case."
-    const val PROMOTION = "Good job, %s, you have earned a promotion."
-    const val NEW_RANK = "Your new rank is: %s."
-    const val TOO_LONG = "We've just received word that %s slipped through your fingers because your investigation took too long!"
-    const val CLARA_JAILED = "You have successfully arrested the ring-leader, Clara San Diego, and sent her to jail for good!"
-    const val HALL_OF_FAME = "Congratulations, your name will go into the Interpol Hall of Fame!"
+    const val TREASURE_STOLEN = "A national treasure has been stolen in %s."
+    const val TREASURE_ID = "Reports identify the stolen item as %s."
+    const val ASSIGNMENT = "Follow the thief's trail from %s to %s hideout and bring %s in!"
+    const val DEADLINE = "The thief must be in custody by Sunday at 5 p.m."
+    const val WARRANT_ISSUED = "A warrant has been issued for the arrest of %s."
+    const val NO_WARRANT = "There is no arrest warrant on file."
+    const val ELIMINATES_ALL = "The details you entered rule out every suspect on file."
+    const val CAUGHT_UP = "You have finally cornered %s."
+    const val NO_WARRANT_ESCAPE = "But with no warrant in hand, no lawful arrest can be made!"
+    const val GOT_AWAY = "Once again, Clara's gang has slipped away with the loot!"
+    const val TRAILED_CORRECTLY = "Your pursuit of %s was right on the mark."
+    const val FALSE_WARRANT = "Sadly, the warrant you hold names %s."
+    const val FALSE_ARREST = "Watch out - a wrongful arrest could land us all in court!"
+    const val APPREHENDED = "With your help, police in %s have taken %s into custody."
+    const val LOOT = "%s was carrying the stolen %s, now on its way home to the thankful people of %s."
+    const val THANKS = "Everyone at Interpol appreciates your fine work on this case."
+    const val PROMOTION = "Well done, %s - a promotion is yours."
+    const val NEW_RANK = "You now hold the rank of %s."
+    const val TOO_LONG = "Word just came in: %s escaped because the investigation ran out of time!"
+    const val CLARA_JAILED = "You've captured the ring-leader herself - Clara San Diego is behind bars for good!"
+    const val HALL_OF_FAME = "Congratulations - you've earned a place in the Interpol Hall of Fame!"
 
     // Promotion quiz: almanac fill-in-the-blank (matched case-insensitively).
     val promotionQuiz = listOf(

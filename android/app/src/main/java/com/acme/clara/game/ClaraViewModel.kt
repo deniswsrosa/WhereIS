@@ -169,7 +169,7 @@ class ClaraViewModel : ViewModel() {
     fun toggleSound() { s = s.copy(soundOn = !s.soundOn, overlay = null) }
     fun showJoystick() {
         s = s.copy(overlay = Overlay.Info("JOYSTICK",
-            listOf("Joystick improperly centered", "or not present.")))
+            listOf("Joystick missing", "or badly centered.")))
     }
 
     // ---------- case generation ----------
@@ -258,7 +258,7 @@ class ClaraViewModel : ViewModel() {
             // 50/50 on the second, certain on the third, per the 1990 release's rules)
             places.forEachIndexed { i, p ->
                 list.add(Venue(p, occs[i], ClueKind.DANGER,
-                    "Rumor has it that the gang is in town somewhere."))
+                    "Word on the street says the gang is hiding somewhere in town."))
             }
         } else {
             val nextCity = st.route.getOrNull(st.progress + 1)
@@ -502,18 +502,18 @@ class ClaraViewModel : ViewModel() {
         when {
             w == null -> {
                 s = s.copy(won = false, resultLines = listOf(
-                    "Interpol here.",
-                    "You have caught up with ${c.name}.",
-                    GameData.NO_WARRANT.let { "However, without a warrant we cannot make a legal arrest!" },
-                    "It looks like the gang has gotten away with another caper!",
+                    "This is Interpol.",
+                    "You have finally cornered ${c.name}.",
+                    GameData.NO_WARRANT.let { "But with no warrant in hand, no lawful arrest can be made!" },
+                    "The gang has pulled off another caper and vanished!",
                 ))
             }
             w.name != c.name -> {
                 s = s.copy(won = false, resultLines = listOf(
-                    "You have trailed the suspect to ${s.currentCity}.",
-                    "Unfortunately, you have a warrant for ${w.name}.",
-                    "Be careful, we could all be sued for false arrest!",
-                    "We hope you do better on your next case.",
+                    "Your trail has led you to ${s.currentCity}.",
+                    "Sadly, the warrant you hold names ${w.name}.",
+                    "Watch out - a wrongful arrest could land us all in court!",
+                    "Better luck on your next assignment.",
                 ))
             }
             else -> win(c)
@@ -535,14 +535,14 @@ class ClaraViewModel : ViewModel() {
         val crimeCity = s.route.firstOrNull() ?: s.currentCity
         val lines = mutableListOf<String>()
         if (c.name == "Clara San Diego") {
-            lines += "You have successfully arrested the ring-leader, Clara San Diego, and sent her to jail for good!"
-            lines += "Congratulations, your name will go into the Interpol Hall of Fame!"
+            lines += "You've captured the ring-leader herself - Clara San Diego is behind bars for good!"
+            lines += "Congratulations - you've earned a place in the Interpol Hall of Fame!"
         } else {
             // faithful phrasing: the CRIME city's police make the arrest and get the loot back
-            lines += "Thanks to your help, the $crimeCity police have apprehended ${c.name}."
-            lines += "${c.name} had the loot, ${s.treasure}, which will be returned to the grateful residents of $crimeCity."
+            lines += "With your help, police in $crimeCity have taken ${c.name} into custody."
+            lines += "${c.name} was carrying the stolen ${s.treasure}, now on its way home to the thankful people of $crimeCity."
         }
-        lines += "We here at Interpol thank you for your good work on this case."
+        lines += "Everyone at Interpol appreciates your fine work on this case."
         val newCases = s.casesSolved + 1
         // jailing Carmen herself concludes the career — no promotion, straight to the
         // Hall of Fame report and off the roster
@@ -551,8 +551,8 @@ class ClaraViewModel : ViewModel() {
         // until your next promotion" — thresholds 1, 5, 9, 13
         val promote = !careerOver && s.rankIndex < GameData.ranks.lastIndex && newCases in setOf(1, 5, 9, 13)
         if (promote) {
-            lines += "Good job, ${s.detectiveName}, you have earned a promotion."
-            lines += "Before you are promoted you have one more clue to unravel."
+            lines += "Well done, ${s.detectiveName} - a promotion is yours."
+            lines += "One last puzzle stands between you and the promotion."
         }
         s = s.copy(phase = Phase.RESULT, won = true, casesSolved = newCases,
             resultLines = lines, pendingPromotion = promote, careerOver = careerOver)
@@ -573,9 +573,9 @@ class ClaraViewModel : ViewModel() {
     private fun escaped(reason: String) {
         val c = s.culprit!!
         val lines = if (reason == "time") listOf(
-            "Message from Interpol:", "Bad news...",
-            "We've just received word that ${c.name} slipped through your fingers because your investigation took too long!",
-        ) else listOf("The suspect got away!")
+            "Incoming from Interpol:", "Unwelcome news...",
+            "Word just came in: ${c.name} escaped because the investigation ran out of time!",
+        ) else listOf("The suspect has escaped!")
         s = s.copy(phase = Phase.RESULT, won = false, resultLines = lines)
         cue(SoundCue.OUT_OF_TIME)
     }
