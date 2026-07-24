@@ -12,3 +12,6 @@ android/local.properties
 
 # --- session scratch / perm-test artifacts ---
 _perm_test_*.txt
+
+# Rendered stinger reference audio (kept on disk, not tracked)
+work/stinger_audio/

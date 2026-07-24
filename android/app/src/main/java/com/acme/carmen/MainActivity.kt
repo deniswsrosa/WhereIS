@@ -45,6 +45,9 @@ fun CarmenApp() {
             else -> GameSound.stopTheme()
         }
     }
+    // Event stingers: the ViewModel emits a (seq, cue) pair at each game moment; the seq
+    // makes repeats distinct so this re-fires even for the same cue twice running.
+    LaunchedEffect(vm.soundCue) { vm.soundCue?.let { GameSound.play(context, it.second) } }
     // Note: only systemBars are padded here — the IME inset is deliberately NOT consumed,
     // so opening the keyboard never shrinks the 320x200 canvas. Screens that host a text
     // field (the HQ printer) handle the keyboard themselves by panning up.

@@ -12,6 +12,12 @@ import kotlin.random.Random
 
 enum class Phase { INTRO, TITLE, SIGN_ON, BRIEFING, CITY, TRAVEL, CRIME, CHASE, RESULT }
 
+/** Event stingers from the original MIDISND.DAT, mapped to game moments (the UI layer
+ *  resolves each to its res/raw MIDI and plays it over the theme). */
+enum class SoundCue {
+    BRIEFING, FLASH, CLUE, DANGER, WARRANT, ARRIVE, TRAVEL, CHASE, WIN, WRONG_ARREST, OUT_OF_TIME
+}
+
 enum class ClueKind { DESTINATION, TRAIT, DANGER, NONE }
 
 /** Menu-bar overlays. */
@@ -115,6 +121,13 @@ class CarmenViewModel : ViewModel() {
     var s by mutableStateOf(GameState())
         private set
 
+    // One-shot sound cue for the UI to play. The seq makes each emit distinct so a repeated
+    // cue (e.g. two clues in a row) still re-triggers the LaunchedEffect that observes it.
+    var soundCue by mutableStateOf<Pair<Int, SoundCue>?>(null)
+        private set
+    private var cueSeq = 0
+    private fun cue(c: SoundCue) { cueSeq++; soundCue = cueSeq to c }
+
     // ---------- flow ----------
     fun introDone() { if (s.phase == Phase.INTRO) s = s.copy(phase = Phase.TITLE) }
     fun start() { s = s.copy(phase = Phase.SIGN_ON) }
@@ -143,13 +156,13 @@ class CarmenViewModel : ViewModel() {
     fun gotoCity() { s = s.copy(phase = Phase.CITY) }
     fun gotoTravel() { s = s.copy(phase = Phase.TRAVEL, selectedTool = 1) }
     // The player fills in the suspect's description themselves — the computer is not pre-populated.
-    fun gotoCrime() { s = s.copy(phase = Phase.CRIME, selectedTool = 3) }
+    fun gotoCrime() { s = s.copy(phase = Phase.CRIME, selectedTool = 3); cue(SoundCue.FLASH) }
     fun selectTool(i: Int) { s = s.copy(selectedTool = i) }
 
     // ---------- menu bar ----------
     fun openOverlay(o: Overlay) { s = s.copy(overlay = o) }
     fun dismissOverlay() { s = s.copy(overlay = null) }
-    fun menuNewCase() { s = s.copy(overlay = null, phase = Phase.BRIEFING); newCase() }
+    fun menuNewCase() { s = s.copy(overlay = null, phase = Phase.BRIEFING); newCase(); cue(SoundCue.BRIEFING) }
     fun menuQuitToTitle() { s = GameState(phase = Phase.TITLE) }
     // Options > Sound is a silent checkmark toggle in the original (the √ beside the item
     // reflects the state); the actual mute is applied by the audio engine in the UI layer.
@@ -335,6 +348,8 @@ class CarmenViewModel : ViewModel() {
             }
             if (caught) { confront(); return }
         }
+        // clue vs. warning stinger, keyed on what this venue's witness will say
+        cue(if (v.kind == ClueKind.DANGER) SoundCue.DANGER else SoundCue.CLUE)
         var st = s
         if (index !in st.visited && v.kind == ClueKind.TRAIT)
             st = st.copy(revealedCount = st.revealedCount + 1)
@@ -402,6 +417,7 @@ class CarmenViewModel : ViewModel() {
             (2 + d * 6).toInt().coerceIn(2, 14)
         } else Random.nextInt(2, 6)
         s = s.copy(flying = city, flightHours = cost)
+        cue(SoundCue.TRAVEL)
     }
 
     /** Flight animation finished: apply the arrival. */
@@ -424,6 +440,7 @@ class CarmenViewModel : ViewModel() {
         s = s.copy(phase = Phase.CITY)
         buildVenues()
         s = s.copy(departOptions = makeDepartOptions())
+        cue(SoundCue.ARRIVE)
     }
 
     // ---------- crime computer ----------
@@ -458,8 +475,10 @@ class CarmenViewModel : ViewModel() {
             (st.compFeature == null || su.tFeature == st.compFeature) &&
             (st.compVehicle == null || su.tVehicle == st.compVehicle)
         }
-        if (m.size == 1 && anyFilterSet()) st = st.copy(warrantFor = m.first())
+        val issuedWarrant = m.size == 1 && anyFilterSet()
+        if (issuedWarrant) st = st.copy(warrantFor = m.first())
         s = st
+        if (issuedWarrant) cue(SoundCue.WARRANT)   // "You now have a warrant to arrest X."
         checkDeadline()
     }
 
@@ -494,10 +513,16 @@ class CarmenViewModel : ViewModel() {
         }
         // win() sets phase=RESULT; route everything through the chase animation instead
         s = s.copy(phase = Phase.CHASE)
+        cue(SoundCue.CHASE)
     }
 
     /** Chase animation finished (or was tapped through) — show the Interpol report. */
-    fun chaseDone() { if (s.phase == Phase.CHASE) s = s.copy(phase = Phase.RESULT) }
+    fun chaseDone() {
+        if (s.phase != Phase.CHASE) return
+        s = s.copy(phase = Phase.RESULT)
+        // the report's outcome cue: triumphant on a win, the botched-arrest sting otherwise
+        cue(if (s.won) SoundCue.WIN else SoundCue.WRONG_ARREST)
+    }
 
     private fun win(c: Suspect) {
         val crimeCity = s.route.firstOrNull() ?: s.currentCity
@@ -545,10 +570,11 @@ class CarmenViewModel : ViewModel() {
             "We've just received word that ${c.name} slipped through your fingers because your investigation took too long!",
         ) else listOf("The suspect got away!")
         s = s.copy(phase = Phase.RESULT, won = false, resultLines = lines)
+        cue(SoundCue.OUT_OF_TIME)
     }
 
     fun nextCase() { newCase() }
-    fun toBriefingForNext() { s = s.copy(phase = Phase.BRIEFING); newCase() }
+    fun toBriefingForNext() { s = s.copy(phase = Phase.BRIEFING); newCase(); cue(SoundCue.BRIEFING) }
 
     // ---------- time formatting ----------
     fun clockLabel(offsetHours: Int = 0): String {
