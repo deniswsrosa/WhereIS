@@ -65,8 +65,26 @@ fun IntroScreen(vm: ClaraViewModel) = VirtualScreen { v ->
         vm.introDone()
     }
     when (stage) {
-        0 -> PixelImage("intro_presents", Modifier.fillMaxSize())
-        3 -> PixelImage("intro_acme_agency", Modifier.fillMaxSize())
+        // captions were baked into the DOS captures with the original's wording; the
+        // bitmaps are wiped clean and the (reworded) lines drawn at runtime instead
+        0 -> {
+            PixelImage("intro_presents", Modifier.fillMaxSize())
+            v.At(0, 161, 320, 18, Alignment.Center) {
+                Text("Acme Detective Agency Presents",
+                    style = v.text(9, color = Vga.White, bold = true))
+            }
+        }
+        3 -> {
+            PixelImage("intro_acme_agency", Modifier.fillMaxSize())
+            v.At(0, 11, 320, 11, Alignment.Center) {
+                Text("Clara's gang has struck again!",
+                    style = v.text(7, color = Vga.LightRed, bold = true))
+            }
+            v.At(0, 184, 320, 12, Alignment.Center) {
+                Text("and cracking the case is up to you...",
+                    style = v.text(7, color = Vga.White))
+            }
+        }
         else -> {
             Box(Modifier.fillMaxSize().background(Vga.Black))
             val sprite = if (stage == 2) "anim_cops_${frame % 3}" else "anim_detective_${frame % 2}"
