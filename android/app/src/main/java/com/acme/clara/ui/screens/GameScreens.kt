@@ -489,17 +489,22 @@ private fun SightingPanel(v: Virtual, level: Int, onDone: () -> Unit) {
                 1 -> PixelImage("sight_face",
                     Modifier.align(Alignment.BottomCenter).offset(0.dp, v.w(42 * (1f - t)))
                         .size(v.w(52), v.w(42)), ContentScale.Fit)
+                // DOS refs (work/burglar_snapshots/practice_thug): the thug rises in the
+                // panel's bottom-LEFT corner, not centred
                 2 -> PixelImage("sight_thug",
-                    Modifier.align(Alignment.BottomCenter)
-                        .offset(v.w(if (t >= 1f) (if (frame % 2 == 0) -2f else 2f) else 0f), v.w(50 * (1f - t)))
+                    Modifier.align(Alignment.BottomStart)
+                        .offset(v.w(8 + if (t >= 1f) (if (frame % 2 == 0) -2f else 2f) else 0f), v.w(50 * (1f - t)))
                         .size(v.w(54), v.w(50)), ContentScale.Fit)
                 3 -> {
                     if (phase == 0) PixelImage("sight_burglar_peek",
                         Modifier.align(Alignment.BottomEnd).offset(v.w(35 * (1f - t)), v.w(-4))
                             .size(v.w(35), v.w(51)), ContentScale.Fit)
-                    else PixelImage("sight_burglar_run",
+                    // the original's run is a 2-pose leg cycle (~120 ms per pose), verified
+                    // frame-by-frame from DOS captures (work/burglar_snapshots/appearance_*)
+                    else PixelImage(
+                        if ((frame / 3) % 2 == 0) "sight_burglar_run" else "sight_burglar_run_b",
                         Modifier.align(Alignment.BottomStart)
-                            .offset(v.w(165 - 230 * t), v.w(if (frame % 2 == 0) -4f else -5f))
+                            .offset(v.w(165 - 230 * t), v.w(-4))
                             .size(v.w(61), v.w(51)), ContentScale.Fit)
                 }
                 4 -> PixelImage("sight_dagger",
