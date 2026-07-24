@@ -405,18 +405,25 @@ class CarmenViewModel : ViewModel() {
         return if (next != null) (decoys + next).shuffled() else decoys
     }
 
+    /** Flight time from the current city, scaled by map distance (the original's travel
+     *  times depend on how far apart the cities are; short hops ~2-3 h). Deterministic, so
+     *  the DEPART preview shows exactly what the flight will cost. */
+    fun flightHoursTo(city: String): Int {
+        val a = WorldMap.pos[s.currentCity]
+        val b = WorldMap.pos[city]
+        return if (a != null && b != null) {
+            val d = kotlin.math.hypot(((a.x - b.x) * 2f).toDouble(), (a.y - b.y).toDouble())
+            (2 + d * 6).toInt().coerceIn(2, 14)
+        } else 4
+    }
+
+    /** Hours remaining before the Sunday 5 p.m. deadline. */
+    fun hoursLeft(): Int = (GameState.DEADLINE_HOURS - s.clock).coerceAtLeast(0)
+
     /** Start the flight: the travel screen animates the red route line, then calls arrive(). */
     fun travelTo(city: String) {
         if (s.flying != null) return
-        // flight time scales with map distance (the original's travel times depend on how
-        // far apart the cities are; short hops observed at ~2-3 h)
-        val a = WorldMap.pos[s.currentCity]
-        val b = WorldMap.pos[city]
-        val cost = if (a != null && b != null) {
-            val d = kotlin.math.hypot(((a.x - b.x) * 2f).toDouble(), (a.y - b.y).toDouble())
-            (2 + d * 6).toInt().coerceIn(2, 14)
-        } else Random.nextInt(2, 6)
-        s = s.copy(flying = city, flightHours = cost)
+        s = s.copy(flying = city, flightHours = flightHoursTo(city))
         cue(SoundCue.TRAVEL)
     }
 
@@ -589,5 +596,11 @@ class CarmenViewModel : ViewModel() {
             else -> hour - 12 to "p.m."
         }
         return "${days[day]}, $h $ampm"
+    }
+
+    /** Compact time-until-deadline hint, e.g. "3d 4h left" or "18h left" when close. */
+    fun deadlineLabel(offsetHours: Int = 0): String {
+        val left = (GameState.DEADLINE_HOURS - s.clock - offsetHours).coerceAtLeast(0)
+        return if (left >= 24) "${left / 24}d ${left % 24}h left" else "${left}h left"
     }
 }

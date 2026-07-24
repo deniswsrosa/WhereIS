@@ -25,6 +25,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PlatformImeOptions
 import androidx.compose.ui.draw.clipToBounds
@@ -184,7 +185,13 @@ private fun HqPrinterScreen(vm: CarmenViewModel, promptForName: Boolean, onBegin
         }
     }
     LaunchedEffect(printed.size, typing, input, stage) { scroll.animateScrollTo(scroll.maxValue) }
-    LaunchedEffect(stage) { if (stage == ST_NAME) focus.requestFocus() }
+    // Auto-focus the name field and raise the soft keyboard so the player can just start
+    // typing (requestFocus alone doesn't reliably show the IME; the small delay lets the
+    // field finish composing first).
+    val keyboard = LocalSoftwareKeyboardController.current
+    LaunchedEffect(stage) {
+        if (stage == ST_NAME) { delay(60); focus.requestFocus(); keyboard?.show() }
+    }
 
     val paperFont = v.text(7, color = Vga.Black)
 
@@ -340,6 +347,10 @@ fun CityClockBox(v: Virtual, vm: CarmenViewModel, tickHours: Int = 0) {
                 Text(if (sleeping) "SLEEPING…" else vm.s.currentCity,
                     style = v.text(9, color = Vga.White, bold = true))
                 Text(vm.clockLabel(tickHours), style = v.text(8, color = Vga.White))
+                // deadline hint (remake aid): dim normally, red in the last day
+                val left = vm.hoursLeft() - tickHours
+                Text(vm.deadlineLabel(tickHours),
+                    style = v.text(6.5f, color = if (left in 0..24) Vga.Red else Vga.LightGray))
             }
         }
     }
@@ -888,8 +899,11 @@ fun TravelScreen(vm: CarmenViewModel) = VirtualScreen { v ->
     if (flying == null) {
         // tap outside the list cancels (the original cancels with Esc)
         Box(Modifier.fillMaxSize().clickable { vm.gotoCity() })
-        var selected by remember(s.currentCity) { mutableStateOf(0) }
-        val fullH = 18f + options.size * 10f + 6f
+        // Nothing pre-selected: the first tap on a city only highlights it (and shows the
+        // flight time); a second tap on the same city commits the flight — so a mis-tap
+        // never burns hours by accident.
+        var selected by remember(s.currentCity) { mutableStateOf(-1) }
+        val fullH = 18f + options.size * 10f + 6f + 9f
         v.At(4, 13, 141, 24f + (fullH - 24f) * grow) {
             Column(Modifier.fillMaxSize().background(Vga.Black)
                 .border(BorderStroke(v.w(1), Vga.White)).clickable(
@@ -904,13 +918,22 @@ fun TravelScreen(vm: CarmenViewModel) = VirtualScreen { v ->
                             val isSel = i == selected
                             Box(Modifier.fillMaxWidth().height(v.w(10))
                                 .then(if (isSel) Modifier.background(Vga.White) else Modifier)
-                                .clickable { selected = i; vm.travelTo(city) },
+                                .clickable { if (selected == i) vm.travelTo(city) else selected = i },
                                 contentAlignment = Alignment.Center) {
                                 Text(city, style = v.text(8.5f,
                                     color = if (isSel) Vga.Black else Vga.White, bold = true))
+                                // flight time shown up front so the player weighs the cost
+                                Text("~${vm.flightHoursTo(city)}h",
+                                    style = v.text(6f, color = if (isSel) Vga.Blue else Vga.LightGray),
+                                    modifier = Modifier.align(Alignment.CenterEnd).padding(end = v.w(2)))
                             }
                         }
                     }
+                }
+                // hint appears once a city is highlighted
+                if (grow >= 1f) Box(Modifier.fillMaxWidth().height(v.w(8)), contentAlignment = Alignment.Center) {
+                    if (selected >= 0) Text("tap again to fly",
+                        style = v.text(6f, color = Vga.Yellow, bold = true))
                 }
             }
         }
@@ -959,7 +982,10 @@ private fun paperWrap(text: String, width: Int = 17): List<String> {
 @Composable
 fun CrimeScreen(vm: CarmenViewModel) = VirtualScreen { v ->
     val s = vm.s
-    var selRow by remember { mutableStateOf(0) }
+    // Start with no row selected so every row behaves the same: the first tap selects
+    // (white cursor bar), the next cycles its value. (With row 0 pre-selected, a first
+    // tap on SEX cycled immediately — inconsistent with the other rows.)
+    var selRow by remember { mutableStateOf(-1) }
     val paper = remember { mutableStateListOf("READY.") }
     var typing by remember { mutableStateOf("") }
     var printing by remember { mutableStateOf(false) }
