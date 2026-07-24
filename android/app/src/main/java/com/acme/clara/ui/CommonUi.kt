@@ -1,4 +1,4 @@
-package com.acme.carmen.ui
+package com.acme.clara.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.Text
-import com.acme.carmen.ui.theme.Vga
+import com.acme.clara.ui.theme.Vga
 
 /** Scope for laying out inside a virtual 320x200 DOS screen. `unit` = one virtual pixel, in Dp. */
 class Virtual(val unit: Dp, val density: Density) {
@@ -96,12 +96,13 @@ fun drawableId(name: String): Int {
 }
 
 @Composable
-fun PixelImage(name: String, modifier: Modifier = Modifier, scale: ContentScale = ContentScale.FillBounds) {
+fun PixelImage(name: String, modifier: Modifier = Modifier, scale: ContentScale = ContentScale.FillBounds,
+               alignment: Alignment = Alignment.Center) {
     val id = drawableId(name)
     if (id != 0) {
         Image(
             painter = androidx.compose.ui.res.painterResource(id),
-            contentDescription = name, modifier = modifier, contentScale = scale,
+            contentDescription = name, modifier = modifier, contentScale = scale, alignment = alignment,
         )
     } else {
         Box(modifier.background(Vga.Cyan), contentAlignment = Alignment.Center) {

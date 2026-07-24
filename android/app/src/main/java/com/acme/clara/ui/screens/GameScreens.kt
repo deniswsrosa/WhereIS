@@ -1,4 +1,4 @@
-package com.acme.carmen.ui.screens
+package com.acme.clara.ui.screens
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
@@ -31,26 +31,26 @@ import androidx.compose.ui.text.input.PlatformImeOptions
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextAlign
-import com.acme.carmen.game.Venue
+import com.acme.clara.game.Venue
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import com.acme.carmen.data.CityMeta
-import com.acme.carmen.data.GameData
-import com.acme.carmen.data.WorldMap
-import com.acme.carmen.game.CarmenViewModel
-import com.acme.carmen.game.Overlay
-import com.acme.carmen.ui.*
-import com.acme.carmen.ui.theme.Vga
+import com.acme.clara.data.CityMeta
+import com.acme.clara.data.GameData
+import com.acme.clara.data.WorldMap
+import com.acme.clara.game.ClaraViewModel
+import com.acme.clara.game.Overlay
+import com.acme.clara.ui.*
+import com.acme.clara.ui.theme.Vga
 
 /* ----------------------------- INTRO (boot animation) -----------------------------
  * Faithful to the original attract sequence, each stage on its own screen:
  * 1. three crowns + "Brøderbund Software Presents" alone · 2. black screen, the detective
  * walks across near the bottom · 3. black screen, the police squad marches through ·
- * 4. the ACME Detective Agency scene ("Carmen's gang has pulled another caper!").
+ * 4. the ACME Detective Agency scene ("Clara's gang has pulled another caper!").
  * Tap anywhere to skip to the title.
  */
 @Composable
-fun IntroScreen(vm: CarmenViewModel) = VirtualScreen { v ->
+fun IntroScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     var stage by remember { mutableStateOf(0) }   // 0 crowns · 1 detective · 2 cops · 3 ACME
     var walkX by remember { mutableStateOf(-60f) }
     var frame by remember { mutableStateOf(0) }
@@ -81,7 +81,7 @@ fun IntroScreen(vm: CarmenViewModel) = VirtualScreen { v ->
 
 /* ----------------------------- TITLE ----------------------------- */
 @Composable
-fun TitleScreen(vm: CarmenViewModel) = VirtualScreen { v ->
+fun TitleScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     // the whole screen advances, like the original's "any key or button"
     Box(Modifier.fillMaxSize().clickable { vm.start() }) {
         PixelImage("title_screen", Modifier.fillMaxSize())
@@ -110,10 +110,10 @@ private const val PAPER_H = 45f
 private val SIGN_ON_PROMPT = listOf("Detective at keyboard,", "please identify yourself:")
 
 @Composable
-fun SignOnScreen(vm: CarmenViewModel) = HqPrinterScreen(vm, promptForName = true) { vm.beginInvestigation() }
+fun SignOnScreen(vm: ClaraViewModel) = HqPrinterScreen(vm, promptForName = true) { vm.beginInvestigation() }
 
 @Composable
-fun BriefingScreen(vm: CarmenViewModel) = HqPrinterScreen(vm, promptForName = false) { vm.beginInvestigation() }
+fun BriefingScreen(vm: ClaraViewModel) = HqPrinterScreen(vm, promptForName = false) { vm.beginInvestigation() }
 
 /* Sign-on + briefing stages, following the original beat for beat:
  * identify yourself → (new name) "There is no record ... Are you new here? (Y/N)" with
@@ -132,7 +132,7 @@ private const val ST_ASSIGN = 8      // typing assignment + deadline
 private const val ST_BEGIN = 9       // press any key -> investigation
 
 @Composable
-private fun HqPrinterScreen(vm: CarmenViewModel, promptForName: Boolean, onBegin: () -> Unit) =
+private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin: () -> Unit) =
     // While the name is being typed, keep the paper's bottom edge above the keyboard by panning
     // the whole (full-size) scene up — the scene never shrinks.
     VirtualScreen(keepVirtualYAboveIme = PAPER_Y + PAPER_H) { v ->
@@ -335,7 +335,7 @@ private fun VgaCityCard(city: String, region: String, v: Virtual, modifier: Modi
  *  screen. When the overnight clamp fired the title reads "SLEEPING…" for a moment
  *  (dos_sleeping_overnight.png), then reverts to the city name. */
 @Composable
-fun CityClockBox(v: Virtual, vm: CarmenViewModel, tickHours: Int = 0) {
+fun CityClockBox(v: Virtual, vm: ClaraViewModel, tickHours: Int = 0) {
     val sleeping = vm.s.sleeping
     LaunchedEffect(sleeping) {
         if (sleeping) { delay(1800); vm.sleepingShown() }
@@ -357,7 +357,7 @@ fun CityClockBox(v: Virtual, vm: CarmenViewModel, tickHours: Int = 0) {
 }
 
 @Composable
-fun CityScreen(vm: CarmenViewModel) = VirtualScreen { v ->
+fun CityScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     val s = vm.s
     val info = CityMeta.of(s.currentCity)
     var showVenues by remember(s.currentCity, s.progress) { mutableStateOf(false) }
@@ -514,10 +514,11 @@ private fun SightingPanel(v: Virtual, level: Int, onDone: () -> Unit) {
  *  selection border tracks the last activated tool (vm.s.selectedTool), like the original.
  *  While the SEE dropdown is open, `seeLabel` covers the SEE caption with "HIDE". */
 @Composable
-fun GameToolbar(v: Virtual, vm: CarmenViewModel, seeLabel: String? = null,
+fun GameToolbar(v: Virtual, vm: ClaraViewModel, seeLabel: String? = null,
                 onSee: (() -> Unit)? = null, onInvestigate: (() -> Unit)? = null) {
     val selected = vm.s.selectedTool
-    v.At(146, 163, 174, 32) {
+    // same x-extent as the right panel above it — in the original both strips share one width
+    v.At(149, 163, 167, 32) {
         Box(Modifier.fillMaxSize()) {
             PixelImage("toolbar_bar", Modifier.fillMaxSize())
             Row(Modifier.fillMaxSize()) {
@@ -573,10 +574,10 @@ private fun witnessLook(occupation: String): Look {
     return Look(hair, skin, shirt, (h ushr 11).mod(4))   // style: 0 short · 1 full · 2 bald · 3 cap
 }
 
-/** Right-panel witness, matching the original (dos_witness_waiter_layout.png): the witness
- *  sprite sits toward the panel's left edge with its occupation label in white caps directly
- *  under it, and the white rounded speech bubble sits to its RIGHT, vertically centred
- *  against the sprite, tail pointing left into the sprite. */
+/** Right-panel witness, matching the original (bud_palace_wit.png): the witness sprite sits
+ *  in the panel's BOTTOM-LEFT corner with its occupation label in white caps directly under
+ *  it at the panel's bottom edge, and the white rounded speech bubble sits to its RIGHT,
+ *  vertically centred in the panel, tail pointing left toward the sprite. */
 @Composable
 private fun WitnessPanel(v: Virtual, clue: Venue, onDone: () -> Unit) {
     val look = witnessLook(clue.occupation)
@@ -588,26 +589,28 @@ private fun WitnessPanel(v: Virtual, clue: Venue, onDone: () -> Unit) {
     v.At(149, 13, 167, 145) {
         Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White))
             .clickable { if (shown < clue.text.length) shown = clue.text.length else onDone() }) {
-            Row(Modifier.fillMaxSize().padding(horizontal = v.w(4)),
-                verticalAlignment = Alignment.CenterVertically) {
-                // sprite + caps label column, sprite at DOS size (≈42-46 virtual wide)
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    val portrait = "witness_" + snake(clue.occupation)
-                    // DOS witness bust ≈ 30-40 virtual wide × ~46 tall (measured from
-                    // dos_witness_waiter_layout). Fit the portrait inside that box so the
-                    // (taller-than-wide) art doesn't render oversized and eat the panel.
-                    if (drawableId(portrait) != 0) {
-                        PixelImage(portrait, Modifier.size(v.w(40), v.w(48)), ContentScale.Fit)
-                    } else {
-                        Canvas(Modifier.size(v.w(32), v.w(48))) {
-                            drawBust(size.width, size.height, look, (bob - 0.5f) * size.height * 0.02f)
-                        }
+            // sprite + caps label pinned to the bottom-left like the original; everything
+            // left-aligned so the label starts where the sprite's left edge starts
+            Column(Modifier.align(Alignment.BottomStart).padding(start = v.w(6), bottom = v.w(3)),
+                horizontalAlignment = Alignment.Start) {
+                val portrait = "witness_" + snake(clue.occupation)
+                // DOS witness bust ≈ 30-40 virtual wide × ~46 tall (measured from
+                // dos_witness_waiter_layout). Fit the portrait inside that box so the
+                // (taller-than-wide) art doesn't render oversized and eat the panel.
+                if (drawableId(portrait) != 0) {
+                    PixelImage(portrait, Modifier.size(v.w(40), v.w(48)), ContentScale.Fit,
+                        alignment = Alignment.BottomStart)
+                } else {
+                    Canvas(Modifier.size(v.w(32), v.w(48))) {
+                        drawBust(size.width, size.height, look, (bob - 0.5f) * size.height * 0.02f)
                     }
-                    Text(clue.occupation.uppercase(), style = v.text(7, color = Vga.White, bold = true),
-                        modifier = Modifier.padding(top = v.w(2)))
                 }
-                // speech bubble to the sprite's right, vertically centred, tail pointing left
-                Box(Modifier.weight(1f).padding(start = v.w(9))) {
+                Text(clue.occupation.uppercase(), style = v.text(7, color = Vga.White, bold = true),
+                    modifier = Modifier.padding(top = v.w(2)))
+            }
+            // speech bubble to the sprite's right, vertically centred, tail pointing left
+            Box(Modifier.align(Alignment.CenterStart).padding(start = v.w(55), end = v.w(4))) {
+                Box {
                     Box(Modifier.background(Vga.White, RoundedCornerShape(v.w(6)))
                         .padding(horizontal = v.w(5), vertical = v.w(4))) {
                         Text(clue.text.take(shown), style = v.text(7.5f, color = Vga.Black))
@@ -820,7 +823,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCivicBuilding(w
 // City positions live in data.WorldMap (shared with the ViewModel's flight-time model).
 
 @Composable
-fun TravelScreen(vm: CarmenViewModel) = VirtualScreen { v ->
+fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     val s = vm.s
     val options = s.departOptions
     val flying = s.flying
@@ -980,7 +983,7 @@ private fun paperWrap(text: String, width: Int = 17): List<String> {
 }
 
 @Composable
-fun CrimeScreen(vm: CarmenViewModel) = VirtualScreen { v ->
+fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     val s = vm.s
     // Start with no row selected so every row behaves the same: the first tap selects
     // (white cursor bar), the next cycles its value. (With row 0 pre-selected, a first
@@ -1132,7 +1135,7 @@ fun CrimeScreen(vm: CarmenViewModel) = VirtualScreen { v ->
  * original's animation frames. Tap anywhere to skip.
  */
 @Composable
-fun ChaseScreen(vm: CarmenViewModel) = VirtualScreen { v ->
+fun ChaseScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     val s = vm.s
     // stage: 0 suspect runs right · 1 "There goes the suspect!" · 2 cops chase right ·
     // 3 escort marches back left (win only) · then done
@@ -1209,7 +1212,7 @@ fun ChaseScreen(vm: CarmenViewModel) = VirtualScreen { v ->
  * "Press any key or button to continue." advances to the next case.
  */
 @Composable
-fun ResultScreen(vm: CarmenViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f) { v ->
+fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f) { v ->
     val s = vm.s
     val printed = remember { mutableStateListOf<String>() }
     var typing by remember { mutableStateOf("") }
