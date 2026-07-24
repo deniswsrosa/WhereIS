@@ -1,4 +1,4 @@
-package com.acme.carmen.ui
+package com.acme.clara.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import com.acme.carmen.data.Suspect
+import com.acme.clara.data.Suspect
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -26,15 +26,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.sp
-import com.acme.carmen.data.GameData
-import com.acme.carmen.game.CarmenViewModel
-import com.acme.carmen.game.Overlay
-import com.acme.carmen.ui.theme.Vga
+import com.acme.clara.data.GameData
+import com.acme.clara.game.ClaraViewModel
+import com.acme.clara.game.Overlay
+import com.acme.clara.ui.theme.Vga
 
 private data class MenuItemDef(val label: String, val enabled: Boolean = true, val action: () -> Unit)
 
 @Composable
-fun GameMenuBar(v: Virtual, vm: CarmenViewModel) {
+fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
     val s = vm.s
     Row(
         Modifier.fillMaxWidth().height(v.w(11)).background(Vga.LightGray)
@@ -42,11 +42,11 @@ fun GameMenuBar(v: Virtual, vm: CarmenViewModel) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(v.w(6))
     ) {
-        // Menu contents match the DOS EXE menu resources: Game = About Carmen... / New /
+        // Menu contents match the DOS EXE menu resources: Game = About Clara... / New /
         // Save (always grayed — no save slots in the remake yet) / Quit (with the original
         // "Do you really want to quit?" confirm); Options = Sound / Joystick.
         MenuTitle(v, "Game", listOf(
-            MenuItemDef("About Carmen...") { vm.openOverlay(Overlay.About) },
+            MenuItemDef("About Clara...") { vm.openOverlay(Overlay.About) },
             MenuItemDef("New") { vm.menuNewCase() },
             MenuItemDef("Save", enabled = false) {},
             MenuItemDef("Quit") { vm.openOverlay(Overlay.ConfirmQuit) },
@@ -103,15 +103,14 @@ private fun MenuTitle(v: Virtual, title: String, items: List<MenuItemDef>) {
 
 /** Renders the active menu overlay as a centred VGA dialog. Returns nothing if none. */
 @Composable
-fun OverlayHost(v: Virtual, vm: CarmenViewModel) {
+fun OverlayHost(v: Virtual, vm: ClaraViewModel) {
     val o = vm.s.overlay ?: return
     if (o is Overlay.Dossier) { DossierWindow(v, o.suspect) { vm.dismissOverlay() }; return }
     if (o is Overlay.ConfirmQuit) { ConfirmQuitDialog(v, vm); return }
     val (title, lines) = when (o) {
         Overlay.About -> "ABOUT" to listOf(
-            "Where in the World is", "Carmen Sandiego?  (Enhanced)", "MS-DOS Version 2.1",
-            "Copyright 1990 Broderbund", "", "Design: Gene Portwood &", "  Lauren Elliott",
-            "Programming: Glenn Axworthy", "Music & Sound: Tom Rettig",
+            "Where in the World is", "Clara San Diego?  (Enhanced)", "MS-DOS Version 2.1",
+            "Copyright 2026 Denis Inc",
         )
         Overlay.Roster -> "ACME DETECTIVE ROSTER" to listOf(
             "Detective: ${vm.s.detectiveName}", "Rank: ${GameData.ranks[vm.s.rankIndex]}",
@@ -151,7 +150,7 @@ fun OverlayHost(v: Virtual, vm: CarmenViewModel) {
 /** Game > Quit: the original's "Do you really want to quit?" dialog with yellow Yes/No
  *  buttons (red bold text, black border + drop shadow — same style as the sign-on Y/N). */
 @Composable
-private fun ConfirmQuitDialog(v: Virtual, vm: CarmenViewModel) {
+private fun ConfirmQuitDialog(v: Virtual, vm: ClaraViewModel) {
     Box(Modifier.fillMaxSize().clickable { vm.dismissOverlay() }) {
         v.At(78, 82, 170, 52) { Box(Modifier.fillMaxSize().background(Vga.Black)) }   // shadow
         v.At(75, 79, 170, 52) {

@@ -1,10 +1,10 @@
-package com.acme.carmen
+package com.acme.clara
 
-import com.acme.carmen.data.GameData
-import com.acme.carmen.game.CarmenViewModel
-import com.acme.carmen.game.ClueKind
-import com.acme.carmen.game.Phase
-import com.acme.carmen.game.SoundCue
+import com.acme.clara.data.GameData
+import com.acme.clara.game.ClaraViewModel
+import com.acme.clara.game.ClueKind
+import com.acme.clara.game.Phase
+import com.acme.clara.game.SoundCue
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -14,7 +14,7 @@ import org.junit.Test
 
 class GameLogicTest {
 
-    private fun fresh() = CarmenViewModel().apply { signOn("Tester") }
+    private fun fresh() = ClaraViewModel().apply { signOn("Tester") }
 
     // ---------- case generation ----------
 
@@ -25,7 +25,7 @@ class GameLogicTest {
             assertEquals(0, vm.s.progress)
             assertNull("fresh case has no warrant", vm.s.warrantFor)
             assertNotNull(vm.s.culprit)
-            assertFalse("Carmen is never the culprit early", vm.s.culprit!!.name == "Carmen Sandiego")
+            assertFalse("Clara is never the culprit early", vm.s.culprit!!.name == "Clara San Diego")
             assertEquals("case starts at route[0]", vm.s.route.first(), vm.s.currentCity)
             assertEquals("route cities are distinct", vm.s.route.size, vm.s.route.toSet().size)
         }
@@ -33,7 +33,7 @@ class GameLogicTest {
 
     @Test fun revealOrderUniquelyIdentifiesTheCulprit() {
         // A prefix of the discriminating order must pin down exactly one suspect (the culprit).
-        fun value(su: com.acme.carmen.data.Suspect, cat: String) = when (cat) {
+        fun value(su: com.acme.clara.data.Suspect, cat: String) = when (cat) {
             "sex" -> su.tSex; "hobby" -> su.tHobby; "hair" -> su.tHair
             "feature" -> su.tFeature; else -> su.tVehicle
         }
@@ -158,7 +158,7 @@ class GameLogicTest {
 
     // ---------- hideout confrontation odds ----------
 
-    private fun flyToHideout(vm: CarmenViewModel) {
+    private fun flyToHideout(vm: ClaraViewModel) {
         // fly the correct route leg by leg until at the final (hideout) city
         var guard = 0
         while (vm.s.progress < vm.s.route.size - 1 && guard++ < 12) {

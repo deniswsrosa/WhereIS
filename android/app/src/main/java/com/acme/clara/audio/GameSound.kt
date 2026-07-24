@@ -1,9 +1,9 @@
-package com.acme.carmen.audio
+package com.acme.clara.audio
 
 import android.content.Context
 import android.media.MediaPlayer
-import com.acme.carmen.R
-import com.acme.carmen.game.SoundCue
+import com.acme.clara.R
+import com.acme.clara.game.SoundCue
 
 /**
  * Plays the game's own audio, recovered byte-for-byte from the original MIDISND.DAT.

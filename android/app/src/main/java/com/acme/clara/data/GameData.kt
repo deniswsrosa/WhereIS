@@ -1,7 +1,7 @@
 // AUTO-GENERATED from corpus/game_data.json by scripts/gen_kotlin_data.py
 // Byte-exact strings extracted from CARMEN.EXE (Enhanced, MS-DOS v2.1, (c)1990 Broderbund).
 // DO NOT EDIT BY HAND.
-package com.acme.carmen.data
+package com.acme.clara.data
 
 data class Suspect(
     val name: String, val sex: String, val occupation: String,
@@ -205,7 +205,7 @@ object GameData {
         "vehicle:motorcycle" to listOf("{S} arrived on a motorcycle", "{S} was riding a motorbike", "{S} was carrying a helmet"),
     )
     val dossierMenuNames = listOf(
-        "Carmen Sandiego",
+        "Clara San Diego",
         "Merey LaRoc",
         "Dazzle Annie",
         "Lady Agatha",
@@ -219,7 +219,7 @@ object GameData {
 
     val suspects = listOf(
         Suspect(
-            name = "Carmen Sandiego", sex = "Female",
+            name = "Clara San Diego", sex = "Female",
             occupation = "Former spy for the Intelligence Service of Monaco",
             hobby = "Tennis", hair = "Reddish-brown", auto = "1939 Packard convertible",
             feature1 = "Never appears in public without her ruby necklace.", feature2 = "Great fondness for tacos.",
@@ -311,7 +311,7 @@ object GameData {
     const val ELIMINATES_ALL = "The information provided eliminates all possible suspects."
     const val CAUGHT_UP = "You have caught up with %s."
     const val NO_WARRANT_ESCAPE = "However, without a warrant we cannot make a legal arrest!"
-    const val GOT_AWAY = "It looks like Carmen's gang has gotten away with another caper!"
+    const val GOT_AWAY = "It looks like Clara's gang has gotten away with another caper!"
     const val TRAILED_CORRECTLY = "You have trailed %s correctly."
     const val FALSE_WARRANT = "Unfortunately, you have a warrant for %s."
     const val FALSE_ARREST = "Be careful, we could all be sued for false arrest!"
@@ -321,7 +321,7 @@ object GameData {
     const val PROMOTION = "Good job, %s, you have earned a promotion."
     const val NEW_RANK = "Your new rank is: %s."
     const val TOO_LONG = "We've just received word that %s slipped through your fingers because your investigation took too long!"
-    const val CARMEN_JAILED = "You have successfully arrested the ring-leader, Carmen Sandiego, and sent her to jail for good!"
+    const val CLARA_JAILED = "You have successfully arrested the ring-leader, Clara San Diego, and sent her to jail for good!"
     const val HALL_OF_FAME = "Congratulations, your name will go into the Interpol Hall of Fame!"
 
     // Promotion quiz: almanac fill-in-the-blank (matched case-insensitively).

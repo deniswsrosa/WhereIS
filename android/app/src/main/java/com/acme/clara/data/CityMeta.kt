@@ -1,4 +1,4 @@
-package com.acme.carmen.data
+package com.acme.clara.data
 
 /**
  * Per-city geography used for destination clues and the info panel.

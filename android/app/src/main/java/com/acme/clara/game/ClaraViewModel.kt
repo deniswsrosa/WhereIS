@@ -1,13 +1,13 @@
-package com.acme.carmen.game
+package com.acme.clara.game
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.acme.carmen.data.CityMeta
-import com.acme.carmen.data.GameData
-import com.acme.carmen.data.Suspect
-import com.acme.carmen.data.WorldMap
+import com.acme.clara.data.CityMeta
+import com.acme.clara.data.GameData
+import com.acme.clara.data.Suspect
+import com.acme.clara.data.WorldMap
 import kotlin.random.Random
 
 enum class Phase { INTRO, TITLE, SIGN_ON, BRIEFING, CITY, TRAVEL, CRIME, CHASE, RESULT }
@@ -111,13 +111,13 @@ data class GameState(
     companion object {
         const val DEADLINE_HOURS = 152     // Mon 9am -> Sun 5pm
         // Career length: promotions at 1, 5, 9, 13 solved (4 cases per middle rank); the
-        // first case as Ace Detective is always Carmen Sandiego herself — jail her and the
+        // first case as Ace Detective is always Clara San Diego herself — jail her and the
         // career ends in the Hall of Fame (1990 revised rules).
         const val CAREER_CASES = 14
     }
 }
 
-class CarmenViewModel : ViewModel() {
+class ClaraViewModel : ViewModel() {
     var s by mutableStateOf(GameState())
         private set
 
@@ -174,9 +174,9 @@ class CarmenViewModel : ViewModel() {
 
     // ---------- case generation ----------
     private fun newCase() {
-        val carmen = GameData.suspects.first { it.name == "Carmen Sandiego" }
-        val pool = GameData.suspects.filter { it.name != "Carmen Sandiego" }
-        // Carmen is only ever the culprit on the very last case of the career (1990 rules:
+        val carmen = GameData.suspects.first { it.name == "Clara San Diego" }
+        val pool = GameData.suspects.filter { it.name != "Clara San Diego" }
+        // Clara is only ever the culprit on the very last case of the career (1990 rules:
         // catching her is guaranteed, then the detective is retired from the roster)
         val culprit = if (s.casesSolved >= GameState.CAREER_CASES - 1) carmen else pool.random()
 
@@ -534,8 +534,8 @@ class CarmenViewModel : ViewModel() {
     private fun win(c: Suspect) {
         val crimeCity = s.route.firstOrNull() ?: s.currentCity
         val lines = mutableListOf<String>()
-        if (c.name == "Carmen Sandiego") {
-            lines += "You have successfully arrested the ring-leader, Carmen Sandiego, and sent her to jail for good!"
+        if (c.name == "Clara San Diego") {
+            lines += "You have successfully arrested the ring-leader, Clara San Diego, and sent her to jail for good!"
             lines += "Congratulations, your name will go into the Interpol Hall of Fame!"
         } else {
             // faithful phrasing: the CRIME city's police make the arrest and get the loot back
@@ -546,7 +546,7 @@ class CarmenViewModel : ViewModel() {
         val newCases = s.casesSolved + 1
         // jailing Carmen herself concludes the career — no promotion, straight to the
         // Hall of Fame report and off the roster
-        val careerOver = c.name == "Carmen Sandiego"
+        val careerOver = c.name == "Clara San Diego"
         // promotion cadence observed in the original: after case 1, then "four more cases
         // until your next promotion" — thresholds 1, 5, 9, 13
         val promote = !careerOver && s.rankIndex < GameData.ranks.lastIndex && newCases in setOf(1, 5, 9, 13)

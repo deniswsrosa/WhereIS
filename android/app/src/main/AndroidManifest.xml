@@ -7,14 +7,14 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="false"
-        android:theme="@style/Theme.Carmen">
+        android:theme="@style/Theme.Clara">
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:screenOrientation="sensorLandscape"
             android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden|keyboard|navigation|uiMode|density|layoutDirection|fontScale"
-            android:theme="@style/Theme.Carmen">
+            android:theme="@style/Theme.Clara">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

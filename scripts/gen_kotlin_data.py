@@ -12,7 +12,7 @@ g=json.load(open(os.path.join(BASE,"corpus/game_data.json")))
 # --- trait matrix derived from dossiers (documented) ---
 # sex, hobby, hair, feature, vehicle  (hair has 4 categories per witness fragments)
 TRAITS = {
- "Carmen Sandiego":            ("female","tennis","red","jewelry","convertible"),
+ "Clara San Diego":            ("female","tennis","red","jewelry","convertible"),
  "Merey LaRoc":                ("female","mt. climbing","brown","jewelry","limousine"),
  "Dazzle Annie Nonker":        ("female","tennis","blond","tattoo","limousine"),
  # "Denghby Roadster" = open-top roadster -> convertible; per the ADG mechanics analysis,
@@ -52,16 +52,22 @@ leadins=[clean(x) for x in g["clue_lead_ins"] if clean(x)]
 danger=[clean(x) for x in g["danger_messages"] if clean(x)]
 ranks=g["ranks"]
 
+# Product rename (trademark): the archival corpus keeps the original character name;
+# the shipped game renames the ring-leader. Applied at generation time only.
+RENAME={"Carmen Sandiego":"Clara San Diego"}
+def rn(x): return RENAME.get(x,x)
+
 suspects=[]
 for s in g["suspects"]:
-    sex,hobby,hair,feat,veh=TRAITS[s["name"]]
-    suspects.append({**s,"t_sex":sex,"t_hobby":hobby,"t_hair":hair,"t_feature":feat,"t_vehicle":veh})
+    nm=rn(s["name"])
+    sex,hobby,hair,feat,veh=TRAITS[nm]
+    suspects.append({**s,"name":nm,"t_sex":sex,"t_hobby":hobby,"t_hair":hair,"t_feature":feat,"t_vehicle":veh})
 
 K=[]
 K.append("// AUTO-GENERATED from corpus/game_data.json by scripts/gen_kotlin_data.py")
 K.append("// Byte-exact strings extracted from CARMEN.EXE (Enhanced, MS-DOS v2.1, (c)1990 Broderbund).")
 K.append("// DO NOT EDIT BY HAND.")
-K.append("package com.acme.carmen.data")
+K.append("package com.acme.clara.data")
 K.append("")
 K.append("data class Suspect(")
 K.append("    val name: String, val sex: String, val occupation: String,")
@@ -156,7 +162,7 @@ for key, phrasings in TRAIT_CLUES.items():
     K.append(f'        "{kesc(key)}" to listOf({inner}),')
 K.append("    )")
 # Dossiers menu short names, exactly as listed in the EXE menu resources.
-DOSSIER_MENU = ["Carmen Sandiego","Merey LaRoc","Dazzle Annie","Lady Agatha","Len Bulk",
+DOSSIER_MENU = ["Clara San Diego","Merey LaRoc","Dazzle Annie","Lady Agatha","Len Bulk",
                 "Scar Graynolt","Nick Brunch","Fast Eddie B","Ihor Ihorovich","Katherine Drib"]
 K.append("    "+klist("dossierMenuNames", DOSSIER_MENU))
 K.append("")
@@ -183,7 +189,7 @@ K.append('    const val NO_WARRANT = "No warrant has been issued."')
 K.append('    const val ELIMINATES_ALL = "The information provided eliminates all possible suspects."')
 K.append('    const val CAUGHT_UP = "You have caught up with %s."')
 K.append('    const val NO_WARRANT_ESCAPE = "However, without a warrant we cannot make a legal arrest!"')
-K.append('    const val GOT_AWAY = "It looks like Carmen\'s gang has gotten away with another caper!"')
+K.append('    const val GOT_AWAY = "It looks like Clara\'s gang has gotten away with another caper!"')
 K.append('    const val TRAILED_CORRECTLY = "You have trailed %s correctly."')
 K.append('    const val FALSE_WARRANT = "Unfortunately, you have a warrant for %s."')
 K.append('    const val FALSE_ARREST = "Be careful, we could all be sued for false arrest!"')
@@ -193,7 +199,7 @@ K.append('    const val THANKS = "We here at Interpol thank you for your good wo
 K.append('    const val PROMOTION = "Good job, %s, you have earned a promotion."')
 K.append('    const val NEW_RANK = "Your new rank is: %s."')
 K.append('    const val TOO_LONG = "We\'ve just received word that %s slipped through your fingers because your investigation took too long!"')
-K.append('    const val CARMEN_JAILED = "You have successfully arrested the ring-leader, Carmen Sandiego, and sent her to jail for good!"')
+K.append('    const val CLARA_JAILED = "You have successfully arrested the ring-leader, Clara San Diego, and sent her to jail for good!"')
 K.append('    const val HALL_OF_FAME = "Congratulations, your name will go into the Interpol Hall of Fame!"')
 K.append("")
 # Promotion quiz: almanac fill-in-the-blank (first entry captured verbatim; rest authored

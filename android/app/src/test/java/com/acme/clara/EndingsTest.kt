@@ -1,9 +1,9 @@
-package com.acme.carmen
+package com.acme.clara
 
-import com.acme.carmen.data.GameData
-import com.acme.carmen.game.CarmenViewModel
-import com.acme.carmen.game.Phase
-import com.acme.carmen.game.SoundCue
+import com.acme.clara.data.GameData
+import com.acme.clara.game.ClaraViewModel
+import com.acme.clara.game.Phase
+import com.acme.clara.game.SoundCue
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -13,19 +13,19 @@ import org.junit.Test
  *  promotion cadence — the corner cases of the confrontation. */
 class EndingsTest {
 
-    private fun fresh() = CarmenViewModel().apply { signOn("Tester") }
+    private fun fresh() = ClaraViewModel().apply { signOn("Tester") }
 
-    private fun CarmenViewModel.warrantFor(s: com.acme.carmen.data.Suspect) {
+    private fun ClaraViewModel.warrantFor(s: com.acme.clara.data.Suspect) {
         setComp("sex", s.tSex); setComp("hobby", s.tHobby); setComp("hair", s.tHair)
         setComp("feature", s.tFeature); setComp("vehicle", s.tVehicle); compute()
     }
 
-    private fun CarmenViewModel.flyToHideout() {
+    private fun ClaraViewModel.flyToHideout() {
         var guard = 0
         while (s.progress < s.route.size - 1 && guard++ < 12) { travelTo(s.route[s.progress + 1]); arrive() }
     }
 
-    private fun CarmenViewModel.confrontAtHideout() {
+    private fun ClaraViewModel.confrontAtHideout() {
         for (i in 0..2) { if (s.phase == Phase.CHASE) break; openVenue(i) }
         chaseDone()
     }
@@ -64,7 +64,7 @@ class EndingsTest {
         repeat(20) {
             val vm = fresh()
             val c = vm.s.culprit!!
-            val wrong = GameData.suspects.first { it.name != c.name && it.name != "Carmen Sandiego" }
+            val wrong = GameData.suspects.first { it.name != c.name && it.name != "Clara San Diego" }
             vm.warrantFor(wrong)
             // only meaningful when the decoy is uniquely identified and differs from the culprit
             if (vm.s.warrantFor?.name != wrong.name || wrong.name == c.name) return@repeat

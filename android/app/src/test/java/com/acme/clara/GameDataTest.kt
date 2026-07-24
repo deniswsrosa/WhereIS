@@ -1,7 +1,7 @@
-package com.acme.carmen
+package com.acme.clara
 
-import com.acme.carmen.data.GameData
-import com.acme.carmen.data.WorldMap
+import com.acme.clara.data.GameData
+import com.acme.clara.data.WorldMap
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -13,7 +13,7 @@ class GameDataTest {
 
     @Test fun tenSuspectsIncludingCarmen() {
         assertEquals(10, GameData.suspects.size)
-        assertTrue(GameData.suspects.any { it.name == "Carmen Sandiego" })
+        assertTrue(GameData.suspects.any { it.name == "Clara San Diego" })
     }
 
     @Test fun everySuspectTraitTupleIsUnique() {
@@ -45,7 +45,7 @@ class GameDataTest {
     @Test fun traitClueFragmentsCoverEveryUsedValue() {
         // Every hobby/hair/feature/vehicle value that a real suspect has must have witness
         // phrasings, or that trait clue would fall back to a generic line.
-        for (s in GameData.suspects.filter { it.name != "Carmen Sandiego" }) {
+        for (s in GameData.suspects.filter { it.name != "Clara San Diego" }) {
             for (key in listOf("hobby:${s.tHobby}", "hair:${s.tHair}",
                     "feature:${s.tFeature}", "vehicle:${s.tVehicle}")) {
                 val frags = GameData.traitClueFragments[key]
@@ -84,7 +84,7 @@ class GameDataTest {
 
     @Test fun dossierMenuNamesMatchSuspectCount() {
         assertEquals(GameData.suspects.size, GameData.dossierMenuNames.size)
-        assertEquals("Carmen Sandiego", GameData.dossierMenuNames.first())
+        assertEquals("Clara San Diego", GameData.dossierMenuNames.first())
     }
 
     @Test fun fiveRanksAndPromotionQuizFilledIn() {

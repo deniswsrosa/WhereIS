@@ -1,4 +1,4 @@
-package com.acme.carmen.data
+package com.acme.clara.data
 
 import androidx.compose.ui.geometry.Offset
 

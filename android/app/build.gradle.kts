@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.acme.carmen"
+    namespace = "com.acme.clara"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.acme.carmen"
+        applicationId = "com.acme.clara"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

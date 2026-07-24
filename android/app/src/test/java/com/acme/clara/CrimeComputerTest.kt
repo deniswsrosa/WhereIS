@@ -1,7 +1,7 @@
-package com.acme.carmen
+package com.acme.clara
 
-import com.acme.carmen.data.GameData
-import com.acme.carmen.game.CarmenViewModel
+import com.acme.clara.data.GameData
+import com.acme.clara.game.ClaraViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -12,9 +12,9 @@ import org.junit.Test
  *  when exactly one matches — independent of the current case's culprit. */
 class CrimeComputerTest {
 
-    private fun vm() = CarmenViewModel().apply { signOn("Tester") }
+    private fun vm() = ClaraViewModel().apply { signOn("Tester") }
 
-    private fun CarmenViewModel.setAll(sex: String?, hobby: String?, hair: String?, feat: String?, veh: String?) {
+    private fun ClaraViewModel.setAll(sex: String?, hobby: String?, hair: String?, feat: String?, veh: String?) {
         setComp("sex", sex); setComp("hobby", hobby); setComp("hair", hair)
         setComp("feature", feat); setComp("vehicle", veh)
     }

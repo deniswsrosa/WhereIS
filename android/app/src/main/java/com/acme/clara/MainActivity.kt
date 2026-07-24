@@ -1,4 +1,4 @@
-package com.acme.carmen
+package com.acme.clara
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -14,11 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.acme.carmen.audio.GameSound
-import com.acme.carmen.game.CarmenViewModel
-import com.acme.carmen.game.Phase
-import com.acme.carmen.ui.screens.*
-import com.acme.carmen.ui.theme.Vga
+import com.acme.clara.audio.GameSound
+import com.acme.clara.game.ClaraViewModel
+import com.acme.clara.game.Phase
+import com.acme.clara.ui.screens.*
+import com.acme.clara.ui.theme.Vga
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,13 +27,13 @@ class MainActivity : ComponentActivity() {
         // resizing (shrinking) the whole window. The HQ printer screen reads that inset
         // to pan itself up at full size, rather than collapsing into a tiny box.
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        setContent { CarmenApp() }
+        setContent { ClaraApp() }
     }
 }
 
 @Composable
-fun CarmenApp() {
-    val vm: CarmenViewModel = viewModel()
+fun ClaraApp() {
+    val vm: ClaraViewModel = viewModel()
     val context = LocalContext.current
     // Keep the audio engine's mute state in sync with the Options > Sound toggle.
     LaunchedEffect(vm.s.soundOn) { GameSound.setEnabled(context, vm.s.soundOn) }

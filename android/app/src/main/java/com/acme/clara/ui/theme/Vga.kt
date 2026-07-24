@@ -1,4 +1,4 @@
-package com.acme.carmen.ui.theme
+package com.acme.clara.ui.theme
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
