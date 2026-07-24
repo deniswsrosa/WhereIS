@@ -20,6 +20,33 @@
 >   invented "Cancel" row, and got the DOS grow-out animation.
 > - Still open: §19 clue-phrasing audit (separate content/balance pass), §17's optional
 >   LED blink, and section D (sound, menu dropdown contents).
+>
+> **STATUS (2026-07-24 later pass): remaining gaps closed.**
+> - §17 LED blink: front-bezel LEDs (`crime_computer_leds.png`, cropped from
+>   `dos_computer_wait_led.png` at virtual (60,97)) blink every 350 ms during COMPUTE.
+> - §19 clue phrasing: replaced invented templates with the DOS EXE grammar —
+>   `GameData.traitClueFragments` (verbatim per-trait sentences, 3 each / 1 for hair) with
+>   `{S}/{s}/{p}` pronoun slots filled from the culprit's sex (so a clue leaks the sex the
+>   way the original does), the 8 real `clueLeadIns`, and `noInformationByVenue` (per-venue
+>   off-track apology). Destination clues cite a region + landmark fact via CityMeta instead
+>   of naming the city. Verified on the emulator (trait, destination, off-track lines).
+> - Menus: Game = About Carmen… / New / **Save (grayed)** / **Quit** (→ "Do you really want
+>   to quit?" Yes/No dialog); Options = √Sound / Joystick; Dossiers uses the EXE short names.
+> - Riverfront art: already present at `work/identified/venues/riverfront.png` and wired as
+>   `venue_riverfront.png` (no capture needed).
+> - Sound: `MIDISND.DAT` is the CARMEN.DAT container format holding 12 SMF sequences; item 11
+>   is the full-arrangement title theme, extracted to `res/raw/theme.mid` and played by
+>   Android's Sonivox GM synth (`audio/GameSound.kt`) on intro/title/sign-on, stopping on
+>   gameplay, honoring Options > Sound (fake "not wired up" dialog removed). The 11 event
+>   stingers are bundled as `jingle_0..10` but not yet mapped to events — the correct
+>   event→stinger mapping needs auditioning (a wrong guess would regress fidelity).
+>
+> **CITIES.DAT text (not cracked):** its per-item text is bit-packed with a variable-length
+> code keyed off the EXE's frequency-ordered alphabet at file 0x1bd66 (LZSS-for-images and
+> nibble-escape both fail on it). The live-memory-dump fallback (drive DOSBox-X to a witness,
+> read guest RAM) is blocked by the packaged `dosbox-x` carrying `cap_net_raw=ep`, which makes
+> the process non-dumpable; a cap-stripped copy is dumpable but the Xwayland driving proved
+> too flaky to complete a run this session. Destination clues use CityMeta facts instead.
 
 Both games were played end-to-end to a **win** on the same day and compared stage by stage:
 

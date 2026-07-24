@@ -31,7 +31,7 @@ import com.acme.carmen.game.CarmenViewModel
 import com.acme.carmen.game.Overlay
 import com.acme.carmen.ui.theme.Vga
 
-private data class MenuItemDef(val label: String, val action: () -> Unit)
+private data class MenuItemDef(val label: String, val enabled: Boolean = true, val action: () -> Unit)
 
 @Composable
 fun GameMenuBar(v: Virtual, vm: CarmenViewModel) {
@@ -42,22 +42,28 @@ fun GameMenuBar(v: Virtual, vm: CarmenViewModel) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(v.w(6))
     ) {
+        // Menu contents match the DOS EXE menu resources: Game = About Carmen... / New /
+        // Save (always grayed — no save slots in the remake yet) / Quit (with the original
+        // "Do you really want to quit?" confirm); Options = Sound / Joystick.
         MenuTitle(v, "Game", listOf(
             MenuItemDef("About Carmen...") { vm.openOverlay(Overlay.About) },
-            MenuItemDef("New Case") { vm.menuNewCase() },
-            MenuItemDef("Quit to Title") { vm.menuQuitToTitle() },
+            MenuItemDef("New") { vm.menuNewCase() },
+            MenuItemDef("Save", enabled = false) {},
+            MenuItemDef("Quit") { vm.openOverlay(Overlay.ConfirmQuit) },
         ))
         MenuTitle(v, "Options", listOf(
-            MenuItemDef(if (s.soundOn) "Sound: On" else "Sound: Off") { vm.toggleSound() },
-            MenuItemDef("Joystick") { vm.showJoystick() },
+            MenuItemDef(if (s.soundOn) "√Sound" else " Sound") { vm.toggleSound() },
+            MenuItemDef(" Joystick") { vm.showJoystick() },
         ))
         MenuTitle(v, "Acme", listOf(
             MenuItemDef("Detective Roster") { vm.openOverlay(Overlay.Roster) },
             MenuItemDef("Hall of Fame") { vm.openOverlay(Overlay.HallOfFame) },
         ))
-        // Dossiers menu lists the ten suspects directly, like the original
-        MenuTitle(v, "Dossiers", GameData.suspects.map { su ->
-            MenuItemDef(su.name.replace("\"", "")) { vm.openOverlay(Overlay.Dossier(su)) }
+        // Dossiers menu lists the ten suspects under their EXE short names
+        MenuTitle(v, "Dossiers", GameData.suspects.mapIndexed { i, su ->
+            MenuItemDef(GameData.dossierMenuNames.getOrElse(i) { su.name }) {
+                vm.openOverlay(Overlay.Dossier(su))
+            }
         })
     }
 }
@@ -82,10 +88,12 @@ private fun MenuTitle(v: Virtual, title: String, items: List<MenuItemDef>) {
                 var pressed by remember { mutableStateOf(false) }
                 Box(Modifier.fillMaxWidth()
                     .background(if (pressed) Vga.Black else Vga.White)
-                    .clickable { pressed = true; open = false; def.action() }
+                    .clickable(enabled = def.enabled) { pressed = true; open = false; def.action() }
                     .padding(horizontal = 14.dp, vertical = 5.dp)) {
+                    // disabled items render gray, like the DOS grayed Save entry
                     Text(def.label, fontFamily = FontFamily.Monospace,
-                        color = if (pressed) Vga.White else Vga.Black,
+                        color = if (!def.enabled) Vga.LightGray
+                            else if (pressed) Vga.White else Vga.Black,
                         fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
             }
@@ -98,6 +106,7 @@ private fun MenuTitle(v: Virtual, title: String, items: List<MenuItemDef>) {
 fun OverlayHost(v: Virtual, vm: CarmenViewModel) {
     val o = vm.s.overlay ?: return
     if (o is Overlay.Dossier) { DossierWindow(v, o.suspect) { vm.dismissOverlay() }; return }
+    if (o is Overlay.ConfirmQuit) { ConfirmQuitDialog(v, vm); return }
     val (title, lines) = when (o) {
         Overlay.About -> "ABOUT" to listOf(
             "Where in the World is", "Carmen Sandiego?  (Enhanced)", "MS-DOS Version 2.1",
@@ -112,6 +121,7 @@ fun OverlayHost(v: Virtual, vm: CarmenViewModel) {
             listOf("The Hall of Fame is empty.")
         else listOf("${vm.s.detectiveName}", "${GameData.ranks[vm.s.rankIndex]} — ${vm.s.casesSolved} case(s)")
         is Overlay.Dossier -> "" to emptyList()   // handled by DossierWindow above
+        Overlay.ConfirmQuit -> "" to emptyList()  // handled by ConfirmQuitDialog above
         is Overlay.Info -> o.title to o.lines
     }
 
@@ -135,6 +145,36 @@ fun OverlayHost(v: Virtual, vm: CarmenViewModel) {
             DosButton("CLOSE", fill = Vga.Green, textColor = Vga.White,
                 style = v.text(9, bold = true)) { vm.dismissOverlay() }
         }
+    }
+}
+
+/** Game > Quit: the original's "Do you really want to quit?" dialog with yellow Yes/No
+ *  buttons (red bold text, black border + drop shadow — same style as the sign-on Y/N). */
+@Composable
+private fun ConfirmQuitDialog(v: Virtual, vm: CarmenViewModel) {
+    Box(Modifier.fillMaxSize().clickable { vm.dismissOverlay() }) {
+        v.At(78, 82, 170, 52) { Box(Modifier.fillMaxSize().background(Vga.Black)) }   // shadow
+        v.At(75, 79, 170, 52) {
+            Column(Modifier.fillMaxSize().background(Vga.White)
+                .border(BorderStroke(v.w(1), Vga.Black)).padding(v.w(4)),
+                horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Do you really want to quit?", style = v.text(8, color = Vga.Black, bold = true))
+                Spacer(Modifier.weight(1f))
+                Row(horizontalArrangement = Arrangement.spacedBy(v.w(10))) {
+                    QuitButton(v, "Yes") { vm.menuQuitToTitle() }
+                    QuitButton(v, "No") { vm.dismissOverlay() }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuitButton(v: Virtual, label: String, onClick: () -> Unit) {
+    Box(Modifier.background(Vga.Yellow).border(BorderStroke(v.w(1), Vga.Black))
+        .clickable(onClick = onClick).padding(horizontal = v.w(10), vertical = v.w(2)),
+        contentAlignment = Alignment.Center) {
+        Text(label, style = v.text(8.5f, color = Vga.Red, bold = true))
     }
 }
 

@@ -19,6 +19,8 @@ sealed interface Overlay {
     data object About : Overlay
     data object Roster : Overlay
     data object HallOfFame : Overlay
+    /** Game > Quit — the original's "Do you really want to quit?" Yes/No dialog. */
+    data object ConfirmQuit : Overlay
     /** One suspect's dossier — the white typed-on window from the original's Dossiers menu. */
     data class Dossier(val suspect: Suspect) : Overlay
     data class Info(val title: String, val lines: List<String>) : Overlay
@@ -149,12 +151,9 @@ class CarmenViewModel : ViewModel() {
     fun dismissOverlay() { s = s.copy(overlay = null) }
     fun menuNewCase() { s = s.copy(overlay = null, phase = Phase.BRIEFING); newCase() }
     fun menuQuitToTitle() { s = GameState(phase = Phase.TITLE) }
-    fun toggleSound() {
-        val on = !s.soundOn
-        s = s.copy(soundOn = on, overlay = Overlay.Info("SOUND",
-            listOf("Sound is now ${if (on) "ON" else "OFF"}.", "",
-                "(Digitized & MIDI audio are", "not yet wired up in this remake.)")))
-    }
+    // Options > Sound is a silent checkmark toggle in the original (the √ beside the item
+    // reflects the state); the actual mute is applied by the audio engine in the UI layer.
+    fun toggleSound() { s = s.copy(soundOn = !s.soundOn, overlay = null) }
     fun showJoystick() {
         s = s.copy(overlay = Overlay.Info("JOYSTICK",
             listOf("Joystick improperly centered", "or not present.")))
@@ -236,7 +235,9 @@ class CarmenViewModel : ViewModel() {
 
         if (!onTrack) {
             places.forEachIndexed { i, p ->
-                list.add(Venue(p, occs[i], ClueKind.NONE, GameData.noInformation.random()))
+                // wrong city: each venue answers with its own DOS no-information line
+                val line = GameData.noInformationByVenue[p] ?: GameData.noInformation.random()
+                list.add(Venue(p, occs[i], ClueKind.NONE, line))
             }
         } else if (st.currentCity == st.hideout) {
             // Hideout city: every venue shows the special line until the crook is found
@@ -261,8 +262,9 @@ class CarmenViewModel : ViewModel() {
                     if (tr != null) {
                         list.add(Venue(p, occ, ClueKind.TRAIT, traitClue(tr), tr))
                     } else {
-                        val txt = "${GameData.clueLeadIns.random()} ${flavourFood(st.culprit!!)}."
-                        list.add(Venue(p, occ, ClueKind.DANGER, txt))
+                        // out of discriminating traits: a food/flavour remark (still a full
+                        // DOS sentence, so no extra lead-in — matches "She mentioned…")
+                        list.add(Venue(p, occ, ClueKind.DANGER, "${flavourFood(st.culprit!!)}."))
                     }
                 }
             }
@@ -273,50 +275,50 @@ class CarmenViewModel : ViewModel() {
     private fun destinationClue(next: String): String {
         val info = CityMeta.of(next)
         val lead = GameData.clueLeadIns.random()
-        val she = if (s.culprit?.sex == "Female") "she" else "he"
-        return "$lead $she was headed for a city in ${info.region}, known for ${info.landmark}."
+        // Like the original, the destination is never named outright — the witness cites a
+        // fact you look up (a region + a distinctive landmark), phrased a few different ways.
+        val frag = pronouns(when (Random.nextInt(3)) {
+            0 -> "{s} was headed for a country in ${info.region}"
+            1 -> "{s} planned to visit a place known for ${info.landmark}"
+            else -> "{s} was headed somewhere in ${info.region}, near ${info.landmark}"
+        })
+        return "$lead $frag."
+    }
+
+    /** Substitute the DOS pronoun slots for the culprit's sex. {S}=She/He (sentence start),
+     *  {s}=she/he, {p}=her/his. The original leaks the suspect's sex through these pronouns. */
+    private fun pronouns(frag: String): String {
+        val female = s.culprit?.sex == "Female"
+        return frag.replace("{S}", if (female) "She" else "He")
+            .replace("{s}", if (female) "she" else "he")
+            .replace("{p}", if (female) "her" else "his")
     }
 
     private fun traitClue(tr: Pair<String, String>): String {
-        val lead = GameData.clueLeadIns.random()
         val (cat, v) = tr
-        val she = if (s.culprit?.sex == "Female") "She" else "He"
-        val frag = when (cat) {
-            "sex" -> "the suspect was ${if (v == "female") "a woman" else "a man"}"
-            "hobby" -> when (v) {
-                "tennis" -> "${she.lowercase()} enjoyed playing tennis"
-                "mt. climbing" -> "${she.lowercase()} was a mountain climber"
-                "croquet" -> "${she.lowercase()} played croquet"
-                else -> "${she.lowercase()} liked $v"
-            }
-            "hair" -> "the suspect had $v hair"
-            "feature" -> when (v) {
-                "ring" -> "the suspect wore a large ring"
-                "tattoo" -> "I noticed a tattoo on the suspect"
-                "jewelry" -> "the suspect wore fancy jewelry"
-                "scar" -> "the suspect had a noticeable scar"
-                else -> "the suspect $v"
-            }
-            "vehicle" -> when (v) {
-                "convertible" -> "the suspect arrived in a convertible"
-                "limousine" -> "the suspect was driving a limo"
-                "motorcycle" -> "the suspect arrived on a motorcycle"
-                "race car" -> "the suspect sped off in a race car"
-                else -> "the suspect had a $v"
-            }
-            else -> "the suspect looked suspicious"
-        }
-        return "$lead $frag."
+        // §19: sex is never its own clue in the original — it rides inside every trait
+        // sentence's pronouns. For a bare sex trait, fall back to a jewelry-neutral remark.
+        val frags = GameData.traitClueFragments["$cat:$v"]
+        val frag = if (frags != null) pronouns(frags.random())
+            else pronouns(when (cat) {
+                "sex" -> "{S} looked like the person you're after"
+                "hair" -> "{S} had $v hair"
+                else -> "{S} matched your description"
+            })
+        // ~⅓ of DOS trait lines are the bare sentence; the rest carry a lead-in
+        val lead = GameData.clueLeadIns.random()
+        return if (Random.nextInt(3) == 0) "$frag." else "$lead ${frag.replaceFirstChar { it.lowercase() }}."
     }
 
     private fun flavourFood(c: Suspect): String {
         val f = (c.feature2 + " " + c.feature1).lowercase()
-        return when {
-            "taco" in f || "mexican" in f -> "the suspect asked where to find good Mexican food"
-            "seafood" in f || "shellfish" in f || "lobster" in f -> "the suspect ordered a lot of seafood"
-            "spicy" in f -> "the suspect loved spicy food"
-            else -> "the suspect was acting suspicious"
+        val frag = when {
+            "taco" in f || "mexican" in f -> "{S} mentioned {s} liked Mexican food"
+            "seafood" in f || "shellfish" in f || "lobster" in f -> "{S} mentioned {s} liked seafood"
+            "spicy" in f -> "{S} mentioned {s} liked spicy food"
+            else -> "{S} said {s} didn't like seafood"
         }
+        return pronouns(frag)
     }
 
     // ---------- player actions in a city ----------

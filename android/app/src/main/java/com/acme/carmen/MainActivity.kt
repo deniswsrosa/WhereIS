@@ -9,9 +9,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.acme.carmen.audio.GameSound
 import com.acme.carmen.game.CarmenViewModel
 import com.acme.carmen.game.Phase
 import com.acme.carmen.ui.screens.*
@@ -31,6 +34,17 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun CarmenApp() {
     val vm: CarmenViewModel = viewModel()
+    val context = LocalContext.current
+    // Keep the audio engine's mute state in sync with the Options > Sound toggle.
+    LaunchedEffect(vm.s.soundOn) { GameSound.setEnabled(context, vm.s.soundOn) }
+    // The title theme plays over the front-of-house screens (intro/title/sign-on) and stops
+    // once the investigation proper begins, like the original.
+    LaunchedEffect(vm.s.phase, vm.s.soundOn) {
+        when (vm.s.phase) {
+            Phase.INTRO, Phase.TITLE, Phase.SIGN_ON -> GameSound.startTheme(context)
+            else -> GameSound.stopTheme()
+        }
+    }
     // Note: only systemBars are padded here — the IME inset is deliberately NOT consumed,
     // so opening the keyboard never shrinks the 320x200 canvas. Screens that host a text
     // field (the HQ printer) handle the keyboard themselves by panning up.

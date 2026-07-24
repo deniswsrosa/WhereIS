@@ -126,10 +126,7 @@ object GameData {
         "Attache",
         "Ambassador"
     )
-
-    /** Which witnesses staff each venue — matches the original game's pairings
-     *  (verified against DOSBox captures: Harbor→Customs officer/Sailor, Museum→Docent,
-     *  Library→Circulation clerk/Reference librarian/Archivist, Palace→Soldier, etc.) */
+    // Which witnesses staff each venue (verified against DOSBox captures).
     val venueOccupations = mapOf(
         "Bank" to listOf("Vice President", "Bank Guard", "Teller"),
         "Hotel" to listOf("Hotel manager", "Bellhop", "House detective"),
@@ -144,16 +141,23 @@ object GameData {
         "Marketplace" to listOf("Hawker", "Street merchant", "Urchin"),
         "Foreign Ministry" to listOf("Under Secretary", "Attache", "Ambassador"),
     )
-    val noInformation = listOf(
-        "I'm sorry, I have never seen the person you are looking for.",
-        "No one like that has checked in here.",
-        "Sorry, I haven't seen anybody like that around here.",
-        "I don't think I've seen anybody like that around the library.",
-        "It's awfully busy around here; I haven't noticed anyone suspicious.",
-        "Sorry, I haven't noticed anything suspicious around the harbor.",
-        "There hasn't been another person around here all day.",
-        "No one like that has done business here today."
+    // Off-track witnesses answer with their venue's own line (DOS keeps one per
+    // venue, in venue-list order in the EXE; several venues share the apology).
+    val noInformationByVenue = mapOf(
+        "Bank" to "I'm sorry, I have never seen the person you are looking for.",
+        "Hotel" to "No one like that has checked in here.",
+        "Museum" to "I'm sorry, I have never seen the person you are looking for.",
+        "Sport Club" to "Sorry, I haven't seen anybody like that around here.",
+        "Library" to "I don't think I've seen anybody like that around the library.",
+        "Airport" to "It's awfully busy around here; I haven't noticed anyone suspicious.",
+        "Harbor" to "Sorry, I haven't noticed anything suspicious around the harbor.",
+        "Riverfront" to "There hasn't been another person around here all day.",
+        "Palace" to "I'm sorry, I have never seen the person you are looking for.",
+        "Stock Exchange" to "No one like that has done business here today.",
+        "Marketplace" to "Sorry, I haven't seen anybody like that around here.",
+        "Foreign Ministry" to "I'm sorry, I have never seen the person you are looking for.",
     )
+    val noInformation = noInformationByVenue.values.distinct()
     val clueLeadIns = listOf(
         "My sources tell me",
         "A reliable source told me",
@@ -181,6 +185,36 @@ object GameData {
         "Private Eye",
         "Investigator",
         "Ace Detective"
+    )
+
+    // Suspect-trait sentences verbatim from the DOS EXE. Pronoun slots {S}/{s}/{p}
+    // are filled from the culprit's sex, so a clue leaks the sex like the original.
+    val traitClueFragments = mapOf(
+        "hobby:tennis" to listOf("{S} said that {s} enjoyed playing tennis", "{S} asked about the recent tennis match", "{S} was carrying a tennis raquet"),
+        "hobby:mt. climbing" to listOf("{S} said {s} was a mountain climber", "{S} bragged about dangerous sports", "{S} talked about great mountains"),
+        "hobby:croquet" to listOf("{S} mentioned that {s} plays croquet", "{S} said {s} hated dangerous sports", "{S} talked about a croquet match"),
+        "hair:brown" to listOf("{S} had brown hair"),
+        "hair:blond" to listOf("{S} had blond hair"),
+        "hair:red" to listOf("{S} had red hair"),
+        "hair:black" to listOf("{S} had black hair"),
+        "feature:ring" to listOf("{S} had a large ring on", "{S} had a fancy ring on", "I liked the ring {s} had on"),
+        "feature:tattoo" to listOf("I noticed a tattoo on {p} arm", "{S} tried to conceal a tattoo", "{S} had an ugly tattoo"),
+        "feature:jewelry" to listOf("{S} wore fancy jewelry", "The jewelry {s} wore was stunning", "The jewelry {s} wore looked expensive"),
+        "vehicle:convertible" to listOf("{S} arrived in a convertible", "{S} had a nice convertible", "{S} offered me a ride in {p} convertible"),
+        "vehicle:limousine" to listOf("{S} arrived in a private limo", "{S} was driving a limo", "{S} had {p} driver along"),
+        "vehicle:motorcycle" to listOf("{S} arrived on a motorcycle", "{S} was riding a motorbike", "{S} was carrying a helmet"),
+    )
+    val dossierMenuNames = listOf(
+        "Carmen Sandiego",
+        "Merey LaRoc",
+        "Dazzle Annie",
+        "Lady Agatha",
+        "Len Bulk",
+        "Scar Graynolt",
+        "Nick Brunch",
+        "Fast Eddie B",
+        "Ihor Ihorovich",
+        "Katherine Drib"
     )
 
     val suspects = listOf(
@@ -213,8 +247,6 @@ object GameData {
             occupation = "Reader of upper-class English mystery stories",
             hobby = "Tennis", hair = "Red", auto = "Denghby Roadster",
             feature1 = "Has a diamond ring the size of a grapefruit.", feature2 = "Speeds through the countryside looking for great Mexican restaurants.",
-            // "Denghby Roadster" = open-top roadster -> convertible. "race car" is one of
-            // the 6 computer traits no suspect has (selecting it eliminates all suspects).
             tSex = "female", tHobby = "tennis", tHair = "red",
             tFeature = "ring", tVehicle = "convertible",
         ),
@@ -277,24 +309,6 @@ object GameData {
     const val WARRANT_ISSUED = "You now have a warrant to arrest %s."
     const val NO_WARRANT = "No warrant has been issued."
     const val ELIMINATES_ALL = "The information provided eliminates all possible suspects."
-
-    /** Promotion quiz: almanac-style fill-in-the-blank questions (the original sends you to
-     *  the World Almanac and Book of Facts for the missing word). Answers are matched
-     *  case-insensitively. First entry captured verbatim from the original. */
-    val promotionQuiz = listOf(
-        "______ Island is the \"mainland\" of Japan. (See Japan, Geography: Topography)" to "Honshu",
-        "The capital of Iraq, on the Tigris River, is ______. (See Iraq, Geography)" to "Baghdad",
-        "The ______ River is the longest river in Egypt and in all of Africa." to "Nile",
-        "Mount ______ is the highest mountain in the world, in the Himalayas of Nepal." to "Everest",
-        "The smallest and oldest republic in Europe is San ______." to "Marino",
-        "______ is the capital of Norway and its major port." to "Oslo",
-        "The famous opera house with sail-shaped roofs is found in ______, Australia." to "Sydney",
-        "Machu Picchu, the lost city of the Incas, is located in ______. (See Peru)" to "Peru",
-        "The Comoros island capital of ______ lies between Madagascar and Africa." to "Moroni",
-        "______ is the island nation south of India famous for tea and cinnamon." to "Sri Lanka",
-        "Red Square and St. Basil's cathedral are landmarks of ______." to "Moscow",
-        "The ______ Canal in Egypt connects the Mediterranean and the Red Sea." to "Suez",
-    )
     const val CAUGHT_UP = "You have caught up with %s."
     const val NO_WARRANT_ESCAPE = "However, without a warrant we cannot make a legal arrest!"
     const val GOT_AWAY = "It looks like Carmen's gang has gotten away with another caper!"
@@ -309,4 +323,20 @@ object GameData {
     const val TOO_LONG = "We've just received word that %s slipped through your fingers because your investigation took too long!"
     const val CARMEN_JAILED = "You have successfully arrested the ring-leader, Carmen Sandiego, and sent her to jail for good!"
     const val HALL_OF_FAME = "Congratulations, your name will go into the Interpol Hall of Fame!"
+
+    // Promotion quiz: almanac fill-in-the-blank (matched case-insensitively).
+    val promotionQuiz = listOf(
+        "______ Island is the \"mainland\" of Japan. (See Japan, Geography: Topography)" to "Honshu",
+        "The capital of Iraq, on the Tigris River, is ______. (See Iraq, Geography)" to "Baghdad",
+        "The ______ River is the longest river in Egypt and in all of Africa." to "Nile",
+        "Mount ______ is the highest mountain in the world, in the Himalayas of Nepal." to "Everest",
+        "The smallest and oldest republic in Europe is San ______." to "Marino",
+        "______ is the capital of Norway and its major port." to "Oslo",
+        "The famous opera house with sail-shaped roofs is found in ______, Australia." to "Sydney",
+        "Machu Picchu, the lost city of the Incas, is located in ______. (See Peru)" to "Peru",
+        "The Comoros island capital of ______ lies between Madagascar and Africa." to "Moroni",
+        "______ is the island nation south of India famous for tea and cinnamon." to "Sri Lanka",
+        "Red Square and St. Basil's cathedral are landmarks of ______." to "Moscow",
+        "The ______ Canal in Egypt connects the Mediterranean and the Red Sea." to "Suez",
+    )
 }

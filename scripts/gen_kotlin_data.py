@@ -45,7 +45,8 @@ def clean(s): return "".join(ch for ch in s if 32<=ord(ch)<127).strip()
 
 cities=g["cities"]
 venues=[clean(v).lstrip("$") for v in g["venues"] if clean(v)]
-occs=[clean(o).lstrip("$") for o in g["occupations"] if clean(o)]
+# "Ok" is a button label that leaked into the occupations block — drop it.
+occs=[o for o in (clean(o).lstrip("$") for o in g["occupations"] if clean(o)) if o != "Ok"]
 noinfo=list(dict.fromkeys(clean(x) for x in g["no_information_responses"] if clean(x)))
 leadins=[clean(x) for x in g["clue_lead_ins"] if clean(x)]
 danger=[clean(x) for x in g["danger_messages"] if clean(x)]
@@ -81,10 +82,83 @@ K.append('    val sexes = listOf("female", "male")')
 K.append("")
 K.append("    "+klist("venues", venues))
 K.append("    "+klist("occupations", occs))
-K.append("    "+klist("noInformation", noinfo))
+# Which witnesses staff each venue (verified against DOSBox captures).
+VENUE_OCCUPATIONS = {
+ "Bank": ["Vice President","Bank Guard","Teller"],
+ "Hotel": ["Hotel manager","Bellhop","House detective"],
+ "Museum": ["Museum guard","Docent","Curator"],
+ "Sport Club": ["Tennis pro","Waiter","Bartender"],
+ "Library": ["Circulation clerk","Reference librarian","Archivist"],
+ "Airport": ["Pilot","Flight attendant","Baggage clerk"],
+ "Harbor": ["Sailor","Harbor Master","Customs officer","Stevedore","Tugboat captain"],
+ "Riverfront": ["Sailor","Stevedore","Urchin","Tugboat captain"],
+ "Palace": ["Palace guard","Soldier","Privy Councillor"],
+ "Stock Exchange": ["Analyst","Trader","Messenger"],
+ "Marketplace": ["Hawker","Street merchant","Urchin"],
+ "Foreign Ministry": ["Under Secretary","Attache","Ambassador"],
+}
+K.append("    // Which witnesses staff each venue (verified against DOSBox captures).")
+K.append("    val venueOccupations = mapOf(")
+for ven, os_ in VENUE_OCCUPATIONS.items():
+    inner = ", ".join(f'"{kesc(x)}"' for x in os_)
+    K.append(f'        "{kesc(ven)}" to listOf({inner}),')
+K.append("    )")
+# Off-track no-information lines, one per venue (EXE keeps them in venue-list order;
+# several venues share the generic apology). Emitted as a map so the right venue answers.
+NOINFO_BY_VENUE = {
+ "Bank":"I'm sorry, I have never seen the person you are looking for.",
+ "Hotel":"No one like that has checked in here.",
+ "Museum":"I'm sorry, I have never seen the person you are looking for.",
+ "Sport Club":"Sorry, I haven't seen anybody like that around here.",
+ "Library":"I don't think I've seen anybody like that around the library.",
+ "Airport":"It's awfully busy around here; I haven't noticed anyone suspicious.",
+ "Harbor":"Sorry, I haven't noticed anything suspicious around the harbor.",
+ "Riverfront":"There hasn't been another person around here all day.",
+ "Palace":"I'm sorry, I have never seen the person you are looking for.",
+ "Stock Exchange":"No one like that has done business here today.",
+ "Marketplace":"Sorry, I haven't seen anybody like that around here.",
+ "Foreign Ministry":"I'm sorry, I have never seen the person you are looking for.",
+}
+K.append("    // Off-track witnesses answer with their venue's own line (DOS keeps one per")
+K.append("    // venue, in venue-list order in the EXE; several venues share the apology).")
+K.append("    val noInformationByVenue = mapOf(")
+for ven, line in NOINFO_BY_VENUE.items():
+    K.append(f'        "{kesc(ven)}" to "{kesc(line)}",')
+K.append("    )")
+K.append("    val noInformation = noInformationByVenue.values.distinct()")
 K.append("    "+klist("clueLeadIns", leadins))
 K.append("    "+klist("dangerMessages", danger))
 K.append("    "+klist("ranks", ranks))
+K.append("")
+# Suspect-trait witness sentences, verbatim from the EXE fragment table (Ç/ü/é separators
+# resolved into pronoun slots {S}=She/He {s}=she/he {p}=her/his; only values a real suspect
+# has appear in the EXE — three phrasings each, one for hair).
+TRAIT_CLUES = {
+ "hobby:tennis": ["{S} said that {s} enjoyed playing tennis","{S} asked about the recent tennis match","{S} was carrying a tennis raquet"],
+ "hobby:mt. climbing": ["{S} said {s} was a mountain climber","{S} bragged about dangerous sports","{S} talked about great mountains"],
+ "hobby:croquet": ["{S} mentioned that {s} plays croquet","{S} said {s} hated dangerous sports","{S} talked about a croquet match"],
+ "hair:brown": ["{S} had brown hair"],
+ "hair:blond": ["{S} had blond hair"],
+ "hair:red": ["{S} had red hair"],
+ "hair:black": ["{S} had black hair"],
+ "feature:ring": ["{S} had a large ring on","{S} had a fancy ring on","I liked the ring {s} had on"],
+ "feature:tattoo": ["I noticed a tattoo on {p} arm","{S} tried to conceal a tattoo","{S} had an ugly tattoo"],
+ "feature:jewelry": ["{S} wore fancy jewelry","The jewelry {s} wore was stunning","The jewelry {s} wore looked expensive"],
+ "vehicle:convertible": ["{S} arrived in a convertible","{S} had a nice convertible","{S} offered me a ride in {p} convertible"],
+ "vehicle:limousine": ["{S} arrived in a private limo","{S} was driving a limo","{S} had {p} driver along"],
+ "vehicle:motorcycle": ["{S} arrived on a motorcycle","{S} was riding a motorbike","{S} was carrying a helmet"],
+}
+K.append("    // Suspect-trait sentences verbatim from the DOS EXE. Pronoun slots {S}/{s}/{p}")
+K.append("    // are filled from the culprit's sex, so a clue leaks the sex like the original.")
+K.append("    val traitClueFragments = mapOf(")
+for key, phrasings in TRAIT_CLUES.items():
+    inner = ", ".join(f'"{kesc(p)}"' for p in phrasings)
+    K.append(f'        "{kesc(key)}" to listOf({inner}),')
+K.append("    )")
+# Dossiers menu short names, exactly as listed in the EXE menu resources.
+DOSSIER_MENU = ["Carmen Sandiego","Merey LaRoc","Dazzle Annie","Lady Agatha","Len Bulk",
+                "Scar Graynolt","Nick Brunch","Fast Eddie B","Ihor Ihorovich","Katherine Drib"]
+K.append("    "+klist("dossierMenuNames", DOSSIER_MENU))
 K.append("")
 K.append("    val suspects = listOf(")
 for s in suspects:
@@ -121,6 +195,28 @@ K.append('    const val NEW_RANK = "Your new rank is: %s."')
 K.append('    const val TOO_LONG = "We\'ve just received word that %s slipped through your fingers because your investigation took too long!"')
 K.append('    const val CARMEN_JAILED = "You have successfully arrested the ring-leader, Carmen Sandiego, and sent her to jail for good!"')
 K.append('    const val HALL_OF_FAME = "Congratulations, your name will go into the Interpol Hall of Fame!"')
+K.append("")
+# Promotion quiz: almanac fill-in-the-blank (first entry captured verbatim; rest authored
+# in the same style). Matched case-insensitively against the missing word.
+PROMO_QUIZ = [
+ ("______ Island is the \"mainland\" of Japan. (See Japan, Geography: Topography)", "Honshu"),
+ ("The capital of Iraq, on the Tigris River, is ______. (See Iraq, Geography)", "Baghdad"),
+ ("The ______ River is the longest river in Egypt and in all of Africa.", "Nile"),
+ ("Mount ______ is the highest mountain in the world, in the Himalayas of Nepal.", "Everest"),
+ ("The smallest and oldest republic in Europe is San ______.", "Marino"),
+ ("______ is the capital of Norway and its major port.", "Oslo"),
+ ("The famous opera house with sail-shaped roofs is found in ______, Australia.", "Sydney"),
+ ("Machu Picchu, the lost city of the Incas, is located in ______. (See Peru)", "Peru"),
+ ("The Comoros island capital of ______ lies between Madagascar and Africa.", "Moroni"),
+ ("______ is the island nation south of India famous for tea and cinnamon.", "Sri Lanka"),
+ ("Red Square and St. Basil's cathedral are landmarks of ______.", "Moscow"),
+ ("The ______ Canal in Egypt connects the Mediterranean and the Red Sea.", "Suez"),
+]
+K.append("    // Promotion quiz: almanac fill-in-the-blank (matched case-insensitively).")
+K.append("    val promotionQuiz = listOf(")
+for q, a in PROMO_QUIZ:
+    K.append(f'        "{kesc(q)}" to "{kesc(a)}",')
+K.append("    )")
 K.append("}")
 out=os.path.join(BASE,"android/app/src/main/java/com/acme/carmen/data/GameData.kt")
 os.makedirs(os.path.dirname(out),exist_ok=True)

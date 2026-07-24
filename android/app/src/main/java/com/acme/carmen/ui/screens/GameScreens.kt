@@ -1054,6 +1054,15 @@ fun CrimeScreen(vm: CarmenViewModel) = VirtualScreen { v ->
     v.At(150, 16, 170, 156) {
         Box(Modifier.fillMaxSize()) {
             PixelImage("crime_computer", Modifier.fillMaxSize())
+            // §17: the front-bezel LEDs light up and blink while the computer works
+            // (dos_computer_wait_led.png vs dos_computer_initial.png; strip at (60,97))
+            if (printing) {
+                var ledOn by remember { mutableStateOf(true) }
+                LaunchedEffect(Unit) { while (true) { delay(350); ledOn = !ledOn } }
+                if (ledOn) v.At(60, 97, 44, 6) {
+                    PixelImage("crime_computer_leds", Modifier.fillMaxSize())
+                }
+            }
             // rows live inside the CRT: interior x=13..152, first row y=9, pitch 10 (image-relative)
             CRIME_ROWS.forEachIndexed { i, label ->
                 val sel = selRow == i
