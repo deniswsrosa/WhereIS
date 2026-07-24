@@ -582,11 +582,13 @@ private fun WitnessPanel(v: Virtual, clue: Venue, onDone: () -> Unit) {
                 // sprite + caps label column, sprite at DOS size (≈42-46 virtual wide)
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     val portrait = "witness_" + snake(clue.occupation)
+                    // DOS witness bust ≈ 30-40 virtual wide × ~46 tall (measured from
+                    // dos_witness_waiter_layout). Fit the portrait inside that box so the
+                    // (taller-than-wide) art doesn't render oversized and eat the panel.
                     if (drawableId(portrait) != 0) {
-                        val aspect = drawableAspect(portrait, 1.6f)
-                        PixelImage(portrait, Modifier.size(v.w(44), v.w(44 * aspect)), ContentScale.Fit)
+                        PixelImage(portrait, Modifier.size(v.w(40), v.w(48)), ContentScale.Fit)
                     } else {
-                        Canvas(Modifier.size(v.w(44), v.w(68))) {
+                        Canvas(Modifier.size(v.w(32), v.w(48))) {
                             drawBust(size.width, size.height, look, (bob - 0.5f) * size.height * 0.02f)
                         }
                     }
