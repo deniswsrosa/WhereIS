@@ -73,8 +73,18 @@ data class GameState(
     // travel animation: destination while the red route line is being drawn (null = not flying)
     val flying: String? = null,
     val flightHours: Int = 0,
-    // the culprit was sighted on arrival (close behind) — city screen runs the burglar animation
-    val sighting: Boolean = false,
+    // stable destination set for this city — the SEE dropdown and the DEPART list share it
+    val departOptions: List<String> = emptyList(),
+    // sighting interstitial to play before the witness: 0 none · 1 masked face · 2 thug ·
+    // 3 burglar with sack · 4 dagger (hideout wrong venue) — DOS escalation ladder
+    val sightingLevel: Int = 0,
+    // which venue at the hideout city hides the suspect (picking it triggers the chase)
+    val hideoutVenueIndex: Int = -1,
+    // toolbar green selection border follows the last activated tool (0 SEE · 1 DEPART ·
+    // 2 INVESTIGATE · 3 CRIME); arriving in a city resets it to INVESTIGATE
+    val selectedTool: Int = 2,
+    // the overnight clamp fired: the city box shows "SLEEPING…" briefly
+    val sleeping: Boolean = false,
     // result
     val won: Boolean = false,
     val resultLines: List<String> = emptyList(),
@@ -121,9 +131,10 @@ class CarmenViewModel : ViewModel() {
 
     // ---------- navigation ----------
     fun gotoCity() { s = s.copy(phase = Phase.CITY) }
-    fun gotoTravel() { s = s.copy(phase = Phase.TRAVEL) }
+    fun gotoTravel() { s = s.copy(phase = Phase.TRAVEL, selectedTool = 1) }
     // The player fills in the suspect's description themselves — the computer is not pre-populated.
-    fun gotoCrime() { s = s.copy(phase = Phase.CRIME) }
+    fun gotoCrime() { s = s.copy(phase = Phase.CRIME, selectedTool = 3) }
+    fun selectTool(i: Int) { s = s.copy(selectedTool = i) }
 
     // ---------- menu bar ----------
     fun openOverlay(o: Overlay) { s = s.copy(overlay = o) }
@@ -148,8 +159,8 @@ class CarmenViewModel : ViewModel() {
         val culprit = if (s.rankIndex >= 4) carmen else pool.random()
 
         val order = discriminatingOrder(culprit)
-        val base = 3 + s.rankIndex          // route grows with rank
-        val routeLen = maxOf(base, order.size + 1).coerceAtMost(6)
+        // Rookie case observed in DOS: 5 cities total (4 hops); longer routes at higher ranks
+        val routeLen = (5 + s.rankIndex).coerceAtMost(8)
 
         val cities = GameData.cities.shuffled().take(routeLen)
         android.util.Log.d("Carmen", "case: culprit=${culprit.name} route=$cities")
@@ -168,8 +179,10 @@ class CarmenViewModel : ViewModel() {
             openClue = null,
             compSex = null, compHobby = null, compHair = null, compFeature = null, compVehicle = null,
             warrantFor = null, computed = false, won = false, resultLines = emptyList(),
+            selectedTool = 2, sightingLevel = 0, sleeping = false,
         )
         buildVenues()
+        s = s.copy(departOptions = makeDepartOptions())
     }
 
     /** Order culprit traits so a prefix uniquely identifies them among all 10 suspects. */
@@ -209,18 +222,26 @@ class CarmenViewModel : ViewModel() {
         }
         val list = mutableListOf<Venue>()
         val onTrack = st.currentCity == st.route.getOrNull(st.progress) && st.onTrack
+        var hideoutIdx = -1
 
         if (!onTrack) {
             places.forEachIndexed { i, p ->
                 list.add(Venue(p, occs[i], ClueKind.NONE, GameData.noInformation.random()))
             }
+        } else if (st.currentCity == st.hideout) {
+            // Hideout city (DOS): the suspect hides in one venue (picking it starts the
+            // chase); the others throw the dagger and the witness says the special line.
+            hideoutIdx = places.indices.random()
+            places.forEachIndexed { i, p ->
+                list.add(Venue(p, occs[i], ClueKind.DANGER,
+                    "Rumor has it that the gang is in town somewhere."))
+            }
         } else {
-            val isHideout = st.currentCity == st.hideout
             val nextCity = st.route.getOrNull(st.progress + 1)
             var slot = 0
             places.forEachIndexed { i, p ->
                 val occ = occs[i]
-                if (!isHideout && slot == 0 && nextCity != null) {
+                if (slot == 0 && nextCity != null) {
                     slot++
                     list.add(Venue(p, occ, ClueKind.DESTINATION, destinationClue(nextCity)))
                 } else {
@@ -230,14 +251,13 @@ class CarmenViewModel : ViewModel() {
                     if (tr != null) {
                         list.add(Venue(p, occ, ClueKind.TRAIT, traitClue(tr), tr))
                     } else {
-                        val txt = if (isHideout) GameData.dangerMessages.random()
-                        else "${GameData.clueLeadIns.random()} ${flavourFood(st.culprit!!)}."
+                        val txt = "${GameData.clueLeadIns.random()} ${flavourFood(st.culprit!!)}."
                         list.add(Venue(p, occ, ClueKind.DANGER, txt))
                     }
                 }
             }
         }
-        s = s.copy(venues = list, visited = emptySet(), openClue = null)
+        s = s.copy(venues = list, visited = emptySet(), openClue = null, hideoutVenueIndex = hideoutIdx)
     }
 
     private fun destinationClue(next: String): String {
@@ -292,29 +312,57 @@ class CarmenViewModel : ViewModel() {
     // ---------- player actions in a city ----------
     fun openVenue(index: Int) {
         val v = s.venues.getOrNull(index) ?: return
-        if (index !in s.visited) {
-            var st = s
-            if (v.kind == ClueKind.TRAIT) st = st.copy(revealedCount = st.revealedCount + 1)
-            // a venue visit costs 2 hours (original: Monday 1 p.m. -> 3 p.m.)
-            st = st.copy(clock = st.clock + 2, visited = st.visited + index)
-            s = st
+        // hideout city: the right venue triggers the confrontation (no witness, no charge)
+        if (s.atHideout && index == s.hideoutVenueIndex) { confront(); return }
+        var st = s
+        if (index !in st.visited && v.kind == ClueKind.TRAIT)
+            st = st.copy(revealedCount = st.revealedCount + 1)
+        // DOS time costs: first venue visit in a city 2 h, every visit after that 3 h
+        st = advanceClock(st, if (st.visited.isEmpty()) 2 else 3)
+        st = st.copy(visited = st.visited + index)
+        // sighting escalation ladder: plays in the panel before the witness pops up
+        val dist = st.route.size - 1 - st.progress
+        val level = when {
+            st.atHideout -> 4                          // dagger + "Rumor has it..."
+            st.onTrack && dist in 1..3 -> 4 - dist     // 3 away: face · 2: thug · 1: burglar
+            else -> 0
         }
-        s = s.copy(openClue = v)
+        s = st.copy(openClue = v, sightingLevel = level)
         checkDeadline()
     }
 
     fun closeClue() { s = s.copy(openClue = null) }
 
-    /** The sighting animation has been shown once; don't repeat it. */
-    fun sightingShown() { s = s.copy(sighting = false) }
+    /** The sighting interstitial finished — reveal the witness. */
+    fun sightingDone() { s = s.copy(sightingLevel = 0) }
+
+    /** The "SLEEPING…" overlay in the city box has been shown. */
+    fun sleepingShown() { s = s.copy(sleeping = false) }
+
+    /** Advance the clock; landing in the 10 p.m. – 8 a.m. window rolls forward to 8 a.m.
+     *  (the detective sleeps) and flags the transient SLEEPING… display. */
+    private fun advanceClock(st: GameState, hours: Int): GameState {
+        var clock = st.clock + hours
+        val hour = (9 + clock) % 24
+        var slept = false
+        if (hour >= 22) { clock += (24 - hour) + 8; slept = true }
+        else if (hour < 8) { clock += 8 - hour; slept = true }
+        return st.copy(clock = clock, sleeping = st.sleeping || slept)
+    }
 
     // ---------- travel ----------
-    fun travelOptions(): List<String> {
-        val correct = s.route.getOrNull(s.progress + 1) ?: return emptyList()
+    /** Build this city's destination set once per arrival — the SEE dropdown and the DEPART
+     *  list must show the same, stable connections (regenerating each frame is un-DOS). */
+    private fun makeDepartOptions(): List<String> {
+        val next = when {
+            s.progress < s.route.size - 1 -> s.route[s.progress + 1]
+            s.currentCity != s.hideout -> s.hideout   // strayed after the hideout: allow the way back
+            else -> null
+        }
         val decoys = GameData.cities
-            .filter { it != correct && it !in s.route.take(s.progress + 1) }
+            .filter { it != next && it != s.currentCity && it !in s.route.take(s.progress + 1) }
             .shuffled().take(3)
-        return (decoys + correct).shuffled()
+        return if (next != null) (decoys + next).shuffled() else decoys
     }
 
     /** Start the flight: the travel screen animates the red route line, then calls arrive(). */
@@ -329,26 +377,22 @@ class CarmenViewModel : ViewModel() {
     fun arrive() {
         val city = s.flying ?: return
         val correct = s.route.getOrNull(s.progress + 1)
-        var newClock = s.clock + s.flightHours
         // overnight rule (observed in the original): landing between 10 p.m. and 8 a.m.
         // rolls the clock forward to 8 a.m. — the detective rests for the night
-        val hour = (9 + newClock) % 24
-        if (hour >= 22) newClock += (24 - hour) + 8
-        else if (hour < 8) newClock += 8 - hour
-        var st = s.copy(clock = newClock, flying = null, flightHours = 0)
-        if (city == correct) {
-            st = st.copy(progress = st.progress + 1, currentCity = city, onTrack = true)
-            // the culprit is sighted when you arrive close behind (last cities of the trail)
-            st = st.copy(sighting = st.progress >= st.route.size - 2 && city != st.hideout)
-        } else {
-            st = st.copy(currentCity = city, onTrack = false, sighting = false)
+        var st = advanceClock(s, s.flightHours).copy(flying = null, flightHours = 0)
+        st = when {
+            city == correct ->
+                st.copy(progress = st.progress + 1, currentCity = city, onTrack = true)
+            city == st.hideout && st.progress == st.route.size - 1 ->
+                st.copy(currentCity = city, onTrack = true)   // flew back to the hideout
+            else -> st.copy(currentCity = city, onTrack = false)
         }
-        s = st
+        // DOS: after arriving in a new city the toolbar selection is INVESTIGATE
+        s = st.copy(selectedTool = 2)
         if (s.deadlinePassed) { escaped("time"); return }
-        // arrival at hideout triggers the confrontation
-        if (s.atHideout) { confront(); return }
         s = s.copy(phase = Phase.CITY)
         buildVenues()
+        s = s.copy(departOptions = makeDepartOptions())
     }
 
     // ---------- crime computer ----------
@@ -374,7 +418,8 @@ class CarmenViewModel : ViewModel() {
      * issues the arrest warrant ("You now have a warrant to arrest X.").
      */
     fun compute() {
-        var st = s.copy(computed = true, clock = s.clock + 1)
+        // DOS COMPUTE costs 3 h (observed 2 p.m. -> 5 p.m., and 10 p.m. -> next morning)
+        var st = advanceClock(s.copy(computed = true), 3)
         val m = GameData.suspects.filter { su ->
             (st.compSex == null || su.tSex == st.compSex) &&
             (st.compHobby == null || su.tHobby == st.compHobby) &&

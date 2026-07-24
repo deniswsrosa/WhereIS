@@ -6,6 +6,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,28 +41,38 @@ import com.acme.carmen.ui.*
 import com.acme.carmen.ui.theme.Vga
 
 /* ----------------------------- INTRO (boot animation) -----------------------------
- * Faithful to the original attract sequence: the three-crowns "Brøderbund Software
- * Presents" card while the detective strides across the bottom of the screen (2-frame
- * walk cycle), then the police squad marches through. Tap anywhere to skip to the title.
+ * Faithful to the original attract sequence, each stage on its own screen:
+ * 1. three crowns + "Brøderbund Software Presents" alone · 2. black screen, the detective
+ * walks across near the bottom · 3. black screen, the police squad marches through ·
+ * 4. the ACME Detective Agency scene ("Carmen's gang has pulled another caper!").
+ * Tap anywhere to skip to the title.
  */
 @Composable
 fun IntroScreen(vm: CarmenViewModel) = VirtualScreen { v ->
-    var walkX by remember { mutableStateOf(-40f) }
+    var stage by remember { mutableStateOf(0) }   // 0 crowns · 1 detective · 2 cops · 3 ACME
+    var walkX by remember { mutableStateOf(-60f) }
     var frame by remember { mutableStateOf(0) }
-    var cops by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        // detective walks left -> right across the bottom (like the original boot)
+        delay(3500)                                    // crowns card, nothing else on screen
+        stage = 1; walkX = -40f
         while (walkX < 330f) { delay(60); walkX += 4f; frame++ }
-        // then the police squad marches through
-        cops = true; walkX = -60f
+        stage = 2; walkX = -60f
         while (walkX < 330f) { delay(60); walkX += 5f; frame++ }
+        stage = 3                                      // ACME Detective Agency scene
+        delay(4000)
         vm.introDone()
     }
-    PixelImage("intro_presents", Modifier.fillMaxSize())
-    val sprite = if (cops) "anim_cops_${frame % 3}" else "anim_detective_${frame % 2}"
-    val w = if (cops) 49f else 34f
-    v.At(walkX, 151, w, 48, Alignment.BottomCenter) {
-        PixelImage(sprite, Modifier.fillMaxSize(), ContentScale.Fit)
+    when (stage) {
+        0 -> PixelImage("intro_presents", Modifier.fillMaxSize())
+        3 -> PixelImage("intro_acme_agency", Modifier.fillMaxSize())
+        else -> {
+            Box(Modifier.fillMaxSize().background(Vga.Black))
+            val sprite = if (stage == 2) "anim_cops_${frame % 3}" else "anim_detective_${frame % 2}"
+            val w = if (stage == 2) 49f else 34f
+            v.At(walkX, 151, w, 48, Alignment.BottomCenter) {
+                PixelImage(sprite, Modifier.fillMaxSize(), ContentScale.Fit)
+            }
+        }
     }
     Box(Modifier.fillMaxSize().clickable { vm.introDone() })
 }
@@ -69,11 +80,12 @@ fun IntroScreen(vm: CarmenViewModel) = VirtualScreen { v ->
 /* ----------------------------- TITLE ----------------------------- */
 @Composable
 fun TitleScreen(vm: CarmenViewModel) = VirtualScreen { v ->
-    PixelImage("title_screen", Modifier.fillMaxSize())
+    // the whole screen advances, like the original's "any key or button"
+    Box(Modifier.fillMaxSize().clickable { vm.start() }) {
+        PixelImage("title_screen", Modifier.fillMaxSize())
+    }
     v.At(0, 176, 320, 24, Alignment.Center) {
-        Box(Modifier.fillMaxSize().clickable { vm.start() }, contentAlignment = Alignment.Center) {
-            Text("PRESS  ANY  KEY  TO  BEGIN", style = v.text(9, color = Vga.Yellow, bold = true))
-        }
+        Text("PRESS  ANY  KEY  TO  BEGIN", style = v.text(9, color = Vga.Yellow, bold = true))
     }
 }
 
@@ -217,30 +229,36 @@ private fun HqPrinterScreen(vm: CarmenViewModel, promptForName: Boolean, onBegin
     }
     // "Press any key or button to continue." under the right panel, like the original
     if (stage == ST_GATE1 || stage == ST_GATE2 || stage == ST_BEGIN) {
-        v.At(150, 163, 166, 30, Alignment.Center) {
+        v.At(150, 172, 166, 22, Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("Press any key or", style = v.text(9.5f, color = Vga.Black, bold = true))
                 Text("button to continue.", style = v.text(9.5f, color = Vga.Black, bold = true))
             }
         }
     }
-    // Yes / No buttons (yellow, red text) for "Are you new here?"
+    // Yes / No buttons (yellow, red text) for "Are you new here?" — DOS geometry:
+    // Yes At(152,176,76,11), No At(234,176,76,11) (dos_signon_yesno ref, ÷2)
     if (stage == ST_YESNO) {
-        v.At(152, 176, 76, 14) {
+        v.At(152, 176, 76, 12) {
             YellowButton(v, "Yes") { printed.add("Y"); stage = ST_IDENT }
         }
-        v.At(243, 176, 62, 14) {
+        v.At(234, 176, 76, 12) {
             // "No" re-asks for the name, like the original
             YellowButton(v, "No") { printed.add("N"); printed.add(""); stage = ST_PROMPT }
         }
     }
 }
 
+/** DOS-style dialog button: yellow fill, 1px black border with a small drop shadow,
+ *  bold red centred label. */
 @Composable
 private fun YellowButton(v: Virtual, label: String, onClick: () -> Unit) {
-    Box(Modifier.fillMaxSize().background(Vga.Yellow).border(BorderStroke(v.w(1), Vga.Black))
-        .clickable(onClick = onClick), contentAlignment = Alignment.Center) {
-        Text(label, style = v.text(9, color = Vga.Red, bold = true))
+    Box(Modifier.fillMaxSize()) {
+        Box(Modifier.matchParentSize().offset(v.w(1), v.w(1)).background(Vga.Black))
+        Box(Modifier.matchParentSize().background(Vga.Yellow).border(BorderStroke(v.w(1), Vga.Black))
+            .clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+            Text(label, style = v.text(9, color = Vga.Red, bold = true))
+        }
     }
 }
 
@@ -305,16 +323,37 @@ private fun VgaCityCard(city: String, region: String, v: Virtual, modifier: Modi
     }
 }
 
+/** The black white-bordered city name / date box at the top-left, shared by every in-game
+ *  screen. When the overnight clamp fired the title reads "SLEEPING…" for a moment
+ *  (dos_sleeping_overnight.png), then reverts to the city name. */
+@Composable
+fun CityClockBox(v: Virtual, vm: CarmenViewModel, tickHours: Int = 0) {
+    val sleeping = vm.s.sleeping
+    LaunchedEffect(sleeping) {
+        if (sleeping) { delay(1800); vm.sleepingShown() }
+    }
+    v.At(4, 13, 141, 30, Alignment.Center) {
+        Box(Modifier.fillMaxSize().background(Vga.Black)
+            .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(2)), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(if (sleeping) "SLEEPING…" else vm.s.currentCity,
+                    style = v.text(9, color = Vga.White, bold = true))
+                Text(vm.clockLabel(tickHours), style = v.text(8, color = Vga.White))
+            }
+        }
+    }
+}
+
 @Composable
 fun CityScreen(vm: CarmenViewModel) = VirtualScreen { v ->
     val s = vm.s
     val info = CityMeta.of(s.currentCity)
     var showVenues by remember(s.currentCity, s.progress) { mutableStateOf(false) }
+    // SEE dropdown open: the city box is replaced by the connections list, SEE reads HIDE
+    var seeOpen by remember(s.currentCity) { mutableStateOf(false) }
     // walking-to-venue animation: index of the venue being walked to, -1 = none
     var walkingTo by remember(s.currentCity) { mutableStateOf(-1) }
     var walkStep by remember { mutableStateOf(0) }
-    // burglar sighting animation offset (fraction 0..1 across the right panel)
-    var burglarT by remember(s.currentCity) { mutableStateOf(if (s.sighting) 0f else -1f) }
 
     LaunchedEffect(walkingTo) {
         if (walkingTo >= 0) {
@@ -324,65 +363,41 @@ fun CityScreen(vm: CarmenViewModel) = VirtualScreen { v ->
             vm.openVenue(t)
         }
     }
-    LaunchedEffect(burglarT >= 0f) {
-        if (burglarT >= 0f) {
-            while (burglarT < 1f) { delay(30); burglarT += 0.02f }
-            burglarT = -1f
-            vm.sightingShown()
-        }
-    }
 
     // menu bar
     v.At(0, 0, 320, 11) { GameMenuBar(v, vm) }
 
-    // name / date box (black, white double border)
-    v.At(4, 13, 141, 30, Alignment.Center) {
-        Box(Modifier.fillMaxSize().background(Vga.Black)
-            .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(2)), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(s.currentCity, style = v.text(9, color = Vga.White, bold = true))
-                Text(vm.clockLabel(), style = v.text(8, color = Vga.White))
-            }
-        }
-    }
+    if (!seeOpen) CityClockBox(v, vm)
     // city photo
     v.At(4, 45, 141, 148) {
         Box(Modifier.fillMaxSize().border(BorderStroke(v.w(1), Vga.White))) {
             CityPhoto(s.currentCity, v, Modifier.fillMaxSize())
         }
     }
-    // warrant indicator (overlaid on the photo's bottom edge)
-    if (s.warrantFor != null) v.At(5, 179, 139, 13, Alignment.Center) {
-        Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.75f)), contentAlignment = Alignment.Center) {
-            Text("WARRANT: ${s.warrantFor!!.name}", style = v.text(7, color = Vga.Yellow, bold = true))
-        }
-    }
-    // right panel: normally the city description; while investigating, the witness you're talking to
+    // while SEE is active the connections dropdown replaces the city box, drawn over the
+    // top of the photo (like the original)
+    if (seeOpen) SeeDropdown(v, s.currentCity, s.departOptions) { seeOpen = false }
+    // right panel: the city description; while investigating, first the sighting
+    // interstitial (if any), then the witness you're talking to
     if (s.openClue != null) {
-        WitnessPanel(v, s.openClue!!) { vm.closeClue() }
+        if (s.sightingLevel > 0) {
+            SightingPanel(v, s.sightingLevel) { vm.sightingDone() }
+        } else {
+            WitnessPanel(v, s.openClue!!) { vm.closeClue() }
+        }
     } else {
         v.At(149, 13, 167, 145) {
             Box(Modifier.fillMaxSize().background(Vga.Black)
                 .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(4))) {
-                if (burglarT < 0f) {
-                    Text(if (s.onTrack) info.description
-                        else "You look around. Nothing here seems out of the ordinary...",
-                        style = v.text(8.5f, color = Vga.White))
-                } else {
-                    // the culprit dashes across the panel — you're close behind!
-                    Box(Modifier.fillMaxSize()) {
-                        PixelImage("anim_burglar",
-                            Modifier.align(Alignment.BottomStart)
-                                .padding(start = v.w((155 * (1f - burglarT))), bottom = v.w(8))
-                                .size(v.w(44), v.w(34)), ContentScale.Fit)
-                    }
-                }
+                Text(if (s.onTrack) info.description
+                    else "You look around. Nothing here seems out of the ordinary...",
+                    style = v.text(8.5f, color = Vga.White))
             }
         }
     }
-    GameToolbar(v, vm, selected = if (showVenues) 2 else 0,
-        onSee = { vm.openOverlay(Overlay.Info(s.currentCity.uppercase(), listOf(info.description))) },
-        onInvestigate = { showVenues = true })
+    GameToolbar(v, vm, seeLabel = if (seeOpen) "HIDE" else null,
+        onSee = { vm.selectTool(0); seeOpen = !seeOpen },
+        onInvestigate = { vm.selectTool(2); showVenues = true })
 
     // Investigate: pick one of 3 locations, shown as buildings + names (matches the original picker)
     if (showVenues && s.openClue == null) {
@@ -393,11 +408,103 @@ fun CityScreen(vm: CarmenViewModel) = VirtualScreen { v ->
     OverlayHost(v, vm)
 }
 
-/** The authentic 4-icon toolbar strip (SEE · DEPART · INVESTIGATE · CRIME) with the green
- *  selection border around the active icon, like the original. */
+/** The SEE tool's dropdown (dos_see_dropdown_open_hide_icon.png): it replaces the city/date
+ *  box — black, white border, current city on top, then an inner double-bordered list of the
+ *  connection cities with the first on the white selection bar. Any tap closes it. */
 @Composable
-fun GameToolbar(v: Virtual, vm: CarmenViewModel, selected: Int,
+private fun SeeDropdown(v: Virtual, city: String, connections: List<String>, onClose: () -> Unit) {
+    v.At(4, 13, 141, 18f + connections.size * 10f + 6f) {
+        Column(Modifier.fillMaxSize().background(Vga.Black)
+            .border(BorderStroke(v.w(1), Vga.White)).clickable(onClick = onClose)) {
+            Box(Modifier.fillMaxWidth().height(v.w(14)), contentAlignment = Alignment.Center) {
+                Text(city, style = v.text(9, color = Vga.White, bold = true))
+            }
+            Box(Modifier.fillMaxWidth().weight(1f).padding(horizontal = v.w(3))
+                .border(BorderStroke(v.w(2), Vga.White)).padding(v.w(1))) {
+                Column(Modifier.fillMaxWidth()) {
+                    connections.forEachIndexed { i, c ->
+                        Box(Modifier.fillMaxWidth().height(v.w(10))
+                            .then(if (i == 0) Modifier.background(Vga.White) else Modifier),
+                            contentAlignment = Alignment.Center) {
+                            Text(c, style = v.text(8.5f, color = if (i == 0) Vga.Black else Vga.White, bold = true))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** The sighting interstitial in the black right panel, escalating as you close in
+ *  (§6 ladder): 1 masked face rises from the bottom edge · 2 striped-shirt thug pops up and
+ *  shakes · 3 burglar with the loot sack peeks in from the right, then runs across ·
+ *  4 the hideout dagger flies across. Tap to skip. */
+@Composable
+private fun SightingPanel(v: Virtual, level: Int, onDone: () -> Unit) {
+    // generic animation parameter 0..1 driven per level
+    var t by remember(level) { mutableStateOf(0f) }
+    var phase by remember(level) { mutableStateOf(0) }   // level 3: 0 peek · 1 run
+    var frame by remember(level) { mutableStateOf(0) }
+    LaunchedEffect(level) {
+        when (level) {
+            1 -> {  // face rises slowly, pauses, sinks back
+                while (t < 1f) { delay(45); t += 0.04f }
+                delay(700)
+                while (t > 0f) { delay(45); t -= 0.04f }
+            }
+            2 -> {  // thug pops up, shakes, drops back
+                while (t < 1f) { delay(25); t += 0.08f }
+                repeat(24) { delay(60); frame++ }
+                while (t > 0f) { delay(25); t -= 0.08f }
+            }
+            3 -> {  // burglar peeks from the right edge, then sprints right -> left
+                while (t < 1f) { delay(50); t += 0.1f }
+                delay(600)
+                phase = 1; t = 0f
+                while (t < 1f) { delay(40); t += 0.035f; frame++ }
+            }
+            4 -> {  // the dagger flies in from the right and sticks mid-panel
+                while (t < 1f) { delay(25); t += 0.09f }
+                delay(900)
+            }
+        }
+        onDone()
+    }
+    v.At(149, 13, 167, 145) {
+        Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White))
+            .clipToBounds().clickable(onClick = onDone)) {
+            when (level) {
+                1 -> PixelImage("sight_face",
+                    Modifier.align(Alignment.BottomCenter).offset(0.dp, v.w(42 * (1f - t)))
+                        .size(v.w(52), v.w(42)), ContentScale.Fit)
+                2 -> PixelImage("sight_thug",
+                    Modifier.align(Alignment.BottomCenter)
+                        .offset(v.w(if (t >= 1f) (if (frame % 2 == 0) -2f else 2f) else 0f), v.w(50 * (1f - t)))
+                        .size(v.w(54), v.w(50)), ContentScale.Fit)
+                3 -> {
+                    if (phase == 0) PixelImage("sight_burglar_peek",
+                        Modifier.align(Alignment.BottomEnd).offset(v.w(35 * (1f - t)), v.w(-4))
+                            .size(v.w(35), v.w(51)), ContentScale.Fit)
+                    else PixelImage("sight_burglar_run",
+                        Modifier.align(Alignment.BottomStart)
+                            .offset(v.w(165 - 230 * t), v.w(if (frame % 2 == 0) -4f else -5f))
+                            .size(v.w(61), v.w(51)), ContentScale.Fit)
+                }
+                4 -> PixelImage("sight_dagger",
+                    Modifier.align(Alignment.CenterStart).offset(v.w(150 * (1f - t) - 8f), 0.dp)
+                        .size(v.w(58), v.w(16)), ContentScale.Fit)
+            }
+        }
+    }
+}
+
+/** The authentic 4-icon toolbar strip (SEE · DEPART · INVESTIGATE · CRIME). The green
+ *  selection border tracks the last activated tool (vm.s.selectedTool), like the original.
+ *  While the SEE dropdown is open, `seeLabel` covers the SEE caption with "HIDE". */
+@Composable
+fun GameToolbar(v: Virtual, vm: CarmenViewModel, seeLabel: String? = null,
                 onSee: (() -> Unit)? = null, onInvestigate: (() -> Unit)? = null) {
+    val selected = vm.s.selectedTool
     v.At(146, 163, 174, 32) {
         Box(Modifier.fillMaxSize()) {
             PixelImage("toolbar_bar", Modifier.fillMaxSize())
@@ -406,6 +513,14 @@ fun GameToolbar(v: Virtual, vm: CarmenViewModel, selected: Int,
                 ToolZone(Modifier.weight(1f), selected == 1, v) { vm.gotoTravel() }
                 ToolZone(Modifier.weight(1f), selected == 2, v) { onInvestigate?.invoke() }
                 ToolZone(Modifier.weight(1f), selected == 3, v) { vm.gotoCrime() }
+            }
+            // "HIDE" caption over the SEE icon while its dropdown is open (DOS behaviour)
+            if (seeLabel != null) {
+                v.At(10, 3, 26, 7, Alignment.Center) {
+                    Box(Modifier.fillMaxSize().background(Vga.White), contentAlignment = Alignment.Center) {
+                        Text(seeLabel, style = v.text(6, color = Vga.Black, bold = true))
+                    }
+                }
             }
         }
     }
@@ -446,10 +561,10 @@ private fun witnessLook(occupation: String): Look {
     return Look(hair, skin, shirt, (h ushr 11).mod(4))   // style: 0 short · 1 full · 2 bald · 3 cap
 }
 
-/** Right-panel witness, matching the original (DOCENT capture): the witness stands at the
- *  lower-left of the black panel at native sprite proportions, the occupation label in white
- *  caps under them, and a white rounded speech bubble fills the upper-right with the clue in
- *  black text, its tail pointing left toward the witness. */
+/** Right-panel witness, matching the original (dos_witness_waiter_layout.png): the witness
+ *  sprite sits toward the panel's left edge with its occupation label in white caps directly
+ *  under it, and the white rounded speech bubble sits to its RIGHT, vertically centred
+ *  against the sprite, tail pointing left into the sprite. */
 @Composable
 private fun WitnessPanel(v: Virtual, clue: Venue, onDone: () -> Unit) {
     val look = witnessLook(clue.occupation)
@@ -461,39 +576,36 @@ private fun WitnessPanel(v: Virtual, clue: Venue, onDone: () -> Unit) {
     v.At(149, 13, 167, 145) {
         Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White))
             .clickable { if (shown < clue.text.length) shown = clue.text.length else onDone() }) {
-            // witness portrait, lower-left, facing the bubble — drawn at native proportions
-            // (fixed 32 virtual px wide, height from the sprite's own aspect, like the original)
-            val portrait = "witness_" + snake(clue.occupation)
-            if (drawableId(portrait) != 0) {
-                val aspect = drawableAspect(portrait, 1.6f)
-                PixelImage(portrait,
-                    Modifier.align(Alignment.BottomStart).padding(start = v.w(10), bottom = v.w(14))
-                        .size(v.w(32), v.w(32 * aspect)), ContentScale.Fit)
-            } else {
-                Canvas(Modifier.align(Alignment.BottomStart).padding(start = v.w(10), bottom = v.w(14)).size(v.w(32), v.w(50))) {
-                    drawBust(size.width, size.height, look, (bob - 0.5f) * size.height * 0.02f)
-                }
-            }
-            // occupation label under the witness (white caps, like "DOCENT")
-            Text(clue.occupation.uppercase(), style = v.text(7, color = Vga.White, bold = true),
-                modifier = Modifier.align(Alignment.BottomStart).padding(start = v.w(6), bottom = v.w(5)))
-            // white rounded speech bubble upper-right, tail pointing left toward the witness
-            Box(Modifier.align(Alignment.TopEnd).padding(top = v.w(8), end = v.w(4), start = v.w(46))) {
-                Box(Modifier.background(Vga.White, RoundedCornerShape(v.w(6)))
-                    .padding(horizontal = v.w(5), vertical = v.w(4))) {
-                    Text(clue.text.take(shown), style = v.text(7.5f, color = Vga.Black))
-                }
-                // tail: triangle sticking out of the bubble's lower-left toward the witness
-                Canvas(Modifier.align(Alignment.BottomStart).offset(v.w(-7), v.w(-6)).size(v.w(9), v.w(8))) {
-                    val p = androidx.compose.ui.graphics.Path().apply {
-                        moveTo(size.width, 0f); lineTo(size.width, size.height); lineTo(0f, size.height * 0.9f); close()
+            Row(Modifier.fillMaxSize().padding(horizontal = v.w(4)),
+                verticalAlignment = Alignment.CenterVertically) {
+                // sprite + caps label column, sprite at DOS size (≈42-46 virtual wide)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    val portrait = "witness_" + snake(clue.occupation)
+                    if (drawableId(portrait) != 0) {
+                        val aspect = drawableAspect(portrait, 1.6f)
+                        PixelImage(portrait, Modifier.size(v.w(44), v.w(44 * aspect)), ContentScale.Fit)
+                    } else {
+                        Canvas(Modifier.size(v.w(44), v.w(68))) {
+                            drawBust(size.width, size.height, look, (bob - 0.5f) * size.height * 0.02f)
+                        }
                     }
-                    drawPath(p, Vga.White)
+                    Text(clue.occupation.uppercase(), style = v.text(7, color = Vga.White, bold = true),
+                        modifier = Modifier.padding(top = v.w(2)))
                 }
-            }
-            if (shown >= clue.text.length) {
-                Text("▶", style = v.text(9, color = Vga.LightGreen, bold = true),
-                    modifier = Modifier.align(Alignment.BottomEnd).padding(v.w(3)))
+                // speech bubble to the sprite's right, vertically centred, tail pointing left
+                Box(Modifier.weight(1f).padding(start = v.w(9))) {
+                    Box(Modifier.background(Vga.White, RoundedCornerShape(v.w(6)))
+                        .padding(horizontal = v.w(5), vertical = v.w(4))) {
+                        Text(clue.text.take(shown), style = v.text(7.5f, color = Vga.Black))
+                    }
+                    // tail: triangle sticking out of the bubble's left edge toward the sprite
+                    Canvas(Modifier.align(Alignment.CenterStart).offset(v.w(-7), v.w(4)).size(v.w(9), v.w(8))) {
+                        val p = androidx.compose.ui.graphics.Path().apply {
+                            moveTo(size.width, 0f); lineTo(size.width, size.height); lineTo(0f, size.height * 0.9f); close()
+                        }
+                        drawPath(p, Vga.White)
+                    }
+                }
             }
         }
     }
@@ -720,12 +832,12 @@ private object WorldMap {
 @Composable
 fun TravelScreen(vm: CarmenViewModel) = VirtualScreen { v ->
     val s = vm.s
-    val options = remember(s.currentCity, s.progress, s.onTrack) { vm.travelOptions() }
-    val info = CityMeta.of(s.currentCity)
-    val traveled = s.route.take(s.progress + 1)   // path flown so far, for the route line
+    val options = s.departOptions
     val flying = s.flying
     // flight animation: fraction of the current leg drawn (0..1)
     var legT by remember { mutableStateOf(0f) }
+    // DOS animates the destination list growing out of the city box when DEPART opens
+    var grow by remember { mutableStateOf(0f) }
     LaunchedEffect(flying) {
         if (flying != null) {
             legT = 0f
@@ -734,48 +846,27 @@ fun TravelScreen(vm: CarmenViewModel) = VirtualScreen { v ->
             vm.arrive()
         }
     }
+    LaunchedEffect(Unit) { while (grow < 1f) { delay(16); grow += 0.12f }; grow = 1f }
 
     v.At(0, 0, 320, 11) { GameMenuBar(v, vm) }
 
     // city name box (top-left) — during a flight the clock ticks hour by hour
-    v.At(4, 13, 141, 30, Alignment.Center) {
-        Box(Modifier.fillMaxSize().background(Vga.Black)
-            .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(2)), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(s.currentCity, style = v.text(9, color = Vga.White, bold = true))
-                val tick = if (flying != null) (legT * s.flightHours).toInt() else 0
-                Text(vm.clockLabel(tick), style = v.text(8, color = Vga.White))
-            }
-        }
-    }
-    // city photo sliver above the map; during flight it becomes the sky gradient (plane view)
+    CityClockBox(v, vm, tickHours = if (flying != null) (legT * s.flightHours).toInt() else 0)
+    // city photo above the map — DOS keeps the departure city's photo visible during the
+    // flight too (dos_flight_airport_photo_behind_map.png), no sky gradient
     v.At(4, 45, 141, 148) {
         Box(Modifier.fillMaxSize().border(BorderStroke(v.w(1), Vga.White))) {
-            if (flying != null) {
-                Canvas(Modifier.fillMaxSize()) {
-                    // light-blue sky gradient, palest at the horizon (like the original flight panel)
-                    val steps = 12
-                    for (i in 0 until steps) {
-                        val f = i / (steps - 1f)
-                        val c = Color(
-                            red = (0.55f + 0.35f * f), green = (0.65f + 0.3f * f), blue = 1f)
-                        drawRect(c, topLeft = Offset(0f, size.height * i / steps),
-                            size = Size(size.width, size.height / steps + 1f))
-                    }
-                }
-            } else {
-                CityPhoto(s.currentCity, v, Modifier.fillMaxSize())
-            }
+            CityPhoto(s.currentCity, v, Modifier.fillMaxSize())
         }
     }
     // description panel (top-right, partly covered by the map below)
     v.At(149, 13, 167, 145) {
         Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(4))) {
-            Text(info.description, style = v.text(8.5f, color = Vga.White))
+            Text(CityMeta.of(s.currentCity).description, style = v.text(8.5f, color = Vga.White))
         }
     }
-    // world map (bottom) with dynamic dots, labels and the route line — authentic frame:
-    // white double border at (8,83), map interior at (10,85) 300x107 (same as the original).
+    // world map (bottom) — DOS draws a clean map every time: only the current city (white)
+    // and the offered destinations (yellow); during the flight only the current leg grows.
     v.At(8, 83, 304, 111) {
         Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(2), Vga.White)))
     }
@@ -787,11 +878,6 @@ fun TravelScreen(vm: CarmenViewModel) = VirtualScreen { v ->
                 val dashes = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
                     floatArrayOf(size.width * 0.008f, size.width * 0.006f), 0f)
                 val stroke = size.height * 0.016f
-                // red dashed route through the cities flown so far (like the original)
-                for (i in 0 until traveled.size - 1) {
-                    val a = px(traveled[i]); val b = px(traveled[i + 1])
-                    if (a != null && b != null) drawLine(Vga.Red, a, b, strokeWidth = stroke, pathEffect = dashes)
-                }
                 // the leg being flown grows dash by dash
                 if (flying != null) {
                     val a = px(s.currentCity); val b = px(flying)
@@ -805,12 +891,11 @@ fun TravelScreen(vm: CarmenViewModel) = VirtualScreen { v ->
                     drawRect(Vga.Black, topLeft = Offset(it.x - dot, it.y - dot), size = Size(dot * 2, dot * 2))
                     drawRect(fill, topLeft = Offset(it.x - dot * 0.6f, it.y - dot * 0.6f), size = Size(dot * 1.2f, dot * 1.2f))
                 }
-                traveled.forEach { marker(it, Vga.Yellow) }
                 options.forEach { marker(it, Vga.Yellow) }
                 marker(s.currentCity, Vga.White)
             }
-            // yellow labels for the current city + candidates (like the original)
-            (listOf(s.currentCity) + options + listOfNotNull(flying)).distinct().forEach { city ->
+            // labels: white for the current city, yellow for the destinations (like the original)
+            (listOf(s.currentCity) + options).distinct().forEach { city ->
                 WorldMap.pos[city]?.let { p ->
                     val leftSide = p.x > 0.78f
                     val color = if (city == s.currentCity) Vga.White else Vga.Yellow
@@ -819,24 +904,33 @@ fun TravelScreen(vm: CarmenViewModel) = VirtualScreen { v ->
             }
         }
     }
-    // destination list overlay (over the name box + photo top, like the original drop-down);
-    // hidden while flying
+    // destination drop-down growing out of the city box (hidden while flying) — same style
+    // as the SEE list: header, inner double border, first destination pre-selected
     if (flying == null) {
-        v.At(8, 13, 143, 66) {
-            Column(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(2), Vga.White))) {
-                Box(Modifier.fillMaxWidth().padding(vertical = v.w(1)), contentAlignment = Alignment.Center) {
+        // tap outside the list cancels (the original cancels with Esc)
+        Box(Modifier.fillMaxSize().clickable { vm.gotoCity() })
+        var selected by remember(s.currentCity) { mutableStateOf(0) }
+        val fullH = 18f + options.size * 10f + 6f
+        v.At(4, 13, 141, 24f + (fullH - 24f) * grow) {
+            Column(Modifier.fillMaxSize().background(Vga.Black)
+                .border(BorderStroke(v.w(1), Vga.White)).clickable(
+                    interactionSource = remember { MutableInteractionSource() }, indication = null) {}) {
+                Box(Modifier.fillMaxWidth().height(v.w(14)), contentAlignment = Alignment.Center) {
                     Text(s.currentCity, style = v.text(9, color = Vga.White, bold = true))
                 }
-                Box(Modifier.fillMaxWidth().height(v.w(1)).background(Vga.White))
-                Column(Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState())) {
-                    options.forEach { city ->
-                        Box(Modifier.fillMaxWidth().clickable { vm.travelTo(city) }, contentAlignment = Alignment.Center) {
-                            Text(city, style = v.text(8.5f, color = Vga.White, bold = true),
-                                modifier = Modifier.padding(vertical = v.w(1)))
+                if (grow >= 1f) Box(Modifier.fillMaxWidth().weight(1f).padding(horizontal = v.w(3))
+                    .border(BorderStroke(v.w(2), Vga.White)).padding(v.w(1))) {
+                    Column(Modifier.fillMaxWidth()) {
+                        options.forEachIndexed { i, city ->
+                            val isSel = i == selected
+                            Box(Modifier.fillMaxWidth().height(v.w(10))
+                                .then(if (isSel) Modifier.background(Vga.White) else Modifier)
+                                .clickable { selected = i; vm.travelTo(city) },
+                                contentAlignment = Alignment.Center) {
+                                Text(city, style = v.text(8.5f,
+                                    color = if (isSel) Vga.Black else Vga.White, bold = true))
+                            }
                         }
-                    }
-                    Box(Modifier.fillMaxWidth().clickable { vm.gotoCity() }, contentAlignment = Alignment.Center) {
-                        Text("Cancel", style = v.text(7, color = Vga.LightRed), modifier = Modifier.padding(top = v.w(1)))
                     }
                 }
             }
@@ -938,23 +1032,17 @@ fun CrimeScreen(vm: CarmenViewModel) = VirtualScreen { v ->
                     }
                 }
             }
-            paper.add("")
-            printLine("READY.")
+            // DOS prints READY. only at the start of a computer session, and leaves no row
+            // selected after a compute
+            selRow = -1
             printing = false
         }
     }
 
     v.At(0, 0, 320, 11) { GameMenuBar(v, vm) }
-    // city name / date box (unchanged from the city screen)
-    v.At(4, 13, 141, 30, Alignment.Center) {
-        Box(Modifier.fillMaxSize().background(Vga.Black)
-            .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(2)), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(s.currentCity, style = v.text(9, color = Vga.White, bold = true))
-                Text(vm.clockLabel(), style = v.text(8, color = Vga.White))
-            }
-        }
-    }
+    // city name / date box (unchanged from the city screen; shows SLEEPING… when the
+    // 3-hour compute crosses 10 p.m. — the CRT stays up, like the original)
+    CityClockBox(v, vm)
     // LEFT: the printer panel — paper grows upward from the platen as results print
     v.At(2, 44, 146, 154) {
         Box(Modifier.fillMaxSize()) {
@@ -1016,7 +1104,8 @@ fun CrimeScreen(vm: CarmenViewModel) = VirtualScreen { v ->
             }
         }
     }
-    GameToolbar(v, vm, selected = 3, onSee = { vm.gotoCity() }, onInvestigate = { vm.gotoCity() })
+    GameToolbar(v, vm, onSee = { vm.selectTool(0); vm.gotoCity() },
+        onInvestigate = { vm.selectTool(2); vm.gotoCity() })
     OverlayHost(v, vm)
 }
 
@@ -1058,15 +1147,7 @@ fun ChaseScreen(vm: CarmenViewModel) = VirtualScreen { v ->
 
     v.At(0, 0, 320, 11) { GameMenuBar(v, vm) }
     // city name / date box
-    v.At(4, 13, 141, 30, Alignment.Center) {
-        Box(Modifier.fillMaxSize().background(Vga.Black)
-            .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(2)), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(s.currentCity, style = v.text(9, color = Vga.White, bold = true))
-                Text(vm.clockLabel(), style = v.text(8, color = Vga.White))
-            }
-        }
-    }
+    CityClockBox(v, vm)
     // city photo stays on the left
     v.At(4, 45, 141, 148) {
         Box(Modifier.fillMaxSize().border(BorderStroke(v.w(1), Vga.White))) {
@@ -1102,17 +1183,8 @@ fun ChaseScreen(vm: CarmenViewModel) = VirtualScreen { v ->
             }
         }
     }
-    // toolbar visible (investigate highlighted), non-interactive during the chase
-    v.At(146, 163, 174, 32) {
-        Box(Modifier.fillMaxSize()) {
-            PixelImage("toolbar_bar", Modifier.fillMaxSize())
-            Row(Modifier.fillMaxSize()) {
-                Box(Modifier.weight(1f)); Box(Modifier.weight(1f))
-                Box(Modifier.weight(1f).fillMaxHeight().border(BorderStroke(v.w(2), Vga.Green)))
-                Box(Modifier.weight(1f))
-            }
-        }
-    }
+    // DOS removes the toolbar completely during the chase — the area below the right panel
+    // stays plain black (dos_chase_suspect_no_toolbar.png)
     // tap to skip
     Box(Modifier.fillMaxSize().clickable { vm.chaseDone() })
 }
@@ -1161,37 +1233,35 @@ fun ResultScreen(vm: CarmenViewModel) = VirtualScreen(keepVirtualYAboveIme = 150
     LaunchedEffect(stage) {
         if (stage == 3) {
             val correct = input.trim().equals(quiz.second, ignoreCase = true)
-            vm.resolvePromotion(correct)
             if (correct) {
+                vm.resolvePromotion(true)
                 typeAll(listOf(
                     "Your new rank is: ${GameData.ranks[vm.s.rankIndex]}.",
                     "${vm.casesToNextPromotion()} more cases until your next promotion.",
                 ))
+                typeAll(listOf("Ready for your next case, ${s.detectiveName}?"))
+                stage = 4
             } else {
-                typeAll(listOf(
-                    "I'm sorry, that is not correct.",
-                    "Your promotion will have to wait, ${s.detectiveName}.",
-                ))
+                // DOS re-asks the same question until it's answered correctly
+                // (dos_quiz_incorrect_try_again.png) — the promotion stays attainable
+                typeAll(listOf("That is incorrect.", "Please try again.", quiz.first))
+                stage = 2
             }
-            typeAll(listOf("Ready for your next case, ${s.detectiveName}?"))
-            stage = 4
         }
-        if (stage == 2) focus.requestFocus()
+        if (stage == 2) {
+            // clear any taps that leaked in while earlier stages auto-advanced (§20)
+            input = ""
+            // wait for the answer field to (re-)enter composition before focusing it
+            delay(120)
+            runCatching { focus.requestFocus() }
+        }
     }
     val scroll = rememberScrollState()
     LaunchedEffect(printed.size, typing, input, stage) { scroll.animateScrollTo(scroll.maxValue) }
 
     v.At(0, 0, 320, 11) { GameMenuBar(v, vm) }
     // city name box
-    v.At(4, 13, 141, 30, Alignment.Center) {
-        Box(Modifier.fillMaxSize().background(Vga.Black)
-            .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(2)), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(s.currentCity, style = v.text(9, color = Vga.White, bold = true))
-                Text(vm.clockLabel(), style = v.text(8, color = Vga.White))
-            }
-        }
-    }
+    CityClockBox(v, vm)
     // left: the printer with the Interpol report typing on
     v.At(2, 44, 146, 154) {
         Box(Modifier.fillMaxSize()) {
@@ -1239,13 +1309,21 @@ fun ResultScreen(vm: CarmenViewModel) = VirtualScreen(keepVirtualYAboveIme = 150
     // right: the JAIL (win) or black panel (loss)
     v.At(150, 26, 168, 146) {
         Box(Modifier.fillMaxSize().background(Vga.Black)) {
-            if (s.won) PixelImage("jail_cell", Modifier.fillMaxSize())
+            if (s.won) {
+                PixelImage("jail_cell", Modifier.fillMaxSize())
+                // the suspect's eyes blink behind the bars on a slow loop (dos_jail_eyes_a/b)
+                var blink by remember { mutableStateOf(false) }
+                LaunchedEffect(Unit) { while (true) { delay(1000); blink = !blink } }
+                if (blink) v.At(63, 71, 41, 29) {
+                    PixelImage("jail_eyes_alt", Modifier.fillMaxSize())
+                }
+            }
         }
     }
     // "Ready for your next case?" -> the original's yellow Yes/No buttons
     if (done) {
-        v.At(152, 176, 76, 14) { YellowButton(v, "Yes") { vm.toBriefingForNext() } }
-        v.At(243, 176, 62, 14) { YellowButton(v, "No") { vm.menuQuitToTitle() } }
+        v.At(152, 176, 76, 12) { YellowButton(v, "Yes") { vm.toBriefingForNext() } }
+        v.At(234, 176, 76, 12) { YellowButton(v, "No") { vm.menuQuitToTitle() } }
     }
     OverlayHost(v, vm)
 }

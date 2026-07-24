@@ -1,5 +1,26 @@
 # Android Fidelity TODO — full findings from the 2026-07-24 dual playthrough
 
+> **STATUS (2026-07-24 evening pass): §1–§18, §20, §21 implemented and verified on the
+> emulator against the bundled refs.** Notes from the fix pass:
+> - §5: ACME scene shipped as `intro_acme_agency.png` (cursor patched with a brick block
+>   cloned from 64 px below; header/footer text is baked into the capture).
+> - §6: sprites shipped as `sight_face/thug/burglar_peek/burglar_run/dagger.png` (crops
+>   from the refs at ÷2; black background kept — invisible on the black panel). Hideout is
+>   now venue-based: `hideoutVenueIndex` in the ViewModel, wrong venue = dagger + forced
+>   "Rumor has it…" line, right venue = chase. Arrival no longer auto-confronts.
+> - §9: `jail_cell.png` proved to be an exact pixel match of the eyes-B frame at offset
+>   (63,71); frame A shipped as `jail_eyes_alt.png` and alternated every 1 s.
+> - §10: the "airport photo" is just the DEPARTURE CITY's photo staying behind the map —
+>   fixed by keeping CityPhoto during flight (no new asset needed).
+> - §15: **the doc had this inverted** — the DOS refs show the area below the right panel
+>   is WHITE on the printer screens (sign-on AND result), and `hq_screen.png` already is.
+>   Only the button geometry was fixed (Yes 152/76, No 234/76, h≈12, drop shadow).
+> - SEE/DEPART now share one stable per-city `departOptions` list (SEE list == DEPART
+>   list, generated once per arrival); DEPART kept tap-outside-to-cancel instead of the
+>   invented "Cancel" row, and got the DOS grow-out animation.
+> - Still open: §19 clue-phrasing audit (separate content/balance pass), §17's optional
+>   LED blink, and section D (sound, menu dropdown contents).
+
 Both games were played end-to-end to a **win** on the same day and compared stage by stage:
 
 - **DOS** (ground truth): case "antique gaucho costume stolen from Buenos Aires", suspect
