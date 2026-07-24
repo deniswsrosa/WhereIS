@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import com.acme.carmen.data.CityMeta
 import com.acme.carmen.data.GameData
 import com.acme.carmen.data.Suspect
+import com.acme.carmen.data.WorldMap
 import kotlin.random.Random
 
 enum class Phase { INTRO, TITLE, SIGN_ON, BRIEFING, CITY, TRAVEL, CRIME, CHASE, RESULT }
@@ -78,8 +79,9 @@ data class GameState(
     // sighting interstitial to play before the witness: 0 none · 1 masked face · 2 thug ·
     // 3 burglar with sack · 4 dagger (hideout wrong venue) — DOS escalation ladder
     val sightingLevel: Int = 0,
-    // which venue at the hideout city hides the suspect (picking it triggers the chase)
-    val hideoutVenueIndex: Int = -1,
+    // Carmen herself was jailed on the final case: the career is over and the detective
+    // is retired from the roster (back to the title after the report)
+    val careerOver: Boolean = false,
     // toolbar green selection border follows the last activated tool (0 SEE · 1 DEPART ·
     // 2 INVESTIGATE · 3 CRIME); arriving in a city resets it to INVESTIGATE
     val selectedTool: Int = 2,
@@ -98,7 +100,13 @@ data class GameState(
     val deadlinePassed: Boolean get() = clock > DEADLINE_HOURS
     val hideout: String get() = route.lastOrNull() ?: ""
     val atHideout: Boolean get() = currentCity == hideout && onTrack
-    companion object { const val DEADLINE_HOURS = 152 } // Mon 9am -> Sun 5pm
+    companion object {
+        const val DEADLINE_HOURS = 152     // Mon 9am -> Sun 5pm
+        // Career length: promotions at 1, 5, 9, 13 solved (4 cases per middle rank); the
+        // first case as Ace Detective is always Carmen Sandiego herself — jail her and the
+        // career ends in the Hall of Fame (1990 revised rules).
+        const val CAREER_CASES = 14
+    }
 }
 
 class CarmenViewModel : ViewModel() {
@@ -156,11 +164,14 @@ class CarmenViewModel : ViewModel() {
     private fun newCase() {
         val carmen = GameData.suspects.first { it.name == "Carmen Sandiego" }
         val pool = GameData.suspects.filter { it.name != "Carmen Sandiego" }
-        val culprit = if (s.rankIndex >= 4) carmen else pool.random()
+        // Carmen is only ever the culprit on the very last case of the career (1990 rules:
+        // catching her is guaranteed, then the detective is retired from the roster)
+        val culprit = if (s.casesSolved >= GameState.CAREER_CASES - 1) carmen else pool.random()
 
         val order = discriminatingOrder(culprit)
-        // Rookie case observed in DOS: 5 cities total (4 hops); longer routes at higher ranks
-        val routeLen = (5 + s.rankIndex).coerceAtMost(8)
+        // cities per case by rank (ADG analysis of the 1990 release): Rookie 5, Sleuth 6,
+        // Private Eye 7, Investigator 8, Ace Detective 9
+        val routeLen = (5 + s.rankIndex).coerceAtMost(9)
 
         val cities = GameData.cities.shuffled().take(routeLen)
         android.util.Log.d("Carmen", "case: culprit=${culprit.name} route=$cities")
@@ -179,7 +190,7 @@ class CarmenViewModel : ViewModel() {
             openClue = null,
             compSex = null, compHobby = null, compHair = null, compFeature = null, compVehicle = null,
             warrantFor = null, computed = false, won = false, resultLines = emptyList(),
-            selectedTool = 2, sightingLevel = 0, sleeping = false,
+            selectedTool = 2, sightingLevel = 0, sleeping = false, careerOver = false,
         )
         buildVenues()
         s = s.copy(departOptions = makeDepartOptions())
@@ -222,16 +233,15 @@ class CarmenViewModel : ViewModel() {
         }
         val list = mutableListOf<Venue>()
         val onTrack = st.currentCity == st.route.getOrNull(st.progress) && st.onTrack
-        var hideoutIdx = -1
 
         if (!onTrack) {
             places.forEachIndexed { i, p ->
                 list.add(Venue(p, occs[i], ClueKind.NONE, GameData.noInformation.random()))
             }
         } else if (st.currentCity == st.hideout) {
-            // Hideout city (DOS): the suspect hides in one venue (picking it starts the
-            // chase); the others throw the dagger and the witness says the special line.
-            hideoutIdx = places.indices.random()
+            // Hideout city: every venue shows the special line until the crook is found
+            // (which venue that is gets decided in openVenue — never the first pick,
+            // 50/50 on the second, certain on the third, per the 1990 release's rules)
             places.forEachIndexed { i, p ->
                 list.add(Venue(p, occs[i], ClueKind.DANGER,
                     "Rumor has it that the gang is in town somewhere."))
@@ -257,7 +267,7 @@ class CarmenViewModel : ViewModel() {
                 }
             }
         }
-        s = s.copy(venues = list, visited = emptySet(), openClue = null, hideoutVenueIndex = hideoutIdx)
+        s = s.copy(venues = list, visited = emptySet(), openClue = null)
     }
 
     private fun destinationClue(next: String): String {
@@ -312,8 +322,17 @@ class CarmenViewModel : ViewModel() {
     // ---------- player actions in a city ----------
     fun openVenue(index: Int) {
         val v = s.venues.getOrNull(index) ?: return
-        // hideout city: the right venue triggers the confrontation (no witness, no charge)
-        if (s.atHideout && index == s.hideoutVenueIndex) { confront(); return }
+        // Hideout city (1990 rules, per the ADG analysis): the crook is NEVER at the first
+        // venue you try, the second is a 50/50 coin flip, the third is certain. Catching
+        // them happens instantly and costs no time.
+        if (s.atHideout && index !in s.visited) {
+            val caught = when (s.visited.size) {
+                0 -> false
+                1 -> Random.nextBoolean()
+                else -> true
+            }
+            if (caught) { confront(); return }
+        }
         var st = s
         if (index !in st.visited && v.kind == ClueKind.TRAIT)
             st = st.copy(revealedCount = st.revealedCount + 1)
@@ -352,24 +371,34 @@ class CarmenViewModel : ViewModel() {
 
     // ---------- travel ----------
     /** Build this city's destination set once per arrival — the SEE dropdown and the DEPART
-     *  list must show the same, stable connections (regenerating each frame is un-DOS). */
+     *  list must show the same, stable connections (regenerating each frame is un-DOS).
+     *  Like the original's flight matrix, a city links to 2-4 others, and a wrong flight can
+     *  never land you somewhere you're supposed to go later in the case (decoys exclude the
+     *  whole route). */
     private fun makeDepartOptions(): List<String> {
         val next = when {
             s.progress < s.route.size - 1 -> s.route[s.progress + 1]
             s.currentCity != s.hideout -> s.hideout   // strayed after the hideout: allow the way back
             else -> null
         }
+        val links = Random.nextInt(2, 5)              // 2-4 connections, like the original
         val decoys = GameData.cities
-            .filter { it != next && it != s.currentCity && it !in s.route.take(s.progress + 1) }
-            .shuffled().take(3)
+            .filter { it != next && it != s.currentCity && it !in s.route }
+            .shuffled().take(if (next != null) links - 1 else links)
         return if (next != null) (decoys + next).shuffled() else decoys
     }
 
     /** Start the flight: the travel screen animates the red route line, then calls arrive(). */
     fun travelTo(city: String) {
         if (s.flying != null) return
-        // flights cost a few hours (original: New Delhi -> Kathmandu = 2h); scale with distance a little
-        val cost = Random.nextInt(2, 6)
+        // flight time scales with map distance (the original's travel times depend on how
+        // far apart the cities are; short hops observed at ~2-3 h)
+        val a = WorldMap.pos[s.currentCity]
+        val b = WorldMap.pos[city]
+        val cost = if (a != null && b != null) {
+            val d = kotlin.math.hypot(((a.x - b.x) * 2f).toDouble(), (a.y - b.y).toDouble())
+            (2 + d * 6).toInt().coerceIn(2, 14)
+        } else Random.nextInt(2, 6)
         s = s.copy(flying = city, flightHours = cost)
     }
 
@@ -481,15 +510,18 @@ class CarmenViewModel : ViewModel() {
         }
         lines += "We here at Interpol thank you for your good work on this case."
         val newCases = s.casesSolved + 1
+        // jailing Carmen herself concludes the career — no promotion, straight to the
+        // Hall of Fame report and off the roster
+        val careerOver = c.name == "Carmen Sandiego"
         // promotion cadence observed in the original: after case 1, then "four more cases
         // until your next promotion" — thresholds 1, 5, 9, 13
-        val promote = s.rankIndex < GameData.ranks.lastIndex && newCases in setOf(1, 5, 9, 13)
+        val promote = !careerOver && s.rankIndex < GameData.ranks.lastIndex && newCases in setOf(1, 5, 9, 13)
         if (promote) {
             lines += "Good job, ${s.detectiveName}, you have earned a promotion."
             lines += "Before you are promoted you have one more clue to unravel."
         }
         s = s.copy(phase = Phase.RESULT, won = true, casesSolved = newCases,
-            resultLines = lines, pendingPromotion = promote)
+            resultLines = lines, pendingPromotion = promote, careerOver = careerOver)
     }
 
     /** The promotion quiz was answered: bump the rank only when correct (like the original). */

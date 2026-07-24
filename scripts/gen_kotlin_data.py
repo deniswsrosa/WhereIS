@@ -15,7 +15,9 @@ TRAITS = {
  "Carmen Sandiego":            ("female","tennis","red","jewelry","convertible"),
  "Merey LaRoc":                ("female","mt. climbing","brown","jewelry","limousine"),
  "Dazzle Annie Nonker":        ("female","tennis","blond","tattoo","limousine"),
- "Lady Agatha Wayland":        ("female","tennis","red","ring","race car"),
+ # "Denghby Roadster" = open-top roadster -> convertible; per the ADG mechanics analysis,
+ # "race car" is one of the 6 computer traits NO suspect has (it eliminates everyone)
+ "Lady Agatha Wayland":        ("female","tennis","red","ring","convertible"),
  "Len \"Red\" Bulk":           ("male","mt. climbing","red","tattoo","convertible"),
  "Scar Graynolt":              ("male","croquet","red","ring","limousine"),
  "Nick Brunch":                ("male","mt. climbing","black","ring","motorcycle"),

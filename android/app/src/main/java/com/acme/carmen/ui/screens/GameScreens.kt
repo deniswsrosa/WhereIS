@@ -35,6 +35,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.acme.carmen.data.CityMeta
 import com.acme.carmen.data.GameData
+import com.acme.carmen.data.WorldMap
 import com.acme.carmen.game.CarmenViewModel
 import com.acme.carmen.game.Overlay
 import com.acme.carmen.ui.*
@@ -803,31 +804,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCivicBuilding(w
 }
 
 /* ----------------------------- TRAVEL ----------------------------- */
-// Normalised (0..1) pixel position of each city on world_map_clean.png. The map asset is the
-// authentic DEPART map interior recovered pixel-perfectly from original captures (median-combined
-// across cases to remove labels/routes); it sits at (10,85)..(309,191) in the 320x200 screen,
-// exactly where the original draws it.
-private object WorldMap {
-    const val WV = 300f     // map interior virtual width  (native asset size, no stretch)
-    const val HV = 107f     // map interior virtual height
-    val pos: Map<String, Offset> = mapOf(
-        "Athens" to Offset(0.5647f, 0.3268f), "Baghdad" to Offset(0.6259f, 0.3703f),
-        "Bamako" to Offset(0.4708f, 0.5406f), "Bangkok" to Offset(0.7922f, 0.5324f),
-        "Budapest" to Offset(0.5509f, 0.2324f), "Buenos Aires" to Offset(0.3215f, 0.7943f),
-        "Cairo" to Offset(0.587f, 0.3996f), "Colombo" to Offset(0.731f, 0.5813f),
-        "Istanbul" to Offset(0.5803f, 0.2976f), "Kathmandu" to Offset(0.7472f, 0.4199f),
-        "Kigali" to Offset(0.5835f, 0.639f), "Lima" to Offset(0.2663f, 0.6967f),
-        "London" to Offset(0.4941f, 0.1904f), "Mexico City" to Offset(0.2008f, 0.4887f),
-        "Montreal" to Offset(0.2765f, 0.2529f), "Moroni" to Offset(0.6226f, 0.6949f),
-        "Moscow" to Offset(0.6059f, 0.1444f), "New Delhi" to Offset(0.7232f, 0.4122f),
-        "New York" to Offset(0.2752f, 0.3005f), "Oslo" to Offset(0.5263f, 0.0979f),
-        "Paris" to Offset(0.5014f, 0.2184f), "Peking" to Offset(0.8393f, 0.3084f),
-        "Port Moresby" to Offset(0.9304f, 0.6827f), "Reykjavik" to Offset(0.4295f, 0.0489f),
-        "Rio de Janeiro" to Offset(0.3666f, 0.7491f), "Rome" to Offset(0.5315f, 0.2889f),
-        "San Marino" to Offset(0.5313f, 0.2686f), "Singapore" to Offset(0.802f, 0.6184f),
-        "Sydney" to Offset(0.9424f, 0.7918f), "Tokyo" to Offset(0.9081f, 0.3484f),
-    )
-}
+// City positions live in data.WorldMap (shared with the ViewModel's flight-time model).
 
 @Composable
 fun TravelScreen(vm: CarmenViewModel) = VirtualScreen { v ->
@@ -1204,7 +1181,7 @@ fun ResultScreen(vm: CarmenViewModel) = VirtualScreen(keepVirtualYAboveIme = 150
     var input by remember { mutableStateOf("") }
     val quiz = remember { GameData.promotionQuiz.random() }
     val focus = remember { FocusRequester() }
-    val done = stage >= 4
+    val done = stage == 4
 
     suspend fun typeAll(lines: List<String>, width: Int = 20) {
         for (line in lines) {
@@ -1219,15 +1196,21 @@ fun ResultScreen(vm: CarmenViewModel) = VirtualScreen(keepVirtualYAboveIme = 150
     }
     LaunchedEffect(Unit) {
         typeAll(s.resultLines)
-        if (s.pendingPromotion) {
-            typeAll(listOf(
-                "Use the World Almanac and Book of Facts to help you find the missing word in the following sentence:",
-                quiz.first,
-            ))
-            stage = 2
-        } else {
-            typeAll(listOf("Ready for your next case, ${s.detectiveName}?"))
-            stage = 4
+        when {
+            // Carmen jailed on the final case: no next case — the detective is retired
+            // from the roster; any tap returns to the title
+            s.careerOver -> stage = 5
+            s.pendingPromotion -> {
+                typeAll(listOf(
+                    "Use the World Almanac and Book of Facts to help you find the missing word in the following sentence:",
+                    quiz.first,
+                ))
+                stage = 2
+            }
+            else -> {
+                typeAll(listOf("Ready for your next case, ${s.detectiveName}?"))
+                stage = 4
+            }
         }
     }
     LaunchedEffect(stage) {
@@ -1235,9 +1218,10 @@ fun ResultScreen(vm: CarmenViewModel) = VirtualScreen(keepVirtualYAboveIme = 150
             val correct = input.trim().equals(quiz.second, ignoreCase = true)
             if (correct) {
                 vm.resolvePromotion(true)
-                typeAll(listOf(
+                typeAll(listOfNotNull(
                     "Your new rank is: ${GameData.ranks[vm.s.rankIndex]}.",
-                    "${vm.casesToNextPromotion()} more cases until your next promotion.",
+                    vm.casesToNextPromotion().takeIf { it > 0 }
+                        ?.let { "$it more cases until your next promotion." },
                 ))
                 typeAll(listOf("Ready for your next case, ${s.detectiveName}?"))
                 stage = 4
@@ -1324,6 +1308,17 @@ fun ResultScreen(vm: CarmenViewModel) = VirtualScreen(keepVirtualYAboveIme = 150
     if (done) {
         v.At(152, 176, 76, 12) { YellowButton(v, "Yes") { vm.toBriefingForNext() } }
         v.At(234, 176, 76, 12) { YellowButton(v, "No") { vm.menuQuitToTitle() } }
+    }
+    // Carmen jailed: career complete — any key returns to the title (off the roster).
+    // White text: unlike the briefing screen, the result screen's background is black.
+    if (stage == 5) {
+        v.At(150, 172, 166, 22, Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Press any key or", style = v.text(9.5f, color = Vga.White, bold = true))
+                Text("button to continue.", style = v.text(9.5f, color = Vga.White, bold = true))
+            }
+        }
+        Box(Modifier.fillMaxSize().clickable { vm.menuQuitToTitle() })
     }
     OverlayHost(v, vm)
 }

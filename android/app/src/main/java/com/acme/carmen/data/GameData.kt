@@ -213,8 +213,10 @@ object GameData {
             occupation = "Reader of upper-class English mystery stories",
             hobby = "Tennis", hair = "Red", auto = "Denghby Roadster",
             feature1 = "Has a diamond ring the size of a grapefruit.", feature2 = "Speeds through the countryside looking for great Mexican restaurants.",
+            // "Denghby Roadster" = open-top roadster -> convertible. "race car" is one of
+            // the 6 computer traits no suspect has (selecting it eliminates all suspects).
             tSex = "female", tHobby = "tennis", tHair = "red",
-            tFeature = "ring", tVehicle = "race car",
+            tFeature = "ring", tVehicle = "convertible",
         ),
         Suspect(
             name = "Len \"Red\" Bulk", sex = "Male",
