@@ -15,3 +15,9 @@ _perm_test_*.txt
 
 # Rendered stinger reference audio (kept on disk, not tracked)
 work/stinger_audio/
+
+# --- AI sprite-generation intermediates (raw model output, hundreds of MB) ---
+work/witness_variations/raw/
+work/witness_variations/raw_v1_rejected/
+work/witness_variations/processed_v1_rejected/
+generated_imgs/
