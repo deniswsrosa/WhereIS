@@ -563,12 +563,15 @@ private fun InvestigatePicker(v: Virtual, venues: List<Venue>, visited: Set<Int>
     v.At(70, 71, 180, 105) {
         Column(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(2), Vga.White))
             .clickable(enabled = false) {}.padding(v.w(3))) {
-            // 3 buildings on a shared baseline (bottom-aligned), native proportions
+            // 3 buildings, outer two on a shared baseline and the middle one riding ~8px
+            // higher — measured from the original picker (dos_04: bottoms 114/106/114)
             Row(Modifier.fillMaxWidth().height(v.w(52)), horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.Bottom) {
                 venues.forEachIndexed { i, venue ->
                     val asset = "venue_" + snake(venue.place)
-                    Box(Modifier.width(v.w(52)).fillMaxHeight().clickable { selected = i; onPick(i) },
+                    val lift = if (i == 1) 8f else 0f
+                    Box(Modifier.width(v.w(52)).fillMaxHeight().clickable { selected = i; onPick(i) }
+                        .padding(bottom = v.w(lift)),
                         contentAlignment = Alignment.BottomCenter) {
                         if (drawableId(asset) != 0) {
                             val aspect = drawableAspect(asset, 0.6f)
@@ -885,8 +888,17 @@ fun CrimeScreen(vm: CarmenViewModel) = VirtualScreen { v ->
     val s = vm.s
     var selRow by remember { mutableStateOf(0) }
     val paper = remember { mutableStateListOf("READY.") }
+    var typing by remember { mutableStateOf("") }
     var printing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+
+    // dot-matrix teletype: every line prints letter by letter, like the original
+    suspend fun printLine(line: String) {
+        typing = ""
+        for (ch in line) { typing += ch; delay(14) }
+        paper.add(line); typing = ""
+        delay(90)
+    }
 
     fun valueOf(row: Int): String? = when (row) {
         0 -> s.compSex; 1 -> s.compHobby; 2 -> s.compHair; 3 -> s.compFeature; else -> s.compVehicle
@@ -907,27 +919,27 @@ fun CrimeScreen(vm: CarmenViewModel) = VirtualScreen { v ->
         if (printing) return
         printing = true
         scope.launch {
-            paper.add("Wait...")
+            printLine("Wait...")
             delay(900)
             vm.compute()
             val results = vm.matches()
             paper.add("")
             when {
-                !vm.anyFilterSet() -> paperWrap("Please enter the suspect's description first.").forEach { paper.add(it); delay(180) }
-                results.isEmpty() -> paperWrap(GameData.ELIMINATES_ALL).forEach { paper.add(it); delay(180) }
+                !vm.anyFilterSet() -> paperWrap("Please enter the suspect's description first.").forEach { printLine(it) }
+                results.isEmpty() -> paperWrap(GameData.ELIMINATES_ALL).forEach { printLine(it) }
                 else -> {
                     // the original prints "Suspect:" when the description narrows to one
-                    paper.add(if (results.size == 1) "Suspect:" else "Suspects:"); delay(220)
-                    results.forEach { paper.add(it.name); delay(220) }
+                    printLine(if (results.size == 1) "Suspect:" else "Suspects:")
+                    results.forEach { printLine(it.name) }
                     if (results.size == 1) {
                         paper.add("")
                         paperWrap(GameData.WARRANT_ISSUED.replace("%s", results.first().name))
-                            .forEach { paper.add(it); delay(180) }
+                            .forEach { printLine(it) }
                     }
                 }
             }
             paper.add("")
-            paper.add("READY.")
+            printLine("READY.")
             printing = false
         }
     }
@@ -949,7 +961,7 @@ fun CrimeScreen(vm: CarmenViewModel) = VirtualScreen { v ->
             PixelImage("crime_printer", Modifier.fillMaxSize())
             // paper sheet: bottom fixed at panel y=102, top grows with content (min = original sheet)
             val lineH = 7.4f
-            val shown = paper.takeLast(12)
+            val shown = paper.takeLast(12) + (if (typing.isNotEmpty()) listOf(typing) else emptyList())
             val sheetH = (10f + shown.size * lineH).coerceAtLeast(29f).coerceAtMost(96f)
             v.At(14, 102f - sheetH, 113, sheetH) {
                 Box(Modifier.fillMaxSize().background(Vga.White).border(BorderStroke(v.w(0.7f), Vga.Black))) {
