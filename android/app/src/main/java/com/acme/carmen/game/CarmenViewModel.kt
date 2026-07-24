@@ -9,7 +9,7 @@ import com.acme.carmen.data.GameData
 import com.acme.carmen.data.Suspect
 import kotlin.random.Random
 
-enum class Phase { INTRO, TITLE, SIGN_ON, BRIEFING, CITY, TRAVEL, CRIME, RESULT }
+enum class Phase { INTRO, TITLE, SIGN_ON, BRIEFING, CITY, TRAVEL, CRIME, CHASE, RESULT }
 
 enum class ClueKind { DESTINATION, TRAIT, DANGER, NONE }
 
@@ -393,12 +393,13 @@ class CarmenViewModel : ViewModel() {
     // ---------- endings ----------
     private fun checkDeadline() { if (s.deadlinePassed) escaped("time") }
 
+    /** Arrived at the hideout: play the chase animation first, then show the result. */
     private fun confront() {
         val c = s.culprit!!
         val w = s.warrantFor
         when {
             w == null -> {
-                s = s.copy(phase = Phase.RESULT, won = false, resultLines = listOf(
+                s = s.copy(won = false, resultLines = listOf(
                     "Interpol here.",
                     "You have caught up with ${c.name}.",
                     GameData.NO_WARRANT.let { "However, without a warrant we cannot make a legal arrest!" },
@@ -406,7 +407,7 @@ class CarmenViewModel : ViewModel() {
                 ))
             }
             w.name != c.name -> {
-                s = s.copy(phase = Phase.RESULT, won = false, resultLines = listOf(
+                s = s.copy(won = false, resultLines = listOf(
                     "You have trailed the suspect to ${s.currentCity}.",
                     "Unfortunately, you have a warrant for ${w.name}.",
                     "Be careful, we could all be sued for false arrest!",
@@ -415,7 +416,12 @@ class CarmenViewModel : ViewModel() {
             }
             else -> win(c)
         }
+        // win() sets phase=RESULT; route everything through the chase animation instead
+        s = s.copy(phase = Phase.CHASE)
     }
+
+    /** Chase animation finished (or was tapped through) — show the Interpol report. */
+    fun chaseDone() { if (s.phase == Phase.CHASE) s = s.copy(phase = Phase.RESULT) }
 
     private fun win(c: Suspect) {
         val crimeCity = s.route.firstOrNull() ?: s.currentCity

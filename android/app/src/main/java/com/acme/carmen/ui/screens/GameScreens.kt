@@ -26,6 +26,8 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PlatformImeOptions
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextAlign
 import com.acme.carmen.game.Venue
 import kotlinx.coroutines.delay
@@ -1004,6 +1006,103 @@ fun CrimeScreen(vm: CarmenViewModel) = VirtualScreen { v ->
     }
     GameToolbar(v, vm, selected = 3, onSee = { vm.gotoCity() }, onInvestigate = { vm.gotoCity() })
     OverlayHost(v, vm)
+}
+
+/* ----------------------------- CHASE (hideout confrontation) -----------------------------
+ * Replicates the arrest sequence captured from the original: the suspect (trenchcoat +
+ * fedora) sprints across the black right panel, "There goes the suspect!" flashes up, the
+ * police squad storms after them, and — when your warrant is right — the suspect marches
+ * back across, hands up, escorted at gunpoint. Then the Interpol report (ResultScreen).
+ * Sprites anim_suspect_run_0..2 / anim_cops_0..2 / anim_escort_0..1 are cropped from the
+ * original's animation frames. Tap anywhere to skip.
+ */
+@Composable
+fun ChaseScreen(vm: CarmenViewModel) = VirtualScreen { v ->
+    val s = vm.s
+    // stage: 0 suspect runs right · 1 "There goes the suspect!" · 2 cops chase right ·
+    // 3 escort marches back left (win only) · then done
+    var stage by remember { mutableStateOf(0) }
+    var x by remember { mutableStateOf(-50f) }     // sprite x within the panel (virtual px)
+    var frame by remember { mutableStateOf(0) }
+
+    LaunchedEffect(Unit) {
+        // 1) the suspect sprints across, left -> right
+        x = -50f
+        while (x < 170f) { delay(55); x += 4.5f; frame++ }
+        // 2) "There goes the suspect!"
+        stage = 1
+        delay(1500)
+        if (s.won) {
+            // 3) the cops storm after them
+            stage = 2; x = -55f
+            while (x < 170f) { delay(55); x += 5f; frame++ }
+            delay(700)
+            // 4) hands up: the suspect is walked back at gunpoint, right -> left
+            stage = 3; x = 165f
+            while (x > -55f) { delay(60); x -= 3.5f; frame++ }
+        }
+        vm.chaseDone()
+    }
+
+    v.At(0, 0, 320, 11) { GameMenuBar(v, vm) }
+    // city name / date box
+    v.At(4, 13, 141, 30, Alignment.Center) {
+        Box(Modifier.fillMaxSize().background(Vga.Black)
+            .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(2)), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(s.currentCity, style = v.text(9, color = Vga.White, bold = true))
+                Text(vm.clockLabel(), style = v.text(8, color = Vga.White))
+            }
+        }
+    }
+    // city photo stays on the left
+    v.At(4, 45, 141, 148) {
+        Box(Modifier.fillMaxSize().border(BorderStroke(v.w(1), Vga.White))) {
+            CityPhoto(s.currentCity, v, Modifier.fillMaxSize())
+        }
+    }
+    // right panel: the chase plays out on black (clipped so sprites enter/exit at the edges)
+    v.At(149, 13, 167, 145) {
+        Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White))
+            .clipToBounds()) {
+            when (stage) {
+                0 -> {
+                    val sprite = "anim_suspect_run_${frame % 3}"
+                    PixelImage(sprite,
+                        Modifier.align(Alignment.BottomStart)
+                            .padding(bottom = v.w(10))
+                            .offset(v.w(x), 0.dp)
+                            .size(v.w(48), v.w(48)), ContentScale.Fit)
+                }
+                1 -> Text("There goes\nthe suspect!",
+                    style = v.text(9, color = Vga.White, bold = true),
+                    modifier = Modifier.align(Alignment.CenterStart).padding(start = v.w(18)))
+                2 -> PixelImage("anim_cops_${frame % 3}",
+                    Modifier.align(Alignment.BottomStart)
+                        .padding(bottom = v.w(10))
+                        .offset(v.w(x), 0.dp)
+                        .size(v.w(50), v.w(48)), ContentScale.Fit)
+                3 -> PixelImage("anim_escort_${frame % 2}",
+                    Modifier.align(Alignment.BottomStart)
+                        .padding(bottom = v.w(10))
+                        .offset(v.w(x), 0.dp)
+                        .size(v.w(48), v.w(48)), ContentScale.Fit)
+            }
+        }
+    }
+    // toolbar visible (investigate highlighted), non-interactive during the chase
+    v.At(146, 163, 174, 32) {
+        Box(Modifier.fillMaxSize()) {
+            PixelImage("toolbar_bar", Modifier.fillMaxSize())
+            Row(Modifier.fillMaxSize()) {
+                Box(Modifier.weight(1f)); Box(Modifier.weight(1f))
+                Box(Modifier.weight(1f).fillMaxHeight().border(BorderStroke(v.w(2), Vga.Green)))
+                Box(Modifier.weight(1f))
+            }
+        }
+    }
+    // tap to skip
+    Box(Modifier.fillMaxSize().clickable { vm.chaseDone() })
 }
 
 /* ----------------------------- RESULT -----------------------------

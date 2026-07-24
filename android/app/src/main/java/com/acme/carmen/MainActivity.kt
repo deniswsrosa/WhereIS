@@ -45,6 +45,7 @@ fun CarmenApp() {
             Phase.CITY -> CityScreen(vm)
             Phase.TRAVEL -> TravelScreen(vm)
             Phase.CRIME -> CrimeScreen(vm)
+            Phase.CHASE -> ChaseScreen(vm)
             Phase.RESULT -> ResultScreen(vm)
         }
     }
