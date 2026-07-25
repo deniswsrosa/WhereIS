@@ -5,8 +5,10 @@ package com.acme.clara.data
  *
  * `real = true`  -> description transcribed verbatim from an authentic in-game screen
  *                   (CARMEN##.BMP captured playthrough shipped in the archive item).
- * `real = false` -> remake-authored, factually accurate and framed to the game's 1990
- *                   period (e.g. "Soviet Union", "Peking"). NOT byte-exact original text.
+ * `real = false` -> remake-authored. Either framed to the game's 1990 period (e.g.
+ *                   "Soviet Union", "Peking") or, where the original stated facts that
+ *                   are now false (populations, defunct countries such as Yugoslavia),
+ *                   updated to present-day data. NOT byte-exact original text.
  *
  * The original Enhanced build does not store these passages as extractable strings;
  * they are rendered into the city artwork. See corpus/carmen_corpus.md, "Negative findings".
@@ -25,13 +27,13 @@ object CityMeta {
         CityInfo("Athens", "Europe", "the Parthenon",
             "In ancient times, Athens was a powerful city-state that warred with its neighbor Sparta and made lasting contributions to philosophy, science, drama and art.", true, "city_athens"),
         CityInfo("Baghdad", "the Middle East", "the Tigris River",
-            "Baghdad, with a population of about 3.5 million, is Iraq's capital and largest city.", true, "city_baghdad"),
+            "Baghdad, with a population of about 8 million, is Iraq's capital and largest city.", false, "city_baghdad"),
         CityInfo("Bamako", "Africa", "the Niger River",
-            "Bamako, with a population of around 800,000, is virtually the only city in Mali, an arid country located in West Africa and extending into the Sahara Desert.", true, "city_bamako"),
+            "Bamako, with a population of around 3 million, is by far the largest city in Mali, an arid country located in West Africa and extending into the Sahara Desert.", false, "city_bamako"),
         CityInfo("Bangkok", "Asia", "temples called wats",
             "Bangkok, the capital of Thailand, is a bustling city laced with canals and dotted with temples called wats.", true, "city_bangkok"),
         CityInfo("Budapest", "Europe", "the Danube",
-            "Hungary, with an area slightly smaller than Indiana, is bordered by Czechoslovakia, Austria, Yugoslavia, Romania and the Soviet Union.", true, "city_budapest"),
+            "Hungary, with an area slightly smaller than Indiana, is bordered by Slovakia, Austria, Slovenia, Croatia, Serbia, Romania and Ukraine.", false, "city_budapest"),
         CityInfo("Buenos Aires", "South America", "the Pampas",
             "Argentina is South America's second-largest nation, after Brazil. Its terrain ranges from tropical forests in the north to cold and barren Tierra del Fuego in the south.", true, "city_buenos_aires"),
         CityInfo("Cairo", "Africa", "the Pyramids",
@@ -57,7 +59,7 @@ object CityMeta {
         CityInfo("Moscow", "Europe", "Red Square",
             "The Soviet Union is the largest country in the world. It occupies one-sixth of the earth's land area.", true, "city_moscow"),
         CityInfo("New Delhi", "Asia", "the Red Fort",
-            "New Delhi, with a population of more than 5 million, is the third largest city in India, a nation of over 750 million people.", true, "city_new_delhi"),
+            "New Delhi, with a metropolitan population of more than 30 million, is the capital of India, a nation of over 1.4 billion people.", false, "city_new_delhi"),
         CityInfo("New York", "North America", "the Statue of Liberty",
             "The headquarters of the United Nations, located in New York, adds to the multi-cultural nature of the city.", true, "city_new_york"),
         CityInfo("Oslo", "Europe", "the Oslofjord",
@@ -79,9 +81,9 @@ object CityMeta {
         CityInfo("Singapore", "Asia", "40 smaller islands",
             "The nation of Singapore, located near the equator in Southeast Asia, consists of one large island plus 40 smaller islands.", true, "city_singapore"),
         CityInfo("Sydney", "Oceania", "the Opera House",
-            "An island continent, Australia is nearly as large as the United States but has only one-fifteenth the population.", true, "city_sydney"),
+            "An island continent, Australia is nearly as large as the United States but has only about one-twelfth the population.", false, "city_sydney"),
         CityInfo("Tokyo", "Asia", "Tokyo Bay",
-            "Tokyo, with a population of more than 8.3 million people, is the capital and largest city in Japan.", true, "city_tokyo"),
+            "Tokyo, with a population of about 14 million people, is the capital and largest city in Japan.", false, "city_tokyo"),
     ).associateBy { it.name }
 
     fun of(name: String): CityInfo = all[name] ?: CityInfo(name, "the world", "the city",
