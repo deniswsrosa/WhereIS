@@ -15,8 +15,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.acme.clara.audio.GameSound
+import com.acme.clara.audio.HapticEngine
 import com.acme.clara.game.ClaraViewModel
+import com.acme.clara.game.Haptics
 import com.acme.clara.game.Phase
+import com.acme.clara.save.LaunchOutcome
+import com.acme.clara.save.SaveStore
+import com.acme.clara.save.decideLaunch
 import com.acme.clara.ui.screens.*
 import com.acme.clara.ui.theme.Vga
 
@@ -35,6 +40,16 @@ class MainActivity : ComponentActivity() {
 fun ClaraApp() {
     val vm: ClaraViewModel = viewModel()
     val context = LocalContext.current
+    // Bind persistence and decide the launch: 0 saves → sign-on, 1 → continue, 2+ → picker.
+    LaunchedEffect(Unit) {
+        val store = SaveStore(context)
+        vm.bindRepository(store)
+        when (val outcome = decideLaunch(store.list())) {
+            is LaunchOutcome.SignOn -> Unit
+            is LaunchOutcome.Continue -> store.load(outcome.id)?.let { vm.resume(it) }
+            is LaunchOutcome.Choose -> vm.toChooseGame()
+        }
+    }
     // Keep the audio engine's mute state in sync with the Options > Sound toggle.
     LaunchedEffect(vm.s.soundOn) { GameSound.setEnabled(context, vm.s.soundOn) }
     // The title theme plays over the front-of-house screens (intro/title/sign-on) and stops
@@ -47,7 +62,12 @@ fun ClaraApp() {
     }
     // Event stingers: the ViewModel emits a (seq, cue) pair at each game moment; the seq
     // makes repeats distinct so this re-fires even for the same cue twice running.
-    LaunchedEffect(vm.soundCue) { vm.soundCue?.let { GameSound.play(context, it.second) } }
+    LaunchedEffect(vm.soundCue) {
+        vm.soundCue?.let {
+            GameSound.play(context, it.second)
+            HapticEngine.play(context, Haptics.forCue(it.second), vm.s.hapticsOn)
+        }
+    }
     // Note: only systemBars are padded here — the IME inset is deliberately NOT consumed,
     // so opening the keyboard never shrinks the 320x200 canvas. Screens that host a text
     // field (the HQ printer) handle the keyboard themselves by panning up.
@@ -64,6 +84,7 @@ fun ClaraApp() {
             Phase.CRIME -> CrimeScreen(vm)
             Phase.CHASE -> ChaseScreen(vm)
             Phase.RESULT -> ResultScreen(vm)
+            Phase.CHOOSE_GAME -> ChooseGameScreen(vm)
         }
     }
 }

@@ -39,6 +39,8 @@ android {
         // The ViewModel calls android.util.Log; return stub defaults instead of throwing
         // so the pure game logic can run under plain JVM unit tests.
         unitTests.isReturnDefaultValues = true
+        // Robolectric needs the merged Android resources to drive the Compose UI tests.
+        unitTests.isIncludeAndroidResources = true
     }
 }
 
@@ -56,4 +58,9 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation(composeBom)
     testImplementation("androidx.compose.runtime:runtime")
+    // Robolectric + Compose UI test: run instrumentation-style UI checks on the JVM.
+    testImplementation("org.robolectric:robolectric:4.12.2")
+    testImplementation("androidx.test:core:1.5.0")
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
