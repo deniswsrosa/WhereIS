@@ -8,9 +8,12 @@ import com.acme.clara.data.CityMeta
 import com.acme.clara.data.GameData
 import com.acme.clara.data.Suspect
 import com.acme.clara.data.WorldMap
+import com.acme.clara.save.SaveData
+import com.acme.clara.save.SaveMeta
+import com.acme.clara.save.SaveRepository
 import kotlin.random.Random
 
-enum class Phase { INTRO, TITLE, SIGN_ON, BRIEFING, CITY, TRAVEL, CRIME, CHASE, RESULT }
+enum class Phase { INTRO, TITLE, SIGN_ON, BRIEFING, CITY, TRAVEL, CRIME, CHASE, RESULT, CHOOSE_GAME }
 
 /** Event stingers from the original MIDISND.DAT, mapped to game moments (the UI layer
  *  resolves each to its res/raw MIDI and plays it over the theme). */
@@ -25,6 +28,10 @@ sealed interface Overlay {
     data object About : Overlay
     data object Roster : Overlay
     data object HallOfFame : Overlay
+    /** The Most-Wanted gallery — villains reveal as they're captured. */
+    data object MostWanted : Overlay
+    /** Commendations earned + career stats. */
+    data object Commendations : Overlay
     /** Game > Quit — the original's "Do you really want to quit?" Yes/No dialog. */
     data object ConfirmQuit : Overlay
     /** One suspect's dossier — the white typed-on window from the original's Dossiers menu. */
@@ -40,6 +47,10 @@ data class Venue(
     val text: String,        // fully assembled witness line
     val trait: Pair<String, String>? = null, // (category,value) if TRAIT
 )
+
+/** One line the detective has logged this case — a lead or a trait, tagged by city.
+ *  Feeds the case journal / "Previously…" recap so a case survives a break away. */
+data class JournalEntry(val kind: ClueKind, val text: String, val city: String)
 
 /** National treasures — remake-authored (the Enhanced build stores none as strings). */
 object Treasures {
@@ -103,6 +114,17 @@ data class GameState(
     // ui
     val overlay: Overlay? = null,
     val soundOn: Boolean = true,
+    val hapticsOn: Boolean = true,
+    // per-case tallies (reset every newCase) — feed stats, achievements, the share card
+    val wrongFlights: Int = 0,
+    val hintsUsed: Int = 0,
+    // the running case journal: leads and traits as they're uncovered (reset per case)
+    val journal: List<JournalEntry> = emptyList(),
+    // career record — persists across cases within a saved profile
+    val capturedVillains: Set<String> = emptySet(),
+    val unlockedAchievements: Set<String> = emptySet(),
+    val hintFreeSolves: Int = 0,
+    val hadCleanCase: Boolean = false,
 ) {
     val revealedTraits: List<Pair<String, String>> get() = revealOrder.take(revealedCount)
     val deadlinePassed: Boolean get() = clock > DEADLINE_HOURS
@@ -128,14 +150,67 @@ class ClaraViewModel : ViewModel() {
     private var cueSeq = 0
     private fun cue(c: SoundCue) { cueSeq++; soundCue = cueSeq to c }
 
+    // ---------- persistence (continuous autosave) ----------
+    private var repo: SaveRepository? = null
+    private var profileId: String? = null
+    private var clock: () -> Long = { 0L }
+
+    /** Wire continuous autosave to a repository + profile. A no-op until attached (e.g. in tests). */
+    fun attachSave(repository: SaveRepository, id: String, now: () -> Long = { System.currentTimeMillis() }) {
+        repo = repository; profileId = id; clock = now
+    }
+
+    /** Bind the repository without picking a profile yet (the launch flow chooses one). */
+    fun bindRepository(repository: SaveRepository, now: () -> Long = { System.currentTimeMillis() }) {
+        repo = repository; clock = now
+    }
+
+    private fun newProfileId(): String = "career-" + java.util.UUID.randomUUID().toString().take(8)
+
+    /** Existing saved careers, newest first (empty when no repository is bound). */
+    fun savedGames(): List<SaveMeta> = repo?.list().orEmpty()
+
+    /** Resume a saved career (launch continue / picker) into this ViewModel. */
+    fun resume(data: SaveData) { profileId = data.meta.id; s = data.state }
+
+    /** Resume by id from the bound repository (used by the picker). */
+    fun resumeById(id: String) { repo?.load(id)?.let { resume(it) } }
+
+    /** Delete a saved career from the picker. */
+    fun deleteGame(id: String) { repo?.delete(id) }
+
+    /** Snapshot the current state as a save (transient UI/animation fields cleared). */
+    fun snapshot(id: String, at: Long): SaveData = SaveData(
+        SaveMeta(id, s.detectiveName, s.rankIndex, s.casesSolved, at),
+        s.copy(overlay = null, openClue = null, flying = null, flightHours = 0,
+            sightingLevel = 0, sleeping = false),
+    )
+
+    /** Load a saved career into this ViewModel (launch continue / picker). */
+    fun loadCareer(data: SaveData) { profileId = data.meta.id; s = data.state }
+
+    /** Persist the current state to the active profile — the state on disk always equals the screen. */
+    private fun autosave() {
+        val r = repo ?: return
+        val id = profileId ?: return
+        r.save(snapshot(id, clock()))
+    }
+
+    fun toggleHaptics() { s = s.copy(hapticsOn = !s.hapticsOn, overlay = null) }
+
+    /** A hint was consumed (from the future hint system) — costs the hint-free streak. */
+    fun useHint() { s = s.copy(hintsUsed = s.hintsUsed + 1) }
+
     // ---------- flow ----------
     fun introDone() { if (s.phase == Phase.INTRO) s = s.copy(phase = Phase.TITLE) }
     fun start() { s = s.copy(phase = Phase.SIGN_ON) }
 
     fun signOn(name: String) {
         val nm = name.trim().ifBlank { "Gumshoe" }
+        if (profileId == null) profileId = newProfileId()
         s = GameState(phase = Phase.BRIEFING, detectiveName = nm)
         newCase()
+        autosave()
     }
 
     /**
@@ -145,9 +220,11 @@ class ClaraViewModel : ViewModel() {
      */
     fun signOnStart(name: String) {
         val nm = name.trim().ifBlank { "Gumshoe" }
+        if (profileId == null) profileId = newProfileId()
         s = GameState(phase = Phase.SIGN_ON, detectiveName = nm)
         newCase()                          // newCase() flips phase to BRIEFING...
         s = s.copy(phase = Phase.SIGN_ON)  // ...keep the printer on-screen until "begin"
+        autosave()
     }
 
     fun beginInvestigation() { s = s.copy(phase = Phase.CITY) }
@@ -162,8 +239,12 @@ class ClaraViewModel : ViewModel() {
     // ---------- menu bar ----------
     fun openOverlay(o: Overlay) { s = s.copy(overlay = o) }
     fun dismissOverlay() { s = s.copy(overlay = null) }
-    fun menuNewCase() { s = s.copy(overlay = null, phase = Phase.BRIEFING); newCase(); cue(SoundCue.BRIEFING) }
-    fun menuQuitToTitle() { s = GameState(phase = Phase.TITLE) }
+    fun menuNewCase() { s = s.copy(overlay = null, phase = Phase.BRIEFING); newCase(); cue(SoundCue.BRIEFING); autosave() }
+    fun menuQuitToTitle() { profileId = null; s = GameState(phase = Phase.TITLE) }
+    /** Game ▸ New Game — start a fresh career (a new saved profile). Names it on the sign-on screen. */
+    fun newGameFlow() { profileId = null; s = GameState(phase = Phase.SIGN_ON) }
+    /** Show the "Choose a game" picker. */
+    fun toChooseGame() { s = s.copy(overlay = null, phase = Phase.CHOOSE_GAME) }
     // Options > Sound is a silent checkmark toggle in the original (the √ beside the item
     // reflects the state); the actual mute is applied by the audio engine in the UI layer.
     fun toggleSound() { s = s.copy(soundOn = !s.soundOn, overlay = null) }
@@ -199,6 +280,7 @@ class ClaraViewModel : ViewModel() {
             revealOrder = order,
             revealedCount = 0,
             visited = emptySet(),
+            wrongFlights = 0, hintsUsed = 0, journal = emptyList(),
             openClue = null,
             compSex = null, compHobby = null, compHair = null, compFeature = null, compVehicle = null,
             warrantFor = null, computed = false, won = false, resultLines = emptyList(),
@@ -351,8 +433,12 @@ class ClaraViewModel : ViewModel() {
         // clue vs. warning stinger, keyed on what this venue's witness will say
         cue(if (v.kind == ClueKind.DANGER) SoundCue.DANGER else SoundCue.CLUE)
         var st = s
-        if (index !in st.visited && v.kind == ClueKind.TRAIT)
+        val firstVisit = index !in st.visited
+        if (firstVisit && v.kind == ClueKind.TRAIT)
             st = st.copy(revealedCount = st.revealedCount + 1)
+        // log leads and traits to the case journal the first time each venue is opened
+        if (firstVisit && (v.kind == ClueKind.DESTINATION || v.kind == ClueKind.TRAIT))
+            st = st.copy(journal = st.journal + JournalEntry(v.kind, v.text, st.currentCity))
         // DOS time costs: first venue visit in a city 2 h, every visit after that 3 h
         st = advanceClock(st, if (st.visited.isEmpty()) 2 else 3)
         st = st.copy(visited = st.visited + index)
@@ -365,6 +451,7 @@ class ClaraViewModel : ViewModel() {
         }
         s = st.copy(openClue = v, sightingLevel = level)
         checkDeadline()
+        autosave()
     }
 
     fun closeClue() { s = s.copy(openClue = null) }
@@ -439,7 +526,7 @@ class ClaraViewModel : ViewModel() {
                 st.copy(progress = st.progress + 1, currentCity = city, onTrack = true)
             city == st.hideout && st.progress == st.route.size - 1 ->
                 st.copy(currentCity = city, onTrack = true)   // flew back to the hideout
-            else -> st.copy(currentCity = city, onTrack = false)
+            else -> st.copy(currentCity = city, onTrack = false, wrongFlights = st.wrongFlights + 1)
         }
         // DOS: after arriving in a new city the toolbar selection is INVESTIGATE
         s = st.copy(selectedTool = 2)
@@ -448,6 +535,7 @@ class ClaraViewModel : ViewModel() {
         buildVenues()
         s = s.copy(departOptions = makeDepartOptions())
         cue(SoundCue.ARRIVE)
+        autosave()
     }
 
     // ---------- crime computer ----------
@@ -457,6 +545,7 @@ class ClaraViewModel : ViewModel() {
             "hair" -> s.copy(compHair = value); "feature" -> s.copy(compFeature = value)
             else -> s.copy(compVehicle = value)
         }.copy(computed = false)
+        autosave()   // a computer entry is case state — persist so a reload can't rewind it
     }
 
     fun matches(): List<Suspect> = GameData.suspects.filter { su ->
@@ -487,6 +576,7 @@ class ClaraViewModel : ViewModel() {
         s = st
         if (issuedWarrant) cue(SoundCue.WARRANT)   // "You now have a warrant to arrest X."
         checkDeadline()
+        autosave()
     }
 
     fun anyFilterSet(): Boolean =
@@ -554,14 +644,29 @@ class ClaraViewModel : ViewModel() {
             lines += "Well done, ${s.detectiveName} - a promotion is yours."
             lines += "One last puzzle stands between you and the promotion."
         }
-        s = s.copy(phase = Phase.RESULT, won = true, casesSolved = newCases,
-            resultLines = lines, pendingPromotion = promote, careerOver = careerOver)
+        // update the career record: capture the villain, tally clean / hint-free solves,
+        // then unlock any newly-earned commendations from the resulting record
+        val captured = s.capturedVillains + c.name
+        val cleanSweep = s.hadCleanCase || s.wrongFlights == 0
+        val hintFree = if (s.hintsUsed == 0) s.hintFreeSolves + 1 else s.hintFreeSolves
+        var next = s.copy(
+            phase = Phase.RESULT, won = true, casesSolved = newCases,
+            resultLines = lines, pendingPromotion = promote, careerOver = careerOver,
+            capturedVillains = captured, hadCleanCase = cleanSweep, hintFreeSolves = hintFree,
+        )
+        next = next.copy(
+            unlockedAchievements = next.unlockedAchievements +
+                Achievements.earned(Achievements.summarise(next)),
+        )
+        s = next
+        autosave()
     }
 
     /** The promotion quiz was answered: bump the rank only when correct (like the original). */
     fun resolvePromotion(correct: Boolean) {
         val newRank = if (correct && s.rankIndex < GameData.ranks.lastIndex) s.rankIndex + 1 else s.rankIndex
         s = s.copy(rankIndex = newRank, pendingPromotion = false)
+        autosave()
     }
 
     /** Cases remaining until the next promotion threshold (1, 5, 9, 13). */

@@ -26,9 +26,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.aspectRatio
 import com.acme.clara.data.GameData
+import com.acme.clara.game.Achievements
 import com.acme.clara.game.ClaraViewModel
+import com.acme.clara.game.MostWanted
 import com.acme.clara.game.Overlay
+import com.acme.clara.game.WantedEntry
 import com.acme.clara.ui.theme.Vga
 
 private data class MenuItemDef(val label: String, val enabled: Boolean = true, val action: () -> Unit)
@@ -48,15 +52,18 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
         MenuTitle(v, "Game", listOf(
             MenuItemDef("About Clara...") { vm.openOverlay(Overlay.About) },
             MenuItemDef("New") { vm.menuNewCase() },
-            MenuItemDef("Save", enabled = false) {},
+            MenuItemDef("New Game") { vm.newGameFlow() },
             MenuItemDef("Quit") { vm.openOverlay(Overlay.ConfirmQuit) },
         ))
         MenuTitle(v, "Options", listOf(
             MenuItemDef(if (s.soundOn) "√Sound" else " Sound") { vm.toggleSound() },
+            MenuItemDef(if (s.hapticsOn) "√Haptics" else " Haptics") { vm.toggleHaptics() },
             MenuItemDef(" Joystick") { vm.showJoystick() },
         ))
         MenuTitle(v, "Acme", listOf(
             MenuItemDef("Detective Roster") { vm.openOverlay(Overlay.Roster) },
+            MenuItemDef("Most Wanted") { vm.openOverlay(Overlay.MostWanted) },
+            MenuItemDef("Commendations") { vm.openOverlay(Overlay.Commendations) },
             MenuItemDef("Hall of Fame") { vm.openOverlay(Overlay.HallOfFame) },
         ))
         // Dossiers menu lists the ten suspects under their EXE short names
@@ -107,6 +114,8 @@ fun OverlayHost(v: Virtual, vm: ClaraViewModel) {
     val o = vm.s.overlay ?: return
     if (o is Overlay.Dossier) { DossierWindow(v, o.suspect) { vm.dismissOverlay() }; return }
     if (o is Overlay.ConfirmQuit) { ConfirmQuitDialog(v, vm); return }
+    if (o is Overlay.MostWanted) { MostWantedWindow(v, vm); return }
+    if (o is Overlay.Commendations) { CommendationsWindow(v, vm); return }
     val (title, lines) = when (o) {
         Overlay.About -> "ABOUT" to listOf(
             "Where in the World is", "Clara San Diego?  (Enhanced)", "MS-DOS Version 2.1",
@@ -121,6 +130,8 @@ fun OverlayHost(v: Virtual, vm: ClaraViewModel) {
         else listOf("${vm.s.detectiveName}", "${GameData.ranks[vm.s.rankIndex]} — ${vm.s.casesSolved} case(s)")
         is Overlay.Dossier -> "" to emptyList()   // handled by DossierWindow above
         Overlay.ConfirmQuit -> "" to emptyList()  // handled by ConfirmQuitDialog above
+        Overlay.MostWanted -> "" to emptyList()   // handled by MostWantedWindow above
+        Overlay.Commendations -> "" to emptyList()// handled by CommendationsWindow above
         is Overlay.Info -> o.title to o.lines
     }
 
@@ -259,5 +270,99 @@ private fun DossierWindow(v: Virtual, su: Suspect, onClose: () -> Unit) {
                 Text(su.name.replace("\"", "").uppercase(), style = v.text(7.5f, color = Vga.Black, bold = true))
             }
         }
+    }
+}
+
+/* Most-Wanted gallery — the fixed villain roster as a grid of mugshot tiles. Captured
+ * crooks show their portrait and name; the rest stay locked behind a "?" until jailed. */
+@Composable
+private fun MostWantedWindow(v: Virtual, vm: ClaraViewModel) {
+    val gallery = MostWanted.gallery(vm.s.capturedVillains)
+    val caught = MostWanted.capturedCount(vm.s.capturedVillains)
+    Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
+        contentAlignment = Alignment.Center) {
+        Column(Modifier.fillMaxWidth(0.92f).fillMaxHeight(0.9f).background(Vga.Blue).padding(v.w(5)),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("MOST WANTED", style = v.text(10, color = Vga.Yellow, bold = true))
+            Text("$caught / ${gallery.size} captured", style = v.text(7, color = Vga.LightCyan))
+            Spacer(Modifier.height(v.w(3)))
+            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
+                gallery.chunked(4).forEach { row ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(v.w(2))) {
+                        row.forEach { entry -> WantedTile(v, entry, Modifier.weight(1f)) }
+                        repeat(4 - row.size) { Spacer(Modifier.weight(1f)) }
+                    }
+                    Spacer(Modifier.height(v.w(2)))
+                }
+            }
+            Spacer(Modifier.height(v.w(3)))
+            DosButton("CLOSE", fill = Vga.Green, textColor = Vga.White,
+                style = v.text(9, bold = true)) { vm.dismissOverlay() }
+        }
+    }
+}
+
+@Composable
+private fun WantedTile(v: Virtual, entry: WantedEntry, modifier: Modifier) {
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        val slug = "suspect_" + entry.name.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')
+        Box(Modifier.fillMaxWidth().aspectRatio(0.82f).border(BorderStroke(v.w(0.7f), Vga.Black))
+            .background(Vga.DarkGray), contentAlignment = Alignment.Center) {
+            if (entry.captured && spriteExists(slug)) PixelImage(slug, Modifier.fillMaxSize())
+            else Text(if (entry.captured) "◆" else "?",
+                style = v.text(15, color = Vga.LightGray, bold = true))
+        }
+        Text(if (entry.captured) entry.name.replace("\"", "") else "AT LARGE",
+            style = v.text(5.5f, color = if (entry.captured) Vga.White else Vga.LightGray),
+            maxLines = 1, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+    }
+}
+
+/* Commendations + career stats — the persistent record beside the rank ladder. Earned
+ * achievements glow; the rest stay dim with their unlock condition on show. */
+@Composable
+private fun CommendationsWindow(v: Virtual, vm: ClaraViewModel) {
+    val s = vm.s
+    val ids = Achievements.catalog.map { it.id }.toSet()
+    val earned = s.unlockedAchievements.count { it in ids }
+    Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
+        contentAlignment = Alignment.Center) {
+        Column(Modifier.fillMaxWidth(0.9f).fillMaxHeight(0.9f).background(Vga.Blue).padding(v.w(5)),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("COMMENDATIONS", style = v.text(10, color = Vga.Yellow, bold = true))
+            Text("$earned / ${Achievements.catalog.size} earned", style = v.text(7, color = Vga.LightCyan))
+            Spacer(Modifier.height(v.w(3)))
+            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
+                StatRow(v, "Detective", s.detectiveName.ifBlank { "—" })
+                StatRow(v, "Rank", GameData.ranks.getOrElse(s.rankIndex) { "Rookie" })
+                StatRow(v, "Cases solved", "${s.casesSolved}")
+                StatRow(v, "Villains caught", "${MostWanted.capturedCount(s.capturedVillains)} / ${MostWanted.total()}")
+                StatRow(v, "Hint-free solves", "${s.hintFreeSolves}")
+                Spacer(Modifier.height(v.w(3)))
+                Text("— COMMENDATIONS —", style = v.text(6.5f, color = Vga.Yellow, bold = true),
+                    modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                Spacer(Modifier.height(v.w(1)))
+                Achievements.catalog.forEach { a ->
+                    val got = a.id in s.unlockedAchievements
+                    Column(Modifier.fillMaxWidth().padding(vertical = v.w(1))) {
+                        Text((if (got) "★ " else "☆ ") + a.title,
+                            style = v.text(7.5f, color = if (got) Vga.Yellow else Vga.LightGray, bold = true))
+                        Text(a.desc, style = v.text(6.2f, color = if (got) Vga.White else Vga.LightGray))
+                    }
+                }
+            }
+            Spacer(Modifier.height(v.w(3)))
+            DosButton("CLOSE", fill = Vga.Green, textColor = Vga.White,
+                style = v.text(9, bold = true)) { vm.dismissOverlay() }
+        }
+    }
+}
+
+@Composable
+private fun StatRow(v: Virtual, label: String, value: String) {
+    Row(Modifier.fillMaxWidth().padding(vertical = v.w(0.6f)),
+        horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, style = v.text(7, color = Vga.LightCyan))
+        Text(value, style = v.text(7, color = Vga.White, bold = true))
     }
 }

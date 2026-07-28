@@ -1237,6 +1237,7 @@ fun ChaseScreen(vm: ClaraViewModel) = VirtualScreen { v ->
 @Composable
 fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f) { v ->
     val s = vm.s
+    val shareCtx = androidx.compose.ui.platform.LocalContext.current
     val printed = remember { mutableStateListOf<String>() }
     var typing by remember { mutableStateOf("") }
     // 0 typing report · 1 typing quiz · 2 quiz input · 3 typing verdict/ready · 4 Yes/No
@@ -1382,6 +1383,13 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
             }
         }
         Box(Modifier.fillMaxSize().clickable { vm.menuQuitToTitle() })
+    }
+    // Spoiler-free share of the result, once the report has finished printing. Rendered last
+    // so it sits above the full-screen "any key" catcher on the career-finale screen.
+    if (s.won && (done || stage == 5)) {
+        v.At(150, 160, 168, 12) {
+            YellowButton(v, "SHARE RESULT") { com.acme.clara.ui.shareResult(shareCtx, vm) }
+        }
     }
     OverlayHost(v, vm)
 }
