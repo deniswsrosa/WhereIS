@@ -83,6 +83,7 @@ object SaveCodec {
         "pendingPromotion" to s.pendingPromotion,
         "soundOn" to s.soundOn,
         "hapticsOn" to s.hapticsOn,
+        "captionsOn" to s.captionsOn,
         "wrongFlights" to s.wrongFlights,
         "hintsUsed" to s.hintsUsed,
         "journal" to s.journal.map { journalMap(it) },
@@ -90,6 +91,7 @@ object SaveCodec {
         "unlockedAchievements" to s.unlockedAchievements.toList(),
         "hintFreeSolves" to s.hintFreeSolves,
         "hadCleanCase" to s.hadCleanCase,
+        "freeHints" to s.freeHints,
     )
 
     private fun readState(m: Map<*, *>): GameState {
@@ -127,6 +129,7 @@ object SaveCodec {
             pendingPromotion = bool(m["pendingPromotion"], false),
             soundOn = bool(m["soundOn"], true),
             hapticsOn = bool(m["hapticsOn"], true),
+            captionsOn = bool(m["captionsOn"], false),
             wrongFlights = int(m["wrongFlights"]),
             hintsUsed = int(m["hintsUsed"]),
             journal = journalList(m["journal"]),
@@ -134,6 +137,7 @@ object SaveCodec {
             unlockedAchievements = strList(m["unlockedAchievements"]).toSet(),
             hintFreeSolves = int(m["hintFreeSolves"]),
             hadCleanCase = bool(m["hadCleanCase"], false),
+            freeHints = int(m["freeHints"]),
         )
     }
 

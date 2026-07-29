@@ -32,6 +32,8 @@ sealed interface Overlay {
     data object MostWanted : Overlay
     /** Commendations earned + career stats. */
     data object Commendations : Overlay
+    /** The browsable world database (in-game almanac). */
+    data object Almanac : Overlay
     /** Game > Quit — the original's "Do you really want to quit?" Yes/No dialog. */
     data object ConfirmQuit : Overlay
     /** One suspect's dossier — the white typed-on window from the original's Dossiers menu. */
@@ -115,6 +117,7 @@ data class GameState(
     val overlay: Overlay? = null,
     val soundOn: Boolean = true,
     val hapticsOn: Boolean = true,
+    val captionsOn: Boolean = false,   // Options ▸ Captions: on-screen text for audio cues
     // per-case tallies (reset every newCase) — feed stats, achievements, the share card
     val wrongFlights: Int = 0,
     val hintsUsed: Int = 0,
@@ -125,6 +128,8 @@ data class GameState(
     val unlockedAchievements: Set<String> = emptySet(),
     val hintFreeSolves: Int = 0,
     val hadCleanCase: Boolean = false,
+    // free hints banked from returning after time away (spend without losing the hint-free badge)
+    val freeHints: Int = 0,
 ) {
     val revealedTraits: List<Pair<String, String>> get() = revealOrder.take(revealedCount)
     val deadlinePassed: Boolean get() = clock > DEADLINE_HOURS
@@ -170,8 +175,22 @@ class ClaraViewModel : ViewModel() {
     /** Existing saved careers, newest first (empty when no repository is bound). */
     fun savedGames(): List<SaveMeta> = repo?.list().orEmpty()
 
-    /** Resume a saved career (launch continue / picker) into this ViewModel. */
-    fun resume(data: SaveData) { profileId = data.meta.id; s = data.state }
+    /** Resume a saved career (launch continue / picker). Returning after time away banks a free hint. */
+    fun resume(data: SaveData) {
+        profileId = data.meta.id
+        var st = data.state
+        if (WelcomeBack.grantsHint(data.meta.lastPlayed, clock())) {
+            st = st.copy(
+                freeHints = st.freeHints + 1,
+                overlay = Overlay.Info("WELCOME BACK", listOf(
+                    "Been a while, ${st.detectiveName}.",
+                    "A fresh lead has surfaced —",
+                    "here's a free hint to spend.",
+                )),
+            )
+        }
+        s = st
+    }
 
     /** Resume by id from the bound repository (used by the picker). */
     fun resumeById(id: String) { repo?.load(id)?.let { resume(it) } }
@@ -197,9 +216,39 @@ class ClaraViewModel : ViewModel() {
     }
 
     fun toggleHaptics() { s = s.copy(hapticsOn = !s.hapticsOn, overlay = null) }
+    fun toggleCaptions() { s = s.copy(captionsOn = !s.captionsOn, overlay = null) }
 
-    /** A hint was consumed (from the future hint system) — costs the hint-free streak. */
-    fun useHint() { s = s.copy(hintsUsed = s.hintsUsed + 1) }
+    /** Ask for a layered hint. Spends a banked free hint if there is one; otherwise it costs the
+     *  case's hint-free badge. The hint is shown as an Info overlay. */
+    fun requestHint() {
+        val hint = hintText()
+        val free = s.freeHints > 0
+        s = if (free) s.copy(freeHints = s.freeHints - 1) else s.copy(hintsUsed = s.hintsUsed + 1)
+        val note = if (free) "(free hint — your hint-free record is safe)"
+                   else "(this case is no longer a hint-free solve)"
+        s = s.copy(overlay = Overlay.Info("HINT", listOf(hint, "", note)))
+        autosave()
+    }
+
+    /** A tiered hint: a computer nudge, a directional (region-only) lead, or an arrest prompt —
+     *  never the next city outright, so it helps without solving the case. */
+    private fun hintText(): String {
+        val next = s.route.getOrNull(s.progress + 1)
+        return when {
+            s.atHideout && s.warrantFor?.name == s.culprit?.name ->
+                "You've cornered the thief — search the venues here to make the arrest."
+            s.atHideout ->
+                "This is the hideout. Make sure your warrant names the right suspect before closing in."
+            s.warrantFor == null && matches().size == 1 && anyFilterSet() ->
+                "You have enough of the description — run the crime computer to issue the warrant."
+            s.warrantFor == null ->
+                "Question more witnesses; the crime computer still lists several suspects."
+            next != null ->
+                "The trail leads toward ${CityMeta.of(next).region}. Find a lead pointing that way."
+            else ->
+                "Follow your last lead to the thief's hideout."
+        }
+    }
 
     // ---------- flow ----------
     fun introDone() { if (s.phase == Phase.INTRO) s = s.copy(phase = Phase.TITLE) }
