@@ -58,10 +58,13 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
         MenuTitle(v, "Options", listOf(
             MenuItemDef(if (s.soundOn) "√Sound" else " Sound") { vm.toggleSound() },
             MenuItemDef(if (s.hapticsOn) "√Haptics" else " Haptics") { vm.toggleHaptics() },
+            MenuItemDef(if (s.captionsOn) "√Captions" else " Captions") { vm.toggleCaptions() },
             MenuItemDef(" Joystick") { vm.showJoystick() },
         ))
         MenuTitle(v, "Acme", listOf(
+            MenuItemDef("Hint") { vm.requestHint() },
             MenuItemDef("Detective Roster") { vm.openOverlay(Overlay.Roster) },
+            MenuItemDef("World Database") { vm.openOverlay(Overlay.Almanac) },
             MenuItemDef("Most Wanted") { vm.openOverlay(Overlay.MostWanted) },
             MenuItemDef("Commendations") { vm.openOverlay(Overlay.Commendations) },
             MenuItemDef("Hall of Fame") { vm.openOverlay(Overlay.HallOfFame) },
@@ -96,6 +99,7 @@ private fun MenuTitle(v: Virtual, title: String, items: List<MenuItemDef>) {
                 Box(Modifier.fillMaxWidth()
                     .background(if (pressed) Vga.Black else Vga.White)
                     .clickable(enabled = def.enabled) { pressed = true; open = false; def.action() }
+                    .labelled(def.label.trim())
                     .padding(horizontal = 14.dp, vertical = 5.dp)) {
                     // disabled items render gray, like the DOS grayed Save entry
                     Text(def.label, fontFamily = FontFamily.Monospace,
@@ -116,6 +120,7 @@ fun OverlayHost(v: Virtual, vm: ClaraViewModel) {
     if (o is Overlay.ConfirmQuit) { ConfirmQuitDialog(v, vm); return }
     if (o is Overlay.MostWanted) { MostWantedWindow(v, vm); return }
     if (o is Overlay.Commendations) { CommendationsWindow(v, vm); return }
+    if (o is Overlay.Almanac) { AlmanacWindow(v, vm); return }
     val (title, lines) = when (o) {
         Overlay.About -> "ABOUT" to listOf(
             "Where in the World is", "Clara San Diego?  (Enhanced)", "MS-DOS Version 2.1",
@@ -132,6 +137,7 @@ fun OverlayHost(v: Virtual, vm: ClaraViewModel) {
         Overlay.ConfirmQuit -> "" to emptyList()  // handled by ConfirmQuitDialog above
         Overlay.MostWanted -> "" to emptyList()   // handled by MostWantedWindow above
         Overlay.Commendations -> "" to emptyList()// handled by CommendationsWindow above
+        Overlay.Almanac -> "" to emptyList()      // handled by AlmanacWindow above
         is Overlay.Info -> o.title to o.lines
     }
 
@@ -201,8 +207,12 @@ private fun DossierWindow(v: Virtual, su: Suspect, onClose: () -> Unit) {
         "Feature:" to su.feature1, "Other:" to su.feature2,
     )
     val total = fields.sumOf { it.second.length }
+    val reduce = reducedMotion()
     var shown by remember(su.name) { mutableStateOf(0) }
-    LaunchedEffect(su.name) { shown = 0; while (shown < total) { kotlinx.coroutines.delay(8); shown += 2 } }
+    LaunchedEffect(su.name) {
+        if (reduce) shown = total                   // reduced-motion: show the dossier at once
+        else { shown = 0; while (shown < total) { kotlinx.coroutines.delay(8); shown += 2 } }
+    }
     fun taken(idx: Int): String {
         var budget = shown
         for (i in 0 until idx) budget -= fields[i].second.length
@@ -364,5 +374,58 @@ private fun StatRow(v: Virtual, label: String, value: String) {
         horizontalArrangement = Arrangement.SpaceBetween) {
         Text(label, style = v.text(7, color = Vga.LightCyan))
         Text(value, style = v.text(7, color = Vga.White, bold = true))
+    }
+}
+
+/* World Database (the in-game almanac) — a browsable Interpol reference over CityMeta.
+ * Master list of cities → tap one for its region, landmark and facts. It names places, not
+ * the next city, so it's a reference the player still has to reason from. */
+@Composable
+private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
+    var selected by remember { mutableStateOf<String?>(null) }
+    val cities = remember { com.acme.clara.data.CityMeta.all.values.sortedBy { it.name } }
+
+    Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
+        contentAlignment = Alignment.Center) {
+        Column(Modifier.fillMaxWidth(0.9f).fillMaxHeight(0.9f).background(Vga.Blue).padding(v.w(5)),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("INTERPOL DATABASE", style = v.text(10, color = Vga.Yellow, bold = true))
+
+            val entry = selected?.let { name -> cities.firstOrNull { it.name == name } }
+            if (entry == null) {
+                Text("${cities.size} places on file", style = v.text(7, color = Vga.LightCyan))
+                Spacer(Modifier.height(v.w(3)))
+                Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
+                    cities.forEach { info ->
+                        Row(Modifier.fillMaxWidth().clickable { selected = info.name }
+                            .labelled("${info.name}, ${info.region}")
+                            .padding(vertical = v.w(1.4f)),
+                            horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(info.name, style = v.text(7.5f, color = Vga.White, bold = true))
+                            Text(info.region, style = v.text(6.5f, color = Vga.LightCyan))
+                        }
+                    }
+                }
+                Spacer(Modifier.height(v.w(3)))
+                DosButton("CLOSE", fill = Vga.Green, textColor = Vga.White,
+                    style = v.text(9, bold = true)) { vm.dismissOverlay() }
+            } else {
+                Text(entry.name.uppercase(), style = v.text(8.5f, color = Vga.LightGreen, bold = true))
+                Spacer(Modifier.height(v.w(2)))
+                Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
+                    StatRow(v, "Region", entry.region)
+                    StatRow(v, "Landmark", entry.landmark)
+                    Spacer(Modifier.height(v.w(3)))
+                    Text(entry.description, style = v.text(7.5f, color = Vga.White))
+                }
+                Spacer(Modifier.height(v.w(3)))
+                Row(horizontalArrangement = Arrangement.spacedBy(v.w(6))) {
+                    DosButton("◀ BACK", fill = Vga.LightGray, textColor = Vga.Black,
+                        style = v.text(9, bold = true)) { selected = null }
+                    DosButton("CLOSE", fill = Vga.Green, textColor = Vga.White,
+                        style = v.text(9, bold = true)) { vm.dismissOverlay() }
+                }
+            }
+        }
     }
 }

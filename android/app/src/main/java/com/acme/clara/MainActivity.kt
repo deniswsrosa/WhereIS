@@ -1,8 +1,12 @@
 package com.acme.clara
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import com.acme.clara.notify.WelcomeBackNotifier
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,8 +36,17 @@ class MainActivity : ComponentActivity() {
         // resizing (shrinking) the whole window. The HQ printer screen reads that inset
         // to pan itself up at full size, rather than collapsing into a tiny box.
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        // Ask once for notification permission so the welcome-back reminder can show (Android 13+).
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+                .launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
         setContent { ClaraApp() }
     }
+
+    // Schedule the "come back" reminder when the app leaves the foreground; cancel it on return.
+    override fun onStart() { super.onStart(); WelcomeBackNotifier.cancel(this) }
+    override fun onStop() { super.onStop(); WelcomeBackNotifier.schedule(this) }
 }
 
 @Composable
@@ -86,5 +99,6 @@ fun ClaraApp() {
             Phase.RESULT -> ResultScreen(vm)
             Phase.CHOOSE_GAME -> ChooseGameScreen(vm)
         }
+        com.acme.clara.ui.CaptionOverlay(vm)
     }
 }

@@ -172,6 +172,7 @@ fun DosButton(
         modifier
             .background(if (enabled) fill else Vga.DarkGray)
             .clickable(enabled = enabled) { onClick() }
+            .tappable(label)
             .padding(horizontal = 10.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {

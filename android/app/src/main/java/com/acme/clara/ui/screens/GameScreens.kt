@@ -282,7 +282,7 @@ private fun YellowButton(v: Virtual, label: String, onClick: () -> Unit) {
     Box(Modifier.fillMaxSize()) {
         Box(Modifier.matchParentSize().offset(v.w(1), v.w(1)).background(Vga.Black))
         Box(Modifier.matchParentSize().background(Vga.Yellow).border(BorderStroke(v.w(1), Vga.Black))
-            .clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+            .clickable(onClick = onClick).labelled(label), contentAlignment = Alignment.Center) {
             Text(label, style = v.text(9, color = Vga.Red, bold = true))
         }
     }
@@ -1238,6 +1238,7 @@ fun ChaseScreen(vm: ClaraViewModel) = VirtualScreen { v ->
 fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f) { v ->
     val s = vm.s
     val shareCtx = androidx.compose.ui.platform.LocalContext.current
+    val reduce = reducedMotion()
     val printed = remember { mutableStateListOf<String>() }
     var typing by remember { mutableStateOf("") }
     // 0 typing report · 1 typing quiz · 2 quiz input · 3 typing verdict/ready · 4 Yes/No
@@ -1250,10 +1251,14 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     suspend fun typeAll(lines: List<String>, width: Int = 20) {
         for (line in lines) {
             for (piece in paperWrap(line, width)) {
-                typing = ""
-                for (ch in piece) { typing += ch; delay(14) }
-                printed.add(piece); typing = ""
-                delay(90)
+                if (reduce) {                       // reduced-motion: print instantly, no typewriter
+                    printed.add(piece)
+                } else {
+                    typing = ""
+                    for (ch in piece) { typing += ch; delay(14) }
+                    printed.add(piece); typing = ""
+                    delay(90)
+                }
             }
             printed.add("")
         }
@@ -1361,7 +1366,7 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
                 PixelImage("jail_cell", Modifier.fillMaxSize())
                 // the suspect's eyes blink behind the bars on a slow loop (dos_jail_eyes_a/b)
                 var blink by remember { mutableStateOf(false) }
-                LaunchedEffect(Unit) { while (true) { delay(1000); blink = !blink } }
+                if (!reduce) LaunchedEffect(Unit) { while (true) { delay(1000); blink = !blink } }
                 if (blink) v.At(63, 71, 41, 29) {
                     PixelImage("jail_eyes_alt", Modifier.fillMaxSize())
                 }

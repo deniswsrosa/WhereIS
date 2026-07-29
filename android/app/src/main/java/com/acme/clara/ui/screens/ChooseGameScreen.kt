@@ -9,7 +9,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import com.acme.clara.ui.labelled
+import com.acme.clara.ui.tappable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,7 +51,9 @@ fun ChooseGameScreen(vm: ClaraViewModel) {
 
         games.forEach { m ->
             Row(
-                Modifier.fillMaxWidth().clickable { vm.resumeById(m.id) }.padding(vertical = 10.dp),
+                Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                    .clickable { vm.resumeById(m.id) }.labelled("Continue ${m.name}")
+                    .padding(vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
@@ -61,7 +66,8 @@ fun ChooseGameScreen(vm: ClaraViewModel) {
                 Text(
                     "✕",
                     color = Vga.Red, fontFamily = FontFamily.Monospace, fontSize = 16.sp,
-                    modifier = Modifier.clickable { vm.deleteGame(m.id); refresh++ }.padding(horizontal = 8.dp),
+                    modifier = Modifier.clickable { vm.deleteGame(m.id); refresh++ }
+                        .tappable("Delete ${m.name}").padding(horizontal = 8.dp),
                 )
             }
         }
@@ -70,7 +76,7 @@ fun ChooseGameScreen(vm: ClaraViewModel) {
         Text(
             "— New Game —",
             color = Vga.LightGreen, fontFamily = FontFamily.Monospace, fontSize = 15.sp,
-            modifier = Modifier.clickable { vm.newGameFlow() },
+            modifier = Modifier.clickable { vm.newGameFlow() }.tappable("Start a new game"),
         )
     }
 }
