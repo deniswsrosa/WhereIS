@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -40,6 +41,7 @@ private data class MenuItemDef(val label: String, val enabled: Boolean = true, v
 @Composable
 fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
     val s = vm.s
+    val menuCtx = LocalContext.current
     Row(
         Modifier.fillMaxWidth().height(v.w(11)).background(Vga.LightGray)
             .padding(horizontal = v.w(3)),
@@ -59,6 +61,9 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
             MenuItemDef(if (s.soundOn) "√Sound" else " Sound") { vm.toggleSound() },
             MenuItemDef(if (s.hapticsOn) "√Haptics" else " Haptics") { vm.toggleHaptics() },
             MenuItemDef(if (s.captionsOn) "√Captions" else " Captions") { vm.toggleCaptions() },
+            MenuItemDef(if (com.acme.clara.notify.Reminders.enabled(menuCtx)) "√Reminders" else " Reminders") {
+                com.acme.clara.notify.Reminders.setEnabled(menuCtx, !com.acme.clara.notify.Reminders.enabled(menuCtx))
+            },
             MenuItemDef(" Joystick") { vm.showJoystick() },
         ))
         MenuTitle(v, "Acme", listOf(

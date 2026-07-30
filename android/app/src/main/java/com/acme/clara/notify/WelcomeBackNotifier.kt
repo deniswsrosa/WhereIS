@@ -16,13 +16,16 @@ object WelcomeBackNotifier {
     private const val WORK = "welcome-back-notification"
 
     fun schedule(context: Context) {
-        val request = OneTimeWorkRequest.Builder(WelcomeBackWorker::class.java)
-            .setInitialDelay(WelcomeBack.THRESHOLD_DAYS.toLong(), TimeUnit.DAYS)
-            .build()
-        WorkManager.getInstance(context).enqueueUniqueWork(WORK, ExistingWorkPolicy.REPLACE, request)
+        // Guarded: never let a scheduling hiccup (or an uninitialised WorkManager) crash the app.
+        runCatching {
+            val request = OneTimeWorkRequest.Builder(WelcomeBackWorker::class.java)
+                .setInitialDelay(WelcomeBack.THRESHOLD_DAYS.toLong(), TimeUnit.DAYS)
+                .build()
+            WorkManager.getInstance(context).enqueueUniqueWork(WORK, ExistingWorkPolicy.REPLACE, request)
+        }
     }
 
     fun cancel(context: Context) {
-        WorkManager.getInstance(context).cancelUniqueWork(WORK)
+        runCatching { WorkManager.getInstance(context).cancelUniqueWork(WORK) }
     }
 }

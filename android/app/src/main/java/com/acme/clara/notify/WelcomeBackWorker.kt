@@ -18,42 +18,49 @@ import com.acme.clara.R
 class WelcomeBackWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
 
     override fun doWork(): Result {
-        val ctx = applicationContext
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            return Result.success()   // no permission — nothing to do
-        }
-
-        val manager = NotificationManagerCompat.from(ctx)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            manager.createNotificationChannel(
-                NotificationChannel(CHANNEL, "Cold cases", NotificationManager.IMPORTANCE_DEFAULT)
-            )
-        }
-
-        val launch = ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)
-        val pending = PendingIntent.getActivity(
-            ctx, 0, launch,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
-        )
-
-        val notification = NotificationCompat.Builder(ctx, CHANNEL)
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("A lead has gone cold")
-            .setContentText("Come back, detective — a fresh hint is waiting.")
-            .setAutoCancel(true)
-            .setContentIntent(pending)
-            .build()
-
-        manager.notify(NOTIFICATION_ID, notification)
+        post(applicationContext)
         return Result.success()
     }
 
     companion object {
-        private const val CHANNEL = "cold_cases"
-        private const val NOTIFICATION_ID = 1001
+        const val CHANNEL = "cold_cases"
+        const val NOTIFICATION_ID = 1001
+        const val TITLE = "A lead has gone cold"
+        const val TEXT = "Come back, detective — a fresh hint is waiting."
+
+        /** Build and post the notification. Returns false (a no-op) when notifications aren't permitted.
+         *  Extracted so it can be unit-tested without a device. */
+        fun post(ctx: Context): Boolean {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                return false   // no permission — nothing to do
+            }
+
+            val manager = NotificationManagerCompat.from(ctx)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                manager.createNotificationChannel(
+                    NotificationChannel(CHANNEL, "Cold cases", NotificationManager.IMPORTANCE_DEFAULT)
+                )
+            }
+
+            val launch = ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)
+            val pending = PendingIntent.getActivity(
+                ctx, 0, launch,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
+
+            val notification = NotificationCompat.Builder(ctx, CHANNEL)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle(TITLE)
+                .setContentText(TEXT)
+                .setAutoCancel(true)
+                .setContentIntent(pending)
+                .build()
+
+            manager.notify(NOTIFICATION_ID, notification)
+            return true
+        }
     }
 }

@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import com.acme.clara.notify.Reminders
 import com.acme.clara.notify.WelcomeBackNotifier
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.WindowInsets
@@ -46,7 +47,10 @@ class MainActivity : ComponentActivity() {
 
     // Schedule the "come back" reminder when the app leaves the foreground; cancel it on return.
     override fun onStart() { super.onStart(); WelcomeBackNotifier.cancel(this) }
-    override fun onStop() { super.onStop(); WelcomeBackNotifier.schedule(this) }
+    override fun onStop() {
+        super.onStop()
+        if (Reminders.enabled(this)) WelcomeBackNotifier.schedule(this)   // on by default
+    }
 }
 
 @Composable
@@ -100,5 +104,6 @@ fun ClaraApp() {
             Phase.CHOOSE_GAME -> ChooseGameScreen(vm)
         }
         com.acme.clara.ui.CaptionOverlay(vm)
+        com.acme.clara.ui.TutorialCoach(vm)
     }
 }
