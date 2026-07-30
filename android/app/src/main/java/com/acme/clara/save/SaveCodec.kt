@@ -91,7 +91,10 @@ object SaveCodec {
         "unlockedAchievements" to s.unlockedAchievements.toList(),
         "hintFreeSolves" to s.hintFreeSolves,
         "hadCleanCase" to s.hadCleanCase,
+        "expansionUnlocked" to s.expansionUnlocked,
         "freeHints" to s.freeHints,
+        "tutorialDone" to s.tutorialDone,
+        "tutorialStep" to s.tutorialStep,
     )
 
     private fun readState(m: Map<*, *>): GameState {
@@ -135,9 +138,12 @@ object SaveCodec {
             journal = journalList(m["journal"]),
             capturedVillains = strList(m["capturedVillains"]).toSet(),
             unlockedAchievements = strList(m["unlockedAchievements"]).toSet(),
+            expansionUnlocked = bool(m["expansionUnlocked"], false),
             hintFreeSolves = int(m["hintFreeSolves"]),
             hadCleanCase = bool(m["hadCleanCase"], false),
             freeHints = int(m["freeHints"]),
+            tutorialDone = bool(m["tutorialDone"], false),
+            tutorialStep = int(m["tutorialStep"], -1),
         )
     }
 

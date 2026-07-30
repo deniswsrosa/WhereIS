@@ -20,6 +20,14 @@ data class CityInfo(
     val description: String,
     val real: Boolean,
     val drawable: String? = null, // resource name if we have the authentic photo
+    // Expansion clue data (empty/null for the original 30, whose clues come from region+landmark
+    // templates). `clues` are hand-authored forward-looking witness leads — one per angle,
+    // exactly the pattern the original used. `greeting`/`flag`/`currency` are structured
+    // attributes destinationClue() can also template a clue from (see ClaraViewModel).
+    val clues: List<String> = emptyList(),
+    val greeting: String? = null, // how the local hello sounds, e.g. "bohn-ZHOOR"
+    val flag: String? = null,     // short flag description, e.g. "a single yellow star on red"
+    val currency: String? = null, // local money, e.g. "rubles"
 )
 
 object CityMeta {
@@ -86,6 +94,7 @@ object CityMeta {
             "Tokyo, with a population of about 14 million people, is the capital and largest city in Japan.", false, "city_tokyo"),
     ).associateBy { it.name }
 
-    fun of(name: String): CityInfo = all[name] ?: CityInfo(name, "the world", "the city",
-        "$name is one of the great cities of the world.", false)
+    fun of(name: String): CityInfo = all[name] ?: Expansion.byName[name]
+        ?: CityInfo(name, "the world", "the city",
+            "$name is one of the great cities of the world.", false)
 }

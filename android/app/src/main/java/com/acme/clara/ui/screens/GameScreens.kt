@@ -890,7 +890,7 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
         Box(Modifier.fillMaxSize()) {
             PixelImage("world_map_clean", Modifier.fillMaxSize())
             Canvas(Modifier.fillMaxSize()) {
-                fun px(city: String) = WorldMap.pos[city]?.let { Offset(it.x * size.width, it.y * size.height) }
+                fun px(city: String) = WorldMap.of(city)?.let { Offset(it.x * size.width, it.y * size.height) }
                 val dashes = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
                     floatArrayOf(size.width * 0.008f, size.width * 0.006f), 0f)
                 val stroke = size.height * 0.016f
@@ -912,7 +912,7 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
             }
             // labels: white for the current city, yellow for the destinations (like the original)
             (listOf(s.currentCity) + options).distinct().forEach { city ->
-                WorldMap.pos[city]?.let { p ->
+                WorldMap.of(city)?.let { p ->
                     val leftSide = p.x > 0.78f
                     val color = if (city == s.currentCity) Vga.White else Vga.Yellow
                     MapLabel(v, city.uppercase(), p, leftSide, color)

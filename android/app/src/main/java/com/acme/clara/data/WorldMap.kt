@@ -27,4 +27,7 @@ object WorldMap {
         "San Marino" to Offset(0.5313f, 0.2686f), "Singapore" to Offset(0.802f, 0.6184f),
         "Sydney" to Offset(0.9424f, 0.7918f), "Tokyo" to Offset(0.9081f, 0.3484f),
     )
+
+    /** Position for any city — base map first, then the paid expansion's projected dots. */
+    fun of(name: String): Offset? = pos[name] ?: Expansion.pos[name]
 }

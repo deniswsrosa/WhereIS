@@ -4,7 +4,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.acme.clara.data.CityInfo
 import com.acme.clara.data.CityMeta
+import com.acme.clara.data.Expansion
 import com.acme.clara.data.GameData
 import com.acme.clara.data.Suspect
 import com.acme.clara.data.WorldMap
@@ -126,10 +128,17 @@ data class GameState(
     // career record — persists across cases within a saved profile
     val capturedVillains: Set<String> = emptySet(),
     val unlockedAchievements: Set<String> = emptySet(),
+    // paid-tier entitlement: unlocks the 68 expansion destinations + new venues for case routes,
+    // decoys, the map and flight times. Free play stays on the original 30. (Persisted with the
+    // save until a global entitlement store exists.)
+    val expansionUnlocked: Boolean = false,
     val hintFreeSolves: Int = 0,
     val hadCleanCase: Boolean = false,
     // free hints banked from returning after time away (spend without losing the hint-free badge)
     val freeHints: Int = 0,
+    // the guided first case: tutorialStep 0..6 while it runs (-1 = none); tutorialDone once seen
+    val tutorialDone: Boolean = false,
+    val tutorialStep: Int = -1,
 ) {
     val revealedTraits: List<Pair<String, String>> get() = revealOrder.take(revealedCount)
     val deadlinePassed: Boolean get() = clock > DEADLINE_HOURS
@@ -218,6 +227,11 @@ class ClaraViewModel : ViewModel() {
     fun toggleHaptics() { s = s.copy(hapticsOn = !s.hapticsOn, overlay = null) }
     fun toggleCaptions() { s = s.copy(captionsOn = !s.captionsOn, overlay = null) }
 
+    // ---------- tutorial ----------
+    /** Advance the guided tutorial when the player performs the step's taught action. */
+    private fun advanceTut(from: Int) { if (s.tutorialStep == from) s = s.copy(tutorialStep = from + 1) }
+    fun skipTutorial() { s = s.copy(tutorialStep = -1, tutorialDone = true); autosave() }
+
     /** Ask for a layered hint. Spends a banked free hint if there is one; otherwise it costs the
      *  case's hint-free badge. The hint is shown as an Info overlay. */
     fun requestHint() {
@@ -276,7 +290,7 @@ class ClaraViewModel : ViewModel() {
         autosave()
     }
 
-    fun beginInvestigation() { s = s.copy(phase = Phase.CITY) }
+    fun beginInvestigation() { s = s.copy(phase = Phase.CITY); advanceTut(0) }
 
     // ---------- navigation ----------
     fun gotoCity() { s = s.copy(phase = Phase.CITY) }
@@ -286,9 +300,13 @@ class ClaraViewModel : ViewModel() {
     fun selectTool(i: Int) { s = s.copy(selectedTool = i) }
 
     // ---------- menu bar ----------
-    fun openOverlay(o: Overlay) { s = s.copy(overlay = o) }
+    fun openOverlay(o: Overlay) { s = s.copy(overlay = o); if (o is Overlay.Almanac) advanceTut(2) }
     fun dismissOverlay() { s = s.copy(overlay = null) }
     fun menuNewCase() { s = s.copy(overlay = null, phase = Phase.BRIEFING); newCase(); cue(SoundCue.BRIEFING); autosave() }
+
+    /** Grant the paid-tier entitlement: the 68 expansion destinations + new venues enter the pool
+     *  from the next case on. Called by the paywall after a successful purchase. Idempotent. */
+    fun unlockExpansion() { if (!s.expansionUnlocked) { s = s.copy(expansionUnlocked = true); autosave() } }
     fun menuQuitToTitle() { profileId = null; s = GameState(phase = Phase.TITLE) }
     /** Game ▸ New Game — start a fresh career (a new saved profile). Names it on the sign-on screen. */
     fun newGameFlow() { profileId = null; s = GameState(phase = Phase.SIGN_ON) }
@@ -315,7 +333,9 @@ class ClaraViewModel : ViewModel() {
         // Private Eye 7, Investigator 8, Ace Detective 9
         val routeLen = (5 + s.rankIndex).coerceAtMost(9)
 
-        val cities = GameData.cities.shuffled().take(routeLen)
+        val cities = activeCities().shuffled().take(routeLen)
+        // the guided first case runs once, on a brand-new career's opening Rookie case
+        val isTutorial = !s.tutorialDone && s.casesSolved == 0 && s.rankIndex == 0
         android.util.Log.d("Carmen", "case: culprit=${culprit.name} route=$cities")
         s = s.copy(
             phase = Phase.BRIEFING,
@@ -330,6 +350,7 @@ class ClaraViewModel : ViewModel() {
             revealedCount = 0,
             visited = emptySet(),
             wrongFlights = 0, hintsUsed = 0, journal = emptyList(),
+            tutorialStep = if (isTutorial) 0 else -1, tutorialDone = s.tutorialDone || isTutorial,
             openClue = null,
             compSex = null, compHobby = null, compHair = null, compFeature = null, compVehicle = null,
             warrantFor = null, computed = false, won = false, resultLines = emptyList(),
@@ -369,10 +390,11 @@ class ClaraViewModel : ViewModel() {
     // ---------- venues per city ----------
     private fun buildVenues() {
         val st = s
-        val places = GameData.venues.shuffled().take(3)
-        // each venue is staffed by one of its own witnesses (Harbor -> Sailor etc., like the original)
+        val places = pickVenues(st.currentCity)
+        // each venue is staffed by one of its own witnesses (Harbor -> Sailor etc., like the original;
+        // new expansion venues fall back to their placeholder occupation)
         val occs = places.map { p ->
-            (GameData.venueOccupations[p] ?: GameData.occupations).random()
+            (GameData.venueOccupations[p] ?: Expansion.venueOccupations[p] ?: GameData.occupations).random()
         }
         val list = mutableListOf<Venue>()
         val onTrack = st.currentCity == st.route.getOrNull(st.progress) && st.onTrack
@@ -380,7 +402,8 @@ class ClaraViewModel : ViewModel() {
         if (!onTrack) {
             places.forEachIndexed { i, p ->
                 // wrong city: each venue answers with its own DOS no-information line
-                val line = GameData.noInformationByVenue[p] ?: GameData.noInformation.random()
+                val line = GameData.noInformationByVenue[p] ?: Expansion.noInformationByVenue[p]
+                    ?: GameData.noInformation.random()
                 list.add(Venue(p, occs[i], ClueKind.NONE, line))
             }
         } else if (st.currentCity == st.hideout) {
@@ -420,13 +443,47 @@ class ClaraViewModel : ViewModel() {
         val info = CityMeta.of(next)
         val lead = GameData.clueLeadIns.random()
         // Like the original, the destination is never named outright — the witness cites a
-        // fact you look up (a region + a distinctive landmark), phrased a few different ways.
-        val frag = pronouns(when (Random.nextInt(3)) {
-            0 -> "{s} was headed for a country in ${info.region}"
-            1 -> "{s} planned to visit a place known for ${info.landmark}"
-            else -> "{s} was headed somewhere in ${info.region}, near ${info.landmark}"
-        })
+        // forward-looking fact you look up. Expansion cities carry hand-authored, reviewed leads
+        // (one per angle); the original 30 fall back to the region+landmark templates.
+        val frag = if (info.clues.isNotEmpty()) pronouns("{s} " + info.clues.random())
+            else pronouns(templatedClueFragment(info))
         return "$lead $frag."
+    }
+
+    /** Build a clue fragment from a city's structured attributes — a template per clue type
+     *  (region · landmark · flag · currency · language), matching the 1990 game's clue mix.
+     *  region + landmark are always available; flag/currency/greeting fire when the almanac has them. */
+    private fun templatedClueFragment(info: CityInfo): String {
+        val options = mutableListOf(
+            "{s} was headed for a country in ${info.region}",
+            "{s} planned to visit a place known for ${info.landmark}",
+            "{s} was headed somewhere in ${info.region}, near ${info.landmark}",
+        )
+        info.flag?.let { options += "{s} sketched a flag with $it" }
+        info.currency?.let { options += "{s} counted money called $it" }
+        info.greeting?.let { options += "{s} practiced a hello that sounded like “$it”" }
+        return options.random()
+    }
+
+    /** Cities in play: the free original 30, plus the paid expansion once unlocked. */
+    private fun activeCities(): List<String> =
+        if (s.expansionUnlocked) GameData.cities + Expansion.names else GameData.cities
+
+    /** Venues in play: base 12, plus the expansion's once unlocked. */
+    private fun activeVenues(): List<String> =
+        if (s.expansionUnlocked) GameData.venues + Expansion.venues else GameData.venues
+
+    /** Three distinct venues for a city. When unlocked and the city has an affinity, its
+     *  characteristic venues (Las Vegas -> the casino) are weighted up but the picks stay distinct. */
+    private fun pickVenues(city: String): List<String> {
+        val pool = activeVenues()
+        val affinity = if (s.expansionUnlocked) Expansion.cityVenueAffinity[city].orEmpty() else emptyList()
+        if (affinity.isEmpty()) return pool.shuffled().take(3)
+        val bag = (affinity + pool).toMutableList()   // affinity multiplicity = extra weight
+        val picks = LinkedHashSet<String>()
+        while (picks.size < 3 && bag.isNotEmpty()) picks.add(bag.removeAt(Random.nextInt(bag.size)))
+        pool.shuffled().forEach { if (picks.size < 3) picks.add(it) }   // top up tiny pools
+        return picks.toList()
     }
 
     /** Substitute the DOS pronoun slots for the culprit's sex. {S}=She/He (sentence start),
@@ -499,6 +556,7 @@ class ClaraViewModel : ViewModel() {
             else -> 0
         }
         s = st.copy(openClue = v, sightingLevel = level)
+        advanceTut(1)
         checkDeadline()
         autosave()
     }
@@ -535,7 +593,7 @@ class ClaraViewModel : ViewModel() {
             else -> null
         }
         val links = Random.nextInt(2, 5)              // 2-4 connections, like the original
-        val decoys = GameData.cities
+        val decoys = activeCities()
             .filter { it != next && it != s.currentCity && it !in s.route }
             .shuffled().take(if (next != null) links - 1 else links)
         return if (next != null) (decoys + next).shuffled() else decoys
@@ -545,8 +603,8 @@ class ClaraViewModel : ViewModel() {
      *  times depend on how far apart the cities are; short hops ~2-3 h). Deterministic, so
      *  the DEPART preview shows exactly what the flight will cost. */
     fun flightHoursTo(city: String): Int {
-        val a = WorldMap.pos[s.currentCity]
-        val b = WorldMap.pos[city]
+        val a = WorldMap.of(s.currentCity)
+        val b = WorldMap.of(city)
         return if (a != null && b != null) {
             val d = kotlin.math.hypot(((a.x - b.x) * 2f).toDouble(), (a.y - b.y).toDouble())
             (2 + d * 6).toInt().coerceIn(2, 14)
@@ -561,6 +619,7 @@ class ClaraViewModel : ViewModel() {
         if (s.flying != null) return
         s = s.copy(flying = city, flightHours = flightHoursTo(city))
         cue(SoundCue.TRAVEL)
+        advanceTut(3)
     }
 
     /** Flight animation finished: apply the arrival. */
@@ -594,6 +653,7 @@ class ClaraViewModel : ViewModel() {
             "hair" -> s.copy(compHair = value); "feature" -> s.copy(compFeature = value)
             else -> s.copy(compVehicle = value)
         }.copy(computed = false)
+        advanceTut(4)
         autosave()   // a computer entry is case state — persist so a reload can't rewind it
     }
 
@@ -624,6 +684,7 @@ class ClaraViewModel : ViewModel() {
         if (issuedWarrant) st = st.copy(warrantFor = m.first())
         s = st
         if (issuedWarrant) cue(SoundCue.WARRANT)   // "You now have a warrant to arrest X."
+        if (issuedWarrant) advanceTut(5)
         checkDeadline()
         autosave()
     }
@@ -706,6 +767,7 @@ class ClaraViewModel : ViewModel() {
         next = next.copy(
             unlockedAchievements = next.unlockedAchievements +
                 Achievements.earned(Achievements.summarise(next)),
+            tutorialDone = true, tutorialStep = -1,
         )
         s = next
         autosave()
