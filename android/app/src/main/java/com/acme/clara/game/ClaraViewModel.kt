@@ -17,8 +17,8 @@ import kotlin.random.Random
 
 enum class Phase { INTRO, TITLE, SIGN_ON, BRIEFING, CITY, TRAVEL, CRIME, CHASE, RESULT, CHOOSE_GAME }
 
-/** Event stingers from the original MIDISND.DAT, mapped to game moments (the UI layer
- *  resolves each to its res/raw MIDI and plays it over the theme). */
+/** Event stingers mapped to game moments (the UI layer resolves each to its
+ *  assets/audio/ MIDI file and plays it over the theme). */
 enum class SoundCue {
     BRIEFING, FLASH, CLUE, DANGER, WARRANT, ARRIVE, TRAVEL, CHASE, WIN, WRONG_ARREST, OUT_OF_TIME
 }

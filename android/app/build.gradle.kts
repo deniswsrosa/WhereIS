@@ -35,6 +35,10 @@ android {
     packaging {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
+    androidResources {
+        // Keep MIDI in assets/audio/ stored uncompressed so GameSound can openFd() them.
+        noCompress += "mid"
+    }
     testOptions {
         // The ViewModel calls android.util.Log; return stub defaults instead of throwing
         // so the pure game logic can run under plain JVM unit tests.

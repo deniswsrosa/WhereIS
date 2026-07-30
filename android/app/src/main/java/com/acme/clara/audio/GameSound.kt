@@ -2,51 +2,52 @@ package com.acme.clara.audio
 
 import android.content.Context
 import android.media.MediaPlayer
-import com.acme.clara.R
 import com.acme.clara.game.SoundCue
 
 /**
- * Plays the game's own audio, recovered byte-for-byte from the original MIDISND.DAT.
+ * Plays the game's music and event stingers from `assets/audio/`.
  *
- * The DAT is the same container format as CARMEN.DAT (u32 dir offset at EOF, 8-byte entries);
- * its items are 12 standard SMF (MThd/MTrk) sequences (archive ids 218..229). Item 11 (id 229)
- * is the full-arrangement title theme; the other 11 are short event stingers. They are bundled
- * verbatim as res/raw MIDI and rendered by Android's built-in Sonivox synth — the same
- * General-MIDI voices the original targeted, so the music is authentic, not a re-creation.
+ * Audio files are MIDI, rendered by Android's built-in Sonivox General-MIDI synth:
+ * `theme.mid` is the looping title theme and `jingle_0.mid`..`jingle_10.mid` are the short
+ * event stingers, mapped to game moments below. Drop generated replacements straight into
+ * `assets/audio/` (same filenames); the original set is archived in `assets/audio/original/`
+ * for reference and is not shipped as active audio.
  *
- * The stinger→event mapping below was established by auditioning each sequence's musical
- * character (resolution, key, harmony) against the game's events; the emotional tentpoles
- * (win/wrong-arrest/out-of-time/warrant) are firm, the suspense/transition cues are best-fit.
+ * Everything is best-effort: if a file isn't present yet, playback simply no-ops, so the
+ * game stays silent (never crashes) while a new soundtrack is being produced.
  */
 object GameSound {
     private var theme: MediaPlayer? = null
     private var stinger: MediaPlayer? = null
     private var enabled = true
 
-    // Which stinger plays for each game moment (see the audition notes in the commit history):
+    private const val DIR = "audio"
+    private const val THEME = "theme.mid"
+
+    // Which stinger plays for each game moment:
     //   jingle_0 playful "discovery"     -> CLUE          jingle_6 dreamy transition  -> TRAVEL
     //   jingle_1 ticking "danger"        -> DANGER        jingle_7 fast dark decisive -> CHASE
     //   jingle_2 buildup that lands      -> ARRIVE        jingle_8 half-cadence prompt-> BRIEFING
     //   jingle_3 dissonant fail sting    -> WRONG_ARREST  jingle_9 theatrical fanfare -> WIN
     //   jingle_4 diminished-7th villain  -> FLASH         jingle_10 somber game-over  -> OUT_OF_TIME
     //   jingle_5 whimsical major resolve -> WARRANT
-    private val cueRes = mapOf(
-        SoundCue.CLUE to R.raw.jingle_0,
-        SoundCue.DANGER to R.raw.jingle_1,
-        SoundCue.ARRIVE to R.raw.jingle_2,
-        SoundCue.WRONG_ARREST to R.raw.jingle_3,
-        SoundCue.FLASH to R.raw.jingle_4,
-        SoundCue.WARRANT to R.raw.jingle_5,
-        SoundCue.TRAVEL to R.raw.jingle_6,
-        SoundCue.CHASE to R.raw.jingle_7,
-        SoundCue.BRIEFING to R.raw.jingle_8,
-        SoundCue.WIN to R.raw.jingle_9,
-        SoundCue.OUT_OF_TIME to R.raw.jingle_10,
+    private val cueFile = mapOf(
+        SoundCue.CLUE to "jingle_0.mid",
+        SoundCue.DANGER to "jingle_1.mid",
+        SoundCue.ARRIVE to "jingle_2.mid",
+        SoundCue.WRONG_ARREST to "jingle_3.mid",
+        SoundCue.FLASH to "jingle_4.mid",
+        SoundCue.WARRANT to "jingle_5.mid",
+        SoundCue.TRAVEL to "jingle_6.mid",
+        SoundCue.CHASE to "jingle_7.mid",
+        SoundCue.BRIEFING to "jingle_8.mid",
+        SoundCue.WIN to "jingle_9.mid",
+        SoundCue.OUT_OF_TIME to "jingle_10.mid",
     )
 
     /** Play the stinger mapped to a game cue. */
     fun play(context: Context, cue: SoundCue) {
-        cueRes[cue]?.let { jingle(context, it) }
+        cueFile[cue]?.let { jingle(context, it) }
     }
 
     fun setEnabled(context: Context, on: Boolean) {
@@ -57,9 +58,8 @@ object GameSound {
     /** Start (or keep) the looping title theme. No-op if already playing or sound is off. */
     fun startTheme(context: Context) {
         if (!enabled || theme != null) return
-        theme = MediaPlayer.create(context.applicationContext, R.raw.theme)?.apply {
+        theme = create(context, THEME)?.apply {
             isLooping = true
-            setOnErrorListener { _, _, _ -> true }
             start()
         }
     }
@@ -69,15 +69,27 @@ object GameSound {
         theme = null
     }
 
-    /** Play a one-shot stinger (stops the theme underneath, like the DOS event fanfares). */
-    fun jingle(context: Context, resId: Int) {
+    /** Play a one-shot stinger by asset filename (stops the theme underneath, like the DOS
+     *  event fanfares). No-op if the file isn't present in assets/audio/ yet. */
+    fun jingle(context: Context, file: String) {
         if (!enabled) return
         stopTheme()
         stinger?.release()
-        stinger = MediaPlayer.create(context.applicationContext, resId)?.apply {
+        stinger = create(context, file)?.apply {
             setOnCompletionListener { it.release(); if (stinger === it) stinger = null }
-            setOnErrorListener { _, _, _ -> true }
             start()
         }
     }
+
+    /** Build a prepared MediaPlayer for assets/audio/<file>, or null if the asset is absent
+     *  (or won't decode). Requires the file to be stored uncompressed — see noCompress "mid". */
+    private fun create(context: Context, file: String): MediaPlayer? = runCatching {
+        context.applicationContext.assets.openFd("$DIR/$file").use { afd ->
+            MediaPlayer().apply {
+                setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                setOnErrorListener { _, _, _ -> true }
+                prepare()
+            }
+        }
+    }.getOrNull()
 }
