@@ -18,7 +18,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import com.acme.clara.data.CountryShapes
+import com.acme.clara.data.WorldMap
 import com.acme.clara.data.Suspect
+import com.acme.clara.game.SpacedRepetition
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -70,6 +75,7 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
             MenuItemDef("Hint") { vm.requestHint() },
             MenuItemDef("Detective Roster") { vm.openOverlay(Overlay.Roster) },
             MenuItemDef("World Database") { vm.openOverlay(Overlay.Almanac) },
+            MenuItemDef("Passport") { vm.openOverlay(Overlay.Passport) },
             MenuItemDef("Most Wanted") { vm.openOverlay(Overlay.MostWanted) },
             MenuItemDef("Commendations") { vm.openOverlay(Overlay.Commendations) },
             MenuItemDef("Hall of Fame") { vm.openOverlay(Overlay.HallOfFame) },
@@ -126,6 +132,7 @@ fun OverlayHost(v: Virtual, vm: ClaraViewModel) {
     if (o is Overlay.MostWanted) { MostWantedWindow(v, vm); return }
     if (o is Overlay.Commendations) { CommendationsWindow(v, vm); return }
     if (o is Overlay.Almanac) { AlmanacWindow(v, vm); return }
+    if (o is Overlay.Passport) { PassportWindow(v, vm); return }
     val (title, lines) = when (o) {
         Overlay.About -> "ABOUT" to listOf(
             "Where in the World is", "Clara San Diego?  (Enhanced)", "MS-DOS Version 2.1",
@@ -143,6 +150,7 @@ fun OverlayHost(v: Virtual, vm: ClaraViewModel) {
         Overlay.MostWanted -> "" to emptyList()   // handled by MostWantedWindow above
         Overlay.Commendations -> "" to emptyList()// handled by CommendationsWindow above
         Overlay.Almanac -> "" to emptyList()      // handled by AlmanacWindow above
+        Overlay.Passport -> "" to emptyList()     // handled by PassportWindow above
         is Overlay.Info -> o.title to o.lines
     }
 
@@ -353,6 +361,14 @@ private fun CommendationsWindow(v: Virtual, vm: ClaraViewModel) {
                 StatRow(v, "Cases solved", "${s.casesSolved}")
                 StatRow(v, "Villains caught", "${MostWanted.capturedCount(s.capturedVillains)} / ${MostWanted.total()}")
                 StatRow(v, "Hint-free solves", "${s.hintFreeSolves}")
+                // H4: the case-a-day streak (with any banked weekly freeze)
+                StatRow(v, "Daily streak", buildString {
+                    append(if (s.streakDays > 0) "🔥 ${s.streakDays} day(s)" else "—")
+                    if (s.streakFreezes > 0) append("  ❄ freeze ready")
+                })
+                Spacer(Modifier.height(v.w(3)))
+                // P2 endowed progress: a bar toward the next rank that opens with a head start
+                RankProgress(v, s)
                 Spacer(Modifier.height(v.w(3)))
                 Text("— COMMENDATIONS —", style = v.text(6.5f, color = Vga.Yellow, bold = true),
                     modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
@@ -382,6 +398,38 @@ private fun StatRow(v: Virtual, label: String, value: String) {
     }
 }
 
+/* P2 endowed progress: a bar toward the next rank. The tutorial + guided first case are
+ * credited as a one-case head start, so it opens partly filled (never a cold zero) — the
+ * loyalty-card effect that lifts first-promotion completion. */
+@Composable
+internal fun RankProgress(v: Virtual, s: com.acme.clara.game.GameState) {
+    val thresholds = listOf(1, 5, 9, 13)
+    val solved = s.casesSolved
+    val next = thresholds.firstOrNull { it > solved }
+    val label: String
+    val frac: Float
+    if (next == null) {
+        label = "${GameData.ranks.last()} — top rank"
+        frac = 1f
+    } else {
+        val prev = thresholds.lastOrNull { it <= solved } ?: 0
+        val band = next - prev
+        val inBand = solved - prev
+        val head = 1                                   // the credited head start
+        frac = ((inBand + head).toFloat() / (band + head)).coerceIn(0f, 1f)
+        val nextRank = GameData.ranks.getOrElse(s.rankIndex + 1) { GameData.ranks.last() }
+        label = "Toward $nextRank — ${inBand + head} of ${band + head}"
+    }
+    Column(Modifier.fillMaxWidth()) {
+        Text(label, style = v.text(6.5f, color = Vga.LightCyan))
+        Spacer(Modifier.height(v.w(1)))
+        Box(Modifier.fillMaxWidth().height(v.w(4)).background(Vga.DarkGray)
+            .border(BorderStroke(v.w(0.6f), Vga.LightGray))) {
+            Box(Modifier.fillMaxWidth(frac).fillMaxHeight().background(Vga.LightGreen))
+        }
+    }
+}
+
 /* World Database (the in-game almanac) — a browsable Interpol reference over CityMeta.
  * Master list of cities → tap one for its region, landmark and facts. It names places, not
  * the next city, so it's a reference the player still has to reason from. */
@@ -402,12 +450,21 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                 Spacer(Modifier.height(v.w(3)))
                 Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
                     cities.forEach { info ->
+                        // L4: flag where each fact sits on the spaced-repetition curve.
+                        val fresh = SpacedRepetition.isFresh(info.name, vm.s.cityLastSeen, vm.s.casesSolved)
+                        val due = SpacedRepetition.isDue(info.name, vm.s.cityLastSeen, vm.s.casesSolved)
+                        val marker = when { fresh -> "seen recently"; due -> "review due"; else -> "" }
                         Row(Modifier.fillMaxWidth().clickable { selected = info.name }
-                            .labelled("${info.name}, ${info.region}")
+                            .labelled("${info.name}, ${info.region}${if (marker.isNotEmpty()) ", $marker" else ""}")
                             .padding(vertical = v.w(1.4f)),
                             horizontalArrangement = Arrangement.SpaceBetween) {
                             Text(info.name, style = v.text(7.5f, color = Vga.White, bold = true))
-                            Text(info.region, style = v.text(6.5f, color = Vga.LightCyan))
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(info.region, style = v.text(6.5f, color = Vga.LightCyan))
+                                if (marker.isNotEmpty())
+                                    Text(marker, style = v.text(5.5f,
+                                        color = if (fresh) Vga.LightGreen else Vga.Yellow))
+                            }
                         }
                     }
                 }
@@ -431,6 +488,126 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                         style = v.text(9, bold = true)) { vm.dismissOverlay() }
                 }
             }
+        }
+    }
+}
+
+/* Passport (C4) — a painted world map of the countries the detective has visited.
+ * Country border silhouettes (data.CountryShapes, projected through the same Mercator
+ * transform as the DEPART map) fill in green as you land in each place; micro-states with
+ * no usable polygon are stamped as a dot. Visits are tracked from day one on the free tier
+ * (GameState.visitedPlaces); the free Passport shows only the original 30 destinations —
+ * the paid expansion adds its 68 to the world and paints in everything already visited. */
+@Composable
+private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
+    val s = vm.s
+    val paid = s.expansionUnlocked
+    // Free tier tracks silently but reveals nothing: the passport stays sealed until the
+    // paid unlock, which then paints in every country already visited (see PassportSealed).
+    if (!paid) { PassportSealed(v, vm); return }
+    val placeCountry = CountryShapes.placeCountry
+    val universe = placeCountry.values.toSet()
+    val visitedPlaces = s.visitedPlaces.filter { it in placeCountry }
+    val visitedCountries = visitedPlaces.mapNotNull { placeCountry[it] }.toSet()
+
+    Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
+        contentAlignment = Alignment.Center) {
+        Column(Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.92f).background(Vga.Blue).padding(v.w(5)),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("PASSPORT", style = v.text(10, color = Vga.Yellow, bold = true))
+            Text("${visitedCountries.size} of ${universe.size} countries",
+                style = v.text(7, color = Vga.LightCyan))
+            Spacer(Modifier.height(v.w(3)))
+
+            // the painted map — the raster DEPART interior with visited countries filled in
+            Box(Modifier.fillMaxWidth().aspectRatio(WorldMap.WV / WorldMap.HV)
+                .background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(1))) {
+                PixelImage("world_map_clean", Modifier.fillMaxSize())
+                Canvas(Modifier.fillMaxSize()) {
+                    val w = size.width; val h = size.height
+                    // filled silhouettes for visited countries that have a polygon
+                    visitedCountries.forEach { code ->
+                        val rings = CountryShapes.rings(code)
+                        if (rings.isNotEmpty()) {
+                            val path = Path()
+                            rings.forEach { ring ->
+                                ring.firstOrNull()?.let { p0 -> path.moveTo(p0.x * w, p0.y * h) }
+                                for (i in 1 until ring.size) path.lineTo(ring[i].x * w, ring[i].y * h)
+                                path.close()
+                            }
+                            drawPath(path, Vga.Green.copy(alpha = 0.6f))
+                            drawPath(path, Vga.LightGreen, style = Stroke(width = h * 0.008f))
+                        }
+                    }
+                    // micro-states / Antarctica: stamp the visited place's dot instead
+                    val r = h * 0.03f
+                    visitedPlaces.forEach { place ->
+                        val code = placeCountry[place] ?: return@forEach
+                        if (CountryShapes.rings(code).isEmpty()) {
+                            WorldMap.of(place)?.let { pos ->
+                                val cx = pos.x * w; val cy = pos.y * h
+                                drawRect(Vga.Black, Offset(cx - r, cy - r), Size(r * 2, r * 2))
+                                drawRect(Vga.LightGreen,
+                                    Offset(cx - r * 0.6f, cy - r * 0.6f), Size(r * 1.2f, r * 1.2f))
+                            }
+                        }
+                    }
+                }
+            }
+            Spacer(Modifier.height(v.w(3)))
+
+            // the stamps: visited countries by name (the collection, also for accessibility)
+            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
+                if (visitedCountries.isEmpty()) {
+                    Text("No stamps yet — solve a case to start filling your passport.",
+                        style = v.text(7, color = Vga.LightGray))
+                } else {
+                    visitedCountries
+                        .map { CountryShapes.countryName[it] ?: it }
+                        .sorted()
+                        .forEach { name ->
+                            Text("✓ ${name.uppercase()}",
+                                style = v.text(7, color = Vga.LightGreen, bold = true),
+                                modifier = Modifier.fillMaxWidth().padding(vertical = v.w(0.5f)))
+                        }
+                }
+            }
+            Spacer(Modifier.height(v.w(3)))
+            DosButton("CLOSE", fill = Vga.Green, textColor = Vga.White,
+                style = v.text(9, bold = true)) { vm.dismissOverlay() }
+        }
+    }
+}
+
+/* Free tier: the passport is sealed. Visits are still recorded (GameState.visitedPlaces),
+ * but nothing about the collection is shown — the paid unlock reveals and paints it all. */
+@Composable
+private fun PassportSealed(v: Virtual, vm: ClaraViewModel) {
+    Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
+        contentAlignment = Alignment.Center) {
+        Column(Modifier.fillMaxWidth(0.86f).background(Vga.Blue).padding(v.w(7)),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("PASSPORT", style = v.text(10, color = Vga.Yellow, bold = true))
+            Spacer(Modifier.height(v.w(4)))
+            Box(Modifier.size(v.w(44), v.w(30)).background(Vga.DarkGray)
+                .border(BorderStroke(v.w(1.5f), Vga.LightGray)), contentAlignment = Alignment.Center) {
+                Text("🔒", style = v.text(20, color = Vga.Yellow))
+            }
+            Spacer(Modifier.height(v.w(4)))
+            listOf(
+                "Your passport is sealed.",
+                "Every place you visit is",
+                "quietly being recorded.",
+                "",
+                "Unlock the Expansion to reveal",
+                "your painted map of the world.",
+            ).forEach {
+                Text(it, style = v.text(7.5f, color = Vga.White), textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth())
+            }
+            Spacer(Modifier.height(v.w(5)))
+            DosButton("CLOSE", fill = Vga.Green, textColor = Vga.White,
+                style = v.text(9, bold = true)) { vm.dismissOverlay() }
         }
     }
 }

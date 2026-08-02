@@ -36,6 +36,8 @@ sealed interface Overlay {
     data object Commendations : Overlay
     /** The browsable world database (in-game almanac). */
     data object Almanac : Overlay
+    /** Passport (C4): the painted world map of countries visited. */
+    data object Passport : Overlay
     /** Game > Quit — the original's "Do you really want to quit?" Yes/No dialog. */
     data object ConfirmQuit : Overlay
     /** One suspect's dossier — the white typed-on window from the original's Dossiers menu. */
@@ -128,6 +130,22 @@ data class GameState(
     // career record — persists across cases within a saved profile
     val capturedVillains: Set<String> = emptySet(),
     val unlockedAchievements: Set<String> = emptySet(),
+    // Passport (C4): every place the detective has ever landed in, across the whole career and
+    // both tiers. Recorded silently from day one on the free tier; on the paid unlock the
+    // world map paints in every country already visited here. Place names -> countries via
+    // data.CountryShapes.placeCountry.
+    val visitedPlaces: Set<String> = emptySet(),
+    // H3 welcome-back warm-up: the next fresh case after a long absence is kinder (a shorter
+    // route + one trait pre-solved). Set on resume() after a gap, consumed by newCase().
+    val warmUpNextCase: Boolean = false,
+    // H4 case-a-day streak: consecutive days with a solved case, a weekly "streak freeze" that
+    // absorbs one missed day, and the epoch-day of the last solve (0 = never).
+    val streakDays: Int = 0,
+    val streakFreezes: Int = 0,
+    val lastSolveEpochDay: Int = 0,
+    // L4 spaced repetition: the case index (casesSolved) each place was last seen, so route
+    // picking can resurface geography on an expanding schedule and the almanac can flag it.
+    val cityLastSeen: Map<String, Int> = emptyMap(),
     // paid-tier entitlement: unlocks the 68 expansion destinations + new venues for case routes,
     // decoys, the map and flight times. Free play stays on the original 30. (Persisted with the
     // save until a global entitlement store exists.)
@@ -188,16 +206,31 @@ class ClaraViewModel : ViewModel() {
     fun resume(data: SaveData) {
         profileId = data.meta.id
         var st = data.state
-        if (WelcomeBack.grantsHint(data.meta.lastPlayed, clock())) {
-            st = st.copy(
-                freeHints = st.freeHints + 1,
-                overlay = Overlay.Info("WELCOME BACK", listOf(
-                    "Been a while, ${st.detectiveName}.",
-                    "A fresh lead has surfaced —",
-                    "here's a free hint to spend.",
-                )),
-            )
-        }
+        val backAfterGap = WelcomeBack.grantsHint(data.meta.lastPlayed, clock())
+        // H3: after a long absence, bank a free hint and queue a kinder warm-up next case.
+        if (backAfterGap) st = st.copy(freeHints = st.freeHints + 1, warmUpNextCase = true)
+        // P5 recap card: the game already logs the whole trail + traits (CaseJournal); draw it
+        // on return so a case survives the break, folding in the welcome-back hint if any.
+        val recap = CaseJournal.recap(st)
+        val caseUnderway = st.phase == Phase.CITY && st.route.isNotEmpty() && st.progress > 0
+        st = if (recap != null && caseUnderway) {
+            val trail = st.route.take(st.progress + 1).joinToString(" ▸ ")
+            val traits = st.revealedTraits.joinToString(", ") { it.second }
+            val lines = buildList {
+                add(recap)
+                add("")
+                add("Trail: $trail")
+                if (traits.isNotBlank()) add("Suspect so far: $traits")
+                if (backAfterGap) { add(""); add("A fresh lead surfaced — here's a free hint to spend.") }
+            }
+            st.copy(overlay = Overlay.Info("PREVIOUSLY ON THIS CASE", lines))
+        } else if (backAfterGap) {
+            st.copy(overlay = Overlay.Info("WELCOME BACK", listOf(
+                "Been a while, ${st.detectiveName}.",
+                "A fresh lead has surfaced —",
+                "here's a free hint to spend.",
+            )))
+        } else st
         s = st
     }
 
@@ -330,10 +363,13 @@ class ClaraViewModel : ViewModel() {
 
         val order = discriminatingOrder(culprit)
         // cities per case by rank (ADG analysis of the 1990 release): Rookie 5, Sleuth 6,
-        // Private Eye 7, Investigator 8, Ace Detective 9
-        val routeLen = (5 + s.rankIndex).coerceAtMost(9)
+        // Private Eye 7, Investigator 8, Ace Detective 9. H3 welcome-back warm-up trims one hop.
+        val warm = s.warmUpNextCase
+        val routeLen = ((5 + s.rankIndex).coerceAtMost(9) - if (warm) 1 else 0).coerceAtLeast(4)
 
-        val cities = activeCities().shuffled().take(routeLen)
+        // L4: pick the route on a spaced-repetition curve so geography recurs for review,
+        // never touching solvability (only which cities appear, not any clue).
+        val cities = SpacedRepetition.pickRoute(activeCities(), s.cityLastSeen, s.casesSolved, routeLen)
         // the guided first case runs once, on a brand-new career's opening Rookie case
         val isTutorial = !s.tutorialDone && s.casesSolved == 0 && s.rankIndex == 0
         android.util.Log.d("Carmen", "case: culprit=${culprit.name} route=$cities")
@@ -347,8 +383,14 @@ class ClaraViewModel : ViewModel() {
             clock = 0,
             onTrack = true,
             revealOrder = order,
-            revealedCount = 0,
+            // H3 warm-up: the first (most telling) trait is already on the board.
+            revealedCount = if (warm) 1 else 0,
+            warmUpNextCase = false,
             visited = emptySet(),
+            // Passport: the briefing city is the first place logged this case.
+            visitedPlaces = s.visitedPlaces + cities.first(),
+            // L4: mark the briefing city as seen this case.
+            cityLastSeen = s.cityLastSeen + (cities.first() to s.casesSolved),
             wrongFlights = 0, hintsUsed = 0, journal = emptyList(),
             tutorialStep = if (isTutorial) 0 else -1, tutorialDone = s.tutorialDone || isTutorial,
             openClue = null,
@@ -430,8 +472,12 @@ class ClaraViewModel : ViewModel() {
                         list.add(Venue(p, occ, ClueKind.TRAIT, traitClue(tr), tr))
                     } else {
                         // out of discriminating traits: a food/flavour remark (still a full
-                        // DOS sentence, so no extra lead-in — matches "She mentioned…")
-                        list.add(Venue(p, occ, ClueKind.DANGER, "${flavourFood(st.culprit!!)}."))
+                        // DOS sentence, so no extra lead-in — matches "She mentioned…"). C3:
+                        // occasionally this pure-flavour slot teases the finale nemesis instead,
+                        // seeding the long arc cases before you ever meet her (never a real clue).
+                        val flav = if (shouldTeaseNemesis(st)) nemesisTease()
+                                   else "${flavourFood(st.culprit!!)}."
+                        list.add(Venue(p, occ, ClueKind.DANGER, flav))
                     }
                 }
             }
@@ -521,6 +567,17 @@ class ClaraViewModel : ViewModel() {
         }
         return pronouns(frag)
     }
+
+    // C3: the finale is always Clara San Diego, but nothing foreshadows her. Seed her name as
+    // the shadowy boss behind ordinary cases so the ~14-case arc has a villain to build toward.
+    private fun shouldTeaseNemesis(st: GameState): Boolean =
+        st.culprit?.name != "Clara San Diego" && st.casesSolved >= 1 && Random.nextInt(4) == 0
+
+    private fun nemesisTease(): String = listOf(
+        "The witness drops their voice: word is a woman named Clara San Diego runs the whole operation.",
+        "\"These capers all trace back to one boss,\" the witness whispers — \"a Clara San Diego.\"",
+        "Someone mutters that the real mastermind, a Clara San Diego, is still out there and untouchable.",
+    ).random()
 
     // ---------- player actions in a city ----------
     fun openVenue(index: Int) {
@@ -636,8 +693,12 @@ class ClaraViewModel : ViewModel() {
                 st.copy(currentCity = city, onTrack = true)   // flew back to the hideout
             else -> st.copy(currentCity = city, onTrack = false, wrongFlights = st.wrongFlights + 1)
         }
-        // DOS: after arriving in a new city the toolbar selection is INVESTIGATE
-        s = st.copy(selectedTool = 2)
+        // DOS: after arriving in a new city the toolbar selection is INVESTIGATE.
+        // Passport (C4): log every place we actually land in — right trail or wrong — so the
+        // painted world map fills in from day one (revealed only once the expansion is bought).
+        // L4: stamp its last-seen case index for spaced-repetition scheduling.
+        s = st.copy(selectedTool = 2, visitedPlaces = st.visitedPlaces + city,
+            cityLastSeen = st.cityLastSeen + (city to st.casesSolved))
         if (s.deadlinePassed) { escaped("time"); return }
         s = s.copy(phase = Phase.CITY)
         buildVenues()
@@ -742,7 +803,25 @@ class ClaraViewModel : ViewModel() {
             lines += "With your help, police in $crimeCity have taken ${c.name} into custody."
             lines += "${c.name} was carrying the stolen ${s.treasure}, now on its way home to the thankful people of $crimeCity."
         }
-        lines += "Everyone at Interpol appreciates your fine work on this case."
+        // R1 peak-end: sign off warm and personal, not on a cold Interpol form line.
+        lines += if (c.name == "Clara San Diego")
+            "Take a bow, ${s.detectiveName}. You began as a rookie — and you brought in the one who slipped past everyone else."
+        else
+            "Get some rest, ${s.detectiveName}. Thanks to you, $crimeCity sleeps easier tonight."
+        // H4 streak: fold today's solve into the case-a-day streak (a weekly freeze absorbs
+        // one missed day). clock() is 0 in tests, which harmlessly keeps the streak at 1.
+        val today = (clock() / 86_400_000L).toInt()
+        var streak = s.streakDays
+        var freezes = s.streakFreezes
+        when {
+            s.lastSolveEpochDay == 0 -> streak = 1
+            today - s.lastSolveEpochDay <= 0 -> if (streak == 0) streak = 1  // another win same day
+            today - s.lastSolveEpochDay == 1 -> streak += 1                  // consecutive day
+            today - s.lastSolveEpochDay == 2 && freezes > 0 -> { freezes -= 1; streak += 1 }
+            else -> streak = 1                                              // streak broke
+        }
+        if (streak > 0 && streak % 7 == 0 && freezes < 1) freezes = 1        // earn a weekly freeze
+        if (streak >= 2) lines += "🔥 $streak-day case streak!"
         val newCases = s.casesSolved + 1
         // jailing Carmen herself concludes the career — no promotion, straight to the
         // Hall of Fame report and off the roster
@@ -763,6 +842,7 @@ class ClaraViewModel : ViewModel() {
             phase = Phase.RESULT, won = true, casesSolved = newCases,
             resultLines = lines, pendingPromotion = promote, careerOver = careerOver,
             capturedVillains = captured, hadCleanCase = cleanSweep, hintFreeSolves = hintFree,
+            streakDays = streak, streakFreezes = freezes, lastSolveEpochDay = today,
         )
         next = next.copy(
             unlockedAchievements = next.unlockedAchievements +
@@ -788,10 +868,23 @@ class ClaraViewModel : ViewModel() {
 
     private fun escaped(reason: String) {
         val c = s.culprit!!
-        val lines = if (reason == "time") listOf(
-            "Incoming from Interpol:", "Unwelcome news...",
-            "Word just came in: ${c.name} escaped because the investigation ran out of time!",
-        ) else listOf("The suspect has escaped!")
+        // R2 near-miss: only when the loss was genuinely close — on the right trail and at (or
+        // one hop from) the hideout when the clock ran out. A wrong-warrant bust isn't a
+        // near-miss; that loss is handled in confront() and stays instructive.
+        val nearMiss = reason == "time" && s.onTrack &&
+            (s.atHideout || s.progress >= s.route.size - 1)
+        val lines = when {
+            nearMiss -> listOf(
+                "So close.",
+                "You reached ${s.hideout} just as ${c.name} slipped out the back —",
+                "minutes too late. The trail was right; the clock beat you.",
+            )
+            reason == "time" -> listOf(
+                "Incoming from Interpol:", "Unwelcome news...",
+                "Word just came in: ${c.name} escaped because the investigation ran out of time!",
+            )
+            else -> listOf("The suspect has escaped!")
+        }
         s = s.copy(phase = Phase.RESULT, won = false, resultLines = lines)
         cue(SoundCue.OUT_OF_TIME)
     }

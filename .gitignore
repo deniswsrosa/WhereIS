@@ -25,3 +25,4 @@ generated_imgs/
 # Burglar-verification raw frame dumps (~600 near-duplicate screenshots per burst);
 # the curated evidence (FILMSTRIP.png, distinct_poses/, native_frames/) is tracked
 work/burglar_snapshots/*/f[0-9]*.png
+scripts/__pycache__/

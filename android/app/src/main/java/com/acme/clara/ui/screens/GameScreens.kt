@@ -24,6 +24,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
+import kotlin.math.roundToInt
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
@@ -354,22 +356,60 @@ private fun VgaCityCard(city: String, region: String, v: Virtual, modifier: Modi
  *  (dos_sleeping_overnight.png), then reverts to the city name. */
 @Composable
 fun CityClockBox(v: Virtual, vm: ClaraViewModel, tickHours: Int = 0) {
-    val sleeping = vm.s.sleeping
+    val s = vm.s
+    val sleeping = s.sleeping
     LaunchedEffect(sleeping) {
         if (sleeping) { delay(1800); vm.sleepingShown() }
     }
+    // P1 trail heat: "CITY n/m" + a meter that warms cool→hot as you close on the hideout.
+    // The distance already exists (it drives the sighting stings); this just surfaces it.
+    val total = s.route.size
+    val inCase = total > 1 && s.currentCity.isNotBlank() && !sleeping
+    val cityNo = (s.progress + 1).coerceIn(1, total.coerceAtLeast(1))
+    val heat = if (s.onTrack && total > 1) (s.progress.toFloat() / (total - 1)).coerceIn(0f, 1f) else 0f
     v.At(4, 13, 141, 30, Alignment.Center) {
         Box(Modifier.fillMaxSize().background(Vga.Black)
             .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(2)), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(if (sleeping) "SLEEPING…" else vm.s.currentCity,
-                    style = v.text(9, color = Vga.White, bold = true))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(if (sleeping) "SLEEPING…" else s.currentCity,
+                        style = v.text(9, color = Vga.White, bold = true))
+                    if (inCase) {
+                        Spacer(Modifier.width(v.w(3)))
+                        Text("CITY $cityNo/$total", style = v.text(6f, color = Vga.Yellow, bold = true))
+                    }
+                }
                 Text(vm.clockLabel(tickHours), style = v.text(8, color = Vga.White))
                 // deadline hint (remake aid): dim normally, red in the last day
-                val left = vm.hoursLeft() - tickHours
-                Text(vm.deadlineLabel(tickHours),
-                    style = v.text(6.5f, color = if (left in 0..24) Vga.Red else Vga.LightGray))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val left = vm.hoursLeft() - tickHours
+                    Text(vm.deadlineLabel(tickHours),
+                        style = v.text(6.5f, color = if (left in 0..24) Vga.Red else Vga.LightGray))
+                    if (inCase && s.onTrack) {
+                        Spacer(Modifier.width(v.w(3)))
+                        TrailMeter(v, heat)
+                    }
+                }
             }
+        }
+    }
+}
+
+/** P1 goal-gradient meter: four blocks warming blue→red as the trail heats up. */
+@Composable
+private fun TrailMeter(v: Virtual, heat: Float) {
+    val blocks = 4
+    val filled = (heat * blocks).roundToInt().coerceIn(0, blocks)
+    val hot = when {
+        heat >= 0.8f -> Vga.Red
+        heat >= 0.5f -> Vga.Yellow
+        heat > 0f -> Vga.LightCyan
+        else -> Vga.LightGray
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(v.w(0.6f))) {
+        repeat(blocks) { i ->
+            Box(Modifier.size(v.w(3f), v.w(4f))
+                .background(if (i < filled) hot else Vga.DarkGray))
         }
     }
 }
@@ -1015,6 +1055,10 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     val paper = remember { mutableStateListOf("READY.") }
     var typing by remember { mutableStateOf("") }
     var printing by remember { mutableStateOf(false) }
+    // S2: a visual "WARRANT ISSUED" stamp fires when the description narrows to one suspect
+    // (the WARRANT stinger + haptic already play in vm.compute()).
+    var showStamp by remember { mutableStateOf(false) }
+    val reduce = reducedMotion()
     val scope = rememberCoroutineScope()
 
     // dot-matrix teletype: every line prints letter by letter, like the original
@@ -1060,6 +1104,7 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                         paper.add("")
                         paperWrap(GameData.WARRANT_ISSUED.replace("%s", results.first().name))
                             .forEach { printLine(it) }
+                        showStamp = true
                     }
                 }
             }
@@ -1146,7 +1191,30 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     }
     GameToolbar(v, vm, onSee = { vm.selectTool(0); vm.gotoCity() },
         onInvestigate = { vm.selectTool(2); vm.gotoCity() })
+    if (showStamp) WarrantStamp(v, reduce) { showStamp = false }
     OverlayHost(v, vm)
+}
+
+/** S2: the "WARRANT ISSUED · APPROVED" stamp — a ritual beat that slams in when the roster
+ *  narrows to one, then clears itself. Pairs the eye with the WARRANT stinger already playing. */
+@Composable
+internal fun WarrantStamp(v: Virtual, reduce: Boolean, onDone: () -> Unit) {
+    var play by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(if (play || reduce) 1f else 3f,
+        animationSpec = tween(300, easing = FastOutSlowInEasing), label = "stamp")
+    val rot by animateFloatAsState(if (play || reduce) -8f else 6f, tween(300), label = "rot")
+    LaunchedEffect(Unit) { play = true; delay(1400); onDone() }
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(Modifier.graphicsLayer { scaleX = scale; scaleY = scale; rotationZ = rot }
+            .border(BorderStroke(v.w(2), Vga.Red)).background(Vga.Black.copy(alpha = 0.75f))
+            .padding(horizontal = v.w(10), vertical = v.w(5)),
+            contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("WARRANT ISSUED", style = v.text(13, color = Vga.Red, bold = true))
+                Text("●  APPROVED  ●", style = v.text(9, color = Vga.Red, bold = true))
+            }
+        }
+    }
 }
 
 /* ----------------------------- CHASE (hideout confrontation) -----------------------------
@@ -1234,6 +1302,14 @@ fun ChaseScreen(vm: ClaraViewModel) = VirtualScreen { v ->
  * right panel shows the culprit behind bars in the brick JAIL (win) or stays black (loss).
  * "Press any key or button to continue." advances to the next case.
  */
+/** P4: the line the promotion screen prints to name what the new rank actually changes.
+ *  Only route length is coded per rank (5 + rankIndex, capped at 9), so name that — never a
+ *  region unlock or a tighter clock the game doesn't apply. */
+internal fun promotionPerkLine(rankIndex: Int): String {
+    val cities = (5 + rankIndex).coerceAtMost(9)
+    return "As ${GameData.ranks[rankIndex]}, the trail now runs $cities cities — a longer chase, more clues to read."
+}
+
 @Composable
 fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f) { v ->
     val s = vm.s
@@ -1287,8 +1363,13 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
             val correct = input.trim().equals(quiz.second, ignoreCase = true)
             if (correct) {
                 vm.resolvePromotion(true)
+                // P4: name what the rank actually changes — route length is the real, coded
+                // reward (it scales per rank); don't promise regions or a tighter clock, which
+                // the game doesn't change.
+                val newRank = vm.s.rankIndex
                 typeAll(listOfNotNull(
-                    "Your new rank is: ${GameData.ranks[vm.s.rankIndex]}.",
+                    "Your new rank is: ${GameData.ranks[newRank]}.",
+                    promotionPerkLine(newRank),
                     vm.casesToNextPromotion().takeIf { it > 0 }
                         ?.let { "$it more cases until your next promotion." },
                 ))
@@ -1396,5 +1477,34 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
             YellowButton(v, "SHARE RESULT") { com.acme.clara.ui.shareResult(shareCtx, vm) }
         }
     }
+    // S1: the captured mugshot slams in and is "filed" in the gallery — a one-shot win beat.
+    if (s.won && !s.careerOver && !reduce) ArrestSlam(v, s.culprit?.name)
     OverlayHost(v, vm)
+}
+
+/** S1 multisensory reward: on a win the suspect's mugshot slams in over the report, then is
+ *  filed into the Most-Wanted gallery. Plays once, then clears itself (skipped on reduced motion). */
+@Composable
+internal fun ArrestSlam(v: Virtual, name: String?) {
+    if (name == null) return
+    var gone by remember { mutableStateOf(false) }
+    if (gone) return
+    var play by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(if (play) 1f else 2.6f,
+        animationSpec = tween(360, easing = FastOutSlowInEasing), label = "slam")
+    val alpha by animateFloatAsState(if (play) 1f else 0f, tween(160), label = "fade")
+    LaunchedEffect(Unit) { play = true; delay(1350); gone = true }
+    val slug = "suspect_" + snake(name)
+    Box(Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha }, contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(Modifier.size(v.w(56)).graphicsLayer { scaleX = scale; scaleY = scale }
+                .border(BorderStroke(v.w(1), Vga.Yellow)).background(Vga.DarkGray),
+                contentAlignment = Alignment.Center) {
+                if (spriteExists(slug)) PixelImage(slug, Modifier.fillMaxSize())
+                else Text("◆", style = v.text(20, color = Vga.LightGray, bold = true))
+            }
+            Spacer(Modifier.height(v.w(4)))
+            Text("FILED IN MOST WANTED", style = v.text(9, color = Vga.Yellow, bold = true))
+        }
+    }
 }
