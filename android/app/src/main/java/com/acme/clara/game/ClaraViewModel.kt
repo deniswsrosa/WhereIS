@@ -508,11 +508,16 @@ class ClaraViewModel : ViewModel() {
             val used = HashSet<String>()
             val generals = ArrayDeque((info?.let { generalCluePool(it) } ?: emptyList()).shuffled())
 
-            fun lead(frag: String) = pronouns("${GameData.clueLeadIns.random()} {s} $frag.")
-            fun flagText() = pronouns("${GameData.clueLeadIns.random()} {s} sketched a flag — ${info!!.flag}.")
+            // Localized lead-ins + template phrases (English is a no-op via Strings.opt).
+            val leadIns = GameData.clueLeadIns.indices.map {
+                com.acme.clara.i18n.Strings.opt("clue.leadin.$it") ?: GameData.clueLeadIns[it]
+            }
+            fun tmpl(key: String, en: String) = com.acme.clara.i18n.Strings.opt(key) ?: en
+            fun lead(frag: String) = pronouns("${leadIns.random()} {s} $frag.")
+            fun flagText() = pronouns("${leadIns.random()} {s} ${tmpl("clue.tmpl.flag", "sketched a flag —")} ${info!!.flag}.")
             // Currency is stored with its article ("the euro") for the almanac; drop it here so the
             // clue reads "money called euro" rather than the awkward "money called the euro".
-            fun currencyText() = pronouns("${GameData.clueLeadIns.random()} {s} counted money called ${info!!.currency!!.removePrefix("the ")}.")
+            fun currencyText() = pronouns("${leadIns.random()} {s} ${tmpl("clue.tmpl.currency", "counted money called")} ${info!!.currency!!.removePrefix("the ")}.")
             // Whiff (venue 3's no-clue outcome): a standalone aside from THIS witness's own
             // occupation (so it fits the teller), or a nemesis whisper.
             fun funnyText(occ: String) =
@@ -576,14 +581,22 @@ class ClaraViewModel : ViewModel() {
     /** The destination's general "where next" hints as subject-less fragments (never flag/currency —
      *  those are their own venues). Expansion cities carry hand-authored leads; the original 30 have
      *  a single landmark fragment, so their 2nd trail slot falls through to the flag/currency. */
-    private fun generalCluePool(info: CityInfo): List<String> =
-        if (info.clues.isNotEmpty()) info.clues
-        else listOf(
+    private fun generalCluePool(info: CityInfo): List<String> {
+        if (info.clues.isNotEmpty()) return info.clues
+        // Base cities have no hand-authored clues: template a trail hint from region + landmark.
+        // Region is a logic switch-key, so localize only its DISPLAY here.
+        val i18n = com.acme.clara.i18n.Strings
+        val lm = info.landmark
+        // A directional region phrase ("toward Europe") — per-language so pt can bake in the
+        // preposition/contraction ("rumo à Europa") without an English word-order template.
+        val rg = i18n.opt("region.dir.${info.region}") ?: "toward ${info.region}"
+        return listOf(
             listOf(
-                "planned to visit a place known for ${info.landmark}",
-                "was headed somewhere in ${info.region}, near ${info.landmark}",
+                (i18n.opt("clue.tmpl.general.0") ?: "planned to visit a place known for {0}").replace("{0}", lm),
+                (i18n.opt("clue.tmpl.general.1") ?: "was headed {1}, near {0}").replace("{1}", rg).replace("{0}", lm),
             ).random()
         )
+    }
 
     /** Venue-3 payoff odds by rank: 100% for the whole free career, then linear down to 50% at the
      *  top International grade — so late-game the flag/currency bet can whiff into a joke. */
@@ -623,9 +636,11 @@ class ClaraViewModel : ViewModel() {
      *  {s}=she/he, {p}=her/his. The original leaks the suspect's sex through these pronouns. */
     private fun pronouns(frag: String): String {
         val female = s.culprit?.sex == "Female"
-        return frag.replace("{S}", if (female) "She" else "He")
-            .replace("{s}", if (female) "she" else "he")
-            .replace("{p}", if (female) "her" else "his")
+        val g = if (female) "f" else "m"
+        fun p(key: String, en: String) = com.acme.clara.i18n.Strings.opt("pron.$key.$g") ?: en
+        return frag.replace("{S}", p("subjCap", if (female) "She" else "He"))
+            .replace("{s}", p("subj", if (female) "she" else "he"))
+            .replace("{p}", p("poss", if (female) "her" else "his"))
     }
 
     /** Rewrite a suspect-aside line's generic "They/them/their" to the culprit's singular pronoun,
