@@ -1,159 +1,258 @@
 package com.acme.clara.ui
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
 import com.acme.clara.game.ClaraViewModel
+import com.acme.clara.game.GameState
 import com.acme.clara.game.Phase
-import com.acme.clara.game.Tutorial
 import com.acme.clara.ui.theme.Vga
 
 /**
- * The Rookie tutorial coach-mark: a framed "case file" tip card for the current step. The player
- * reads it, taps GOT IT, then performs the action — which advances the step and brings up the next
- * tip. SKIP dismisses the whole tutorial. Only shows during gameplay phases.
+ * The Rookie tour — a set of contextual, teach-once lessons, not a linear script. Each turn it asks
+ * [lessonFor] which single lesson (if any) is relevant to the *current* game state, spotlights the
+ * one control that lesson is about, and shows a tip that points at it. Lessons are armed by what the
+ * player has actually done (heard a trail hint, heard a suspect trait, got a warrant…), so a tip
+ * never fires before its concept exists, and each clears the moment the player performs its action.
+ *
+ * Rendered inside each gameplay screen's VirtualScreen so it shares the 320x200 coordinate space;
+ * [suppressed] hides it during a screen's own transient panels (venue picker, walking, SEE list).
  */
 @Composable
-fun TutorialCoach(vm: ClaraViewModel) {
-    // Hoisted above every early return so its slot is stable: otherwise flying (a non-gameplay
-    // TRAVEL phase makes this composable bail before the remember) re-initialises `acked` on the
-    // way back, and an already-dismissed tip pops up again at the next city.
-    var acked by remember { mutableStateOf(-1) }
+fun Tour(v: Virtual, vm: ClaraViewModel, suppressed: Boolean = false) {
+    val s = vm.s
+    if (!s.tutorialActive || suppressed) return
+    // A witness testimony or a menu window owns the screen — never spotlight over it.
+    if (s.openClue != null || s.overlay != null) return
+    val shown = lessonFor(s) ?: return
 
-    val step = vm.s.tutorialStep
-    val message = Tutorial.message(step) ?: return
-    if (vm.s.phase !in gameplayPhases) return
-    if (acked == step) return   // dismissed for this step — the player is doing the action
+    val reduce = reducedMotion()
+    val pulse = if (reduce) 1f else {
+        val inf = rememberInfiniteTransition(label = "tourPulse")
+        inf.animateFloat(0.4f, 1f, infiniteRepeatable(tween(720), RepeatMode.Reverse), label = "a").value
+    }
 
-    val mono = FontFamily.Monospace
+    val t = shown.target
+    val m = 3f
 
-    Box(
-        Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.72f)),
-        contentAlignment = Alignment.Center,
-    ) {
-        // The card: dark VGA panel with a crisp white frame and a thin yellow inner rule, so it
-        // reads as an in-world dispatch rather than a generic dialog.
-        Column(
-            Modifier.fillMaxWidth(0.86f)
-                .border(BorderStroke(2.dp, Vga.White))
-                .background(Vga.Black)
-                .padding(3.dp)
-                .border(BorderStroke(1.dp, Vga.Yellow))
-                .background(Vga.Black),
-        ) {
-            // ---- header bar: label + live step progress dots ----
-            Row(
-                Modifier.fillMaxWidth().background(Vga.Yellow).padding(horizontal = 12.dp, vertical = 7.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    "DETECTIVE  TRAINING",
-                    color = Vga.Black, fontFamily = mono, fontWeight = FontWeight.Bold, fontSize = 12.sp,
-                )
-                Spacer(Modifier.weight(1f))
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    for (i in 0 until Tutorial.STEPS) {
-                        Box(
-                            Modifier.size(7.dp).clip(CircleShape)
-                                .background(if (i <= step) Vga.Red else Vga.Black.copy(alpha = 0.25f))
-                                .border(BorderStroke(1.dp, Vga.Black), CircleShape),
-                        )
-                    }
-                }
+    // ---- dim everything except the target (four bands, so the control stays live) ----
+    Dim(v, 0f, 0f, 320f, t.y - m)
+    Dim(v, 0f, t.y + t.h + m, 320f, 200f - (t.y + t.h + m))
+    Dim(v, 0f, t.y - m, t.x - m, t.h + 2 * m)
+    Dim(v, t.x + t.w + m, t.y - m, 320f - (t.x + t.w + m), t.h + 2 * m)
+
+    // ---- pulsing highlight ring (decorative: no pointer input, so taps reach the control) ----
+    place(v, t.x - m, t.y - m, t.w + 2 * m, t.h + 2 * m) {
+        Box(Modifier.fillMaxSize()
+            .border(BorderStroke(v.w(1.5f), Vga.Yellow.copy(alpha = pulse)))
+            .padding(v.w(1f))
+            .border(BorderStroke(v.w(0.6f), Vga.White.copy(alpha = pulse * 0.8f))))
+    }
+
+    // ---- the tip card, hugging the free side of the target with a caret that points at it ----
+    val targetCx = t.x + t.w / 2f
+    val below = (t.y + t.h / 2f) <= 100f
+    val cardW = 200f
+    val cardCx = targetCx.coerceIn(cardW / 2f + 4f, 316f - cardW / 2f)
+    val cardX = cardCx - cardW / 2f
+    val caretLocalX = (targetCx - cardX - CARET_W / 2f).coerceIn(6f, cardW - 6f - CARET_W)
+
+    if (below) v.At(cardX, t.y + t.h + m, cardW, 200f - (t.y + t.h + m) - 3f, Alignment.TopStart) {
+        Column(Modifier.fillMaxWidth()) {
+            Caret(v, up = true, localX = caretLocalX)
+            TipPanel(v, vm, shown)
+        }
+    } else v.At(cardX, 12f, cardW, (t.y - m) - 12f, Alignment.BottomStart) {
+        Column(Modifier.fillMaxWidth()) {
+            TipPanel(v, vm, shown)
+            Caret(v, up = false, localX = caretLocalX)
+        }
+    }
+}
+
+/** A lesson currently being shown: which control (virtual rect) to spotlight, and what to say.
+ *  [info] tips have no single completing action, so they carry a GOT IT button. */
+private class Shown(val id: String, val target: R, val title: String, val text: String, val info: Boolean)
+
+/** The one relevant lesson for this game state, or null when the tour should stay quiet. Scanned in
+ *  teaching priority: interview → mind-the-clock → crime computer → follow-trail → warrant → arrest. */
+private fun lessonFor(s: GameState): Shown? {
+    val seen = s.tutorialSeen
+    fun un(id: String) = id !in seen
+
+    if (un("interview") && s.phase == Phase.CITY && s.onTrack && s.visited.size < 3)
+        return Shown("interview", TOOL_INVESTIGATE, "QUESTION THE WITNESSES",
+            "Open a place and talk to a witness — try all three here (${s.visited.size}/3). Each offers something different: where the suspect fled, what they look like, or just gossip.", false)
+
+    if (un("time") && s.phase == Phase.CITY && "interview" in seen)
+        return Shown("time", CLOCK, "MIND THE CLOCK",
+            "Three interviews — and look how far the clock jumped. You're on a deadline, so from here on you needn't question everyone: once you have a lead and a description, move on.", true)
+
+    if (un("computer") && s.sawTraitClue && s.warrantFor == null) when (s.phase) {
+        Phase.CITY -> return Shown("computer", TOOL_CRIME, "RECORD THE THIEF",
+            "A witness described the crook. Open the crime computer to log what you heard — one detail per city.", false)
+        Phase.CRIME -> {
+            // Keep coaching the exact row for a clue you've heard but not yet entered — repeating the
+            // hint — and only prompt COMPUTE once it's actually in, so you can't compute prematurely.
+            val need = s.revealedTraits.firstOrNull { (c, v) -> compVal(s, c) != v }
+            return if (need != null) {
+                val label = rowLabelOf(need.first)
+                Shown("computer", crtRow(rowIndexOf(need.first)), "ENTER THE CLUE",
+                    "A witness said the thief's ${label.lowercase()} is “${need.second}”. Tap the $label row, then tap it again until it reads ${need.second}.", false)
+            } else Shown("computer", CRT_COMPUTE, "RUN THE COMPUTER",
+                "That clue's logged. Tap COMPUTE — if several suspects still match, gather more as you travel until one is left.", false)
+        }
+        else -> {}
+    }
+
+    if (un("trail") && s.sawTrailClue && (s.phase == Phase.CITY || s.phase == Phase.CRIME))
+        return Shown("trail", TOOL_DEPART, "CHASE THE SUSPECT",
+            "Your witnesses hinted where the suspect fled next. Not sure of a place? Open Acme ▸ World Database to read up on each possible destination. Then tap the plane to fly there and stay on the chase.", false)
+
+    if (un("warrant") && s.warrantFor != null && (s.phase == Phase.CITY || s.phase == Phase.CRIME))
+        return Shown("warrant", CLOCK, "WARRANT ISSUED",
+            "That's your suspect! Now just follow the trail to their hideout and close in.", true)
+
+    if (un("arrest") && s.warrantFor != null && s.atHideout && s.phase == Phase.CITY)
+        return Shown("arrest", TOOL_INVESTIGATE, "MAKE THE ARREST",
+            "This is the hideout — search the venues here to catch them red-handed.", false)
+
+    return null
+}
+
+private class R(val x: Float, val y: Float, val w: Float, val h: Float)
+
+// The game's fixed layout, in 320x200 virtual pixels (see GameScreens.kt).
+private val TOOL_DEPART = R(190.75f, 163f, 41.75f, 32f)       // toolbar: plane / fly
+private val TOOL_INVESTIGATE = R(232.5f, 163f, 41.75f, 32f)  // toolbar: magnifying glass
+private val TOOL_CRIME = R(274.25f, 163f, 41.75f, 32f)       // toolbar: crime computer
+private val CLOCK = R(4f, 13f, 141f, 30f)                    // top-left city name / clock box
+private val CRT_COMPUTE = R(162f, 84f, 142f, 11f)          // crime computer: the COMPUTE row
+
+// The five CRT trait rows (image-relative y = 9 + i*10 inside the CRT box at 150,16 → absolute).
+private fun crtRow(i: Int) = R(162f, 24f + i * 10f, 142f, 11f)
+private fun rowIndexOf(cat: String) = when (cat) { "sex" -> 0; "hobby" -> 1; "hair" -> 2; "feature" -> 3; else -> 4 }
+private fun rowLabelOf(cat: String) = listOf("SEX", "HOBBY", "HAIR", "FEATURE", "VEHICLE")[rowIndexOf(cat)]
+private fun compVal(s: GameState, cat: String) = when (cat) {
+    "sex" -> s.compSex; "hobby" -> s.compHobby; "hair" -> s.compHair; "feature" -> s.compFeature; else -> s.compVehicle
+}
+
+private const val CARET_W = 9f
+private const val CARET_H = 4.5f
+
+/** A small triangle pointing at the target, sitting on the card edge nearest it. */
+@Composable
+private fun Caret(v: Virtual, up: Boolean, localX: Float) {
+    Box(Modifier.fillMaxWidth().height(v.w(CARET_H))) {
+        Canvas(Modifier.offset(v.w(localX), v.w(0)).size(v.w(CARET_W), v.w(CARET_H))) {
+            val w = size.width; val h = size.height
+            val path = Path().apply {
+                if (up) { moveTo(w / 2f, 0f); lineTo(0f, h); lineTo(w, h) }
+                else { moveTo(0f, 0f); lineTo(w, 0f); lineTo(w / 2f, h) }
+                close()
             }
-
-            // ---- body: step number eyebrow + the tip text ----
-            Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-                Text(
-                    "STEP ${step + 1} OF ${Tutorial.STEPS}",
-                    color = Vga.Yellow, fontFamily = mono, fontWeight = FontWeight.Bold, fontSize = 10.sp,
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    message,
-                    color = Vga.White, fontFamily = mono, fontSize = 15.sp, lineHeight = 21.sp,
-                )
-            }
-
-            // ---- footer: SKIP (ghost) + GOT IT (primary) ----
-            Row(
-                Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 14.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                GhostButton("SKIP", Modifier.weight(1f)) { vm.skipTutorial() }
-                PrimaryButton("GOT IT", Modifier.weight(1f)) { acked = step }
+            // Up-caret merges into the yellow header; down-caret is the panel narrowing to a point.
+            drawPath(path, if (up) Vga.Yellow else Vga.Black)
+            if (!up) {
+                val stroke = h * 0.16f
+                drawLine(Vga.White, Offset(0f, 0f), Offset(w / 2f, h), stroke)
+                drawLine(Vga.White, Offset(w, 0f), Offset(w / 2f, h), stroke)
             }
         }
     }
 }
 
-/** Subdued outlined action — visually recedes so it never competes with the primary. */
 @Composable
-private fun GhostButton(label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Box(
-        modifier
-            .border(BorderStroke(1.dp, Vga.LightGray))
-            .clickable(onClick = onClick).tappable("Skip tutorial")
-            .padding(vertical = 9.dp),
-        contentAlignment = Alignment.Center,
+private fun TipPanel(v: Virtual, vm: ClaraViewModel, shown: Shown) {
+    Column(
+        Modifier.fillMaxWidth()
+            .border(BorderStroke(v.w(1.5f), Vga.White)).background(Vga.Black)
+            .padding(v.w(1.2f)).border(BorderStroke(v.w(0.6f), Vga.Yellow)),
     ) {
-        Text(label, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, color = Vga.LightGray, fontSize = 13.sp)
-    }
-}
-
-/** Primary action styled like the game's DOS button: yellow fill, black frame, a hard drop
- *  shadow for a pressed-in look, and bold red label. */
-@Composable
-private fun PrimaryButton(label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Box(modifier) {
-        // hard shadow slab behind the button face
-        Box(
-            Modifier.fillMaxWidth().height(38.dp)
-                .padding(start = 2.dp, top = 2.dp)
-                .background(Vga.Black),
-        )
-        Box(
-            Modifier.fillMaxWidth().height(38.dp)
-                .padding(end = 2.dp, bottom = 2.dp)
-                .background(Vga.Yellow)
-                .border(BorderStroke(2.dp, Vga.Black))
-                .clickable(onClick = onClick).tappable("Got it"),
-            contentAlignment = Alignment.Center,
+        // ---- header: a little "?" badge + the lesson title ----
+        Row(
+            Modifier.fillMaxWidth().background(Vga.Yellow).padding(horizontal = v.w(5), vertical = v.w(3.2f)),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                label,
-                fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold,
-                color = Vga.Red, fontSize = 14.sp, textAlign = TextAlign.Center,
-            )
+            Box(Modifier.size(v.w(7f)).background(Vga.Black), contentAlignment = Alignment.Center) {
+                Text("?", style = v.text(6.5f, Vga.Yellow, bold = true))
+            }
+            Spacer(Modifier.width(v.w(4)))
+            Text(shown.title, style = v.text(9, Vga.Black, bold = true))
+        }
+        // ---- body ----
+        Text(shown.text, style = v.text(8, Vga.White),
+            modifier = Modifier.padding(horizontal = v.w(6), vertical = v.w(4.5f)))
+        // ---- footer: GOT IT (info tips) or a "do it" nudge, plus Skip tour ----
+        Row(
+            Modifier.fillMaxWidth().padding(start = v.w(6), end = v.w(5), bottom = v.w(4)),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (shown.info) Pill(v, "GOT IT", primary = true) { vm.dismissTip(shown.id) }
+            else Text("▸ try it", style = v.text(6.5f, Vga.LightGreen, bold = true))
+            Spacer(Modifier.weight(1f))
+            Pill(v, "Skip tour", primary = false) { vm.skipTutorial() }
         }
     }
 }
 
-private val gameplayPhases = setOf(Phase.BRIEFING, Phase.CITY, Phase.CRIME)
+/** A small DOS-flavoured button: primary = yellow fill + red label; ghost = outlined + grey label. */
+@Composable
+private fun Pill(v: Virtual, label: String, primary: Boolean, onClick: () -> Unit) {
+    if (primary) Box(
+        Modifier.background(Vga.Yellow).border(BorderStroke(v.w(0.8f), Vga.Black))
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick)
+            .labelled(label).padding(horizontal = v.w(6), vertical = v.w(2.6f)),
+    ) { Text(label, style = v.text(7.5f, Vga.Red, bold = true)) }
+    else Box(
+        Modifier.border(BorderStroke(v.w(0.6f), Vga.LightGray))
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick)
+            .tappable(label).padding(horizontal = v.w(5), vertical = v.w(2.6f)),
+    ) { Text(label, style = v.text(7f, Vga.LightGray, bold = true)) }
+}
+
+/** A dim band; skips zero/negative rects and swallows taps so only the spotlight is tappable. */
+@Composable
+private fun Dim(v: Virtual, x: Float, y: Float, w: Float, h: Float) {
+    if (w <= 0.4f || h <= 0.4f) return
+    place(v, x, y, w, h) {
+        Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f))
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {})
+    }
+}
+
+/** Position a box at a virtual rect (clamped into the canvas). */
+@Composable
+private fun place(v: Virtual, x: Float, y: Float, w: Float, h: Float, content: @Composable BoxScope.() -> Unit) {
+    val cx = x.coerceIn(0f, 320f); val cy = y.coerceIn(0f, 200f)
+    v.At(cx, cy, (x + w - cx).coerceAtMost(320f - cx).coerceAtLeast(0f),
+        (y + h - cy).coerceAtMost(200f - cy).coerceAtLeast(0f), content = content)
+}

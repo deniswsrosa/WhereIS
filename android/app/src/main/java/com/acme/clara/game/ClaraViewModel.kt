@@ -156,9 +156,16 @@ data class GameState(
     val hadCleanCase: Boolean = false,
     // free hints banked from returning after time away (spend without losing the hint-free badge)
     val freeHints: Int = 0,
-    // the guided first case: tutorialStep 0..6 while it runs (-1 = none); tutorialDone once seen
+    // The guided first case is a set of contextual, teach-once lessons rather than a linear step
+    // counter: each lesson fires the first time its game state is true and clears when the player
+    // does the action. [tutorialActive] = the tour is running now; [tutorialDone] = it has run once
+    // (never re-arms); [tutorialSeen] = lesson ids already taught; the sawClue flags arm the lessons
+    // that only make sense once you've actually heard that kind of witness.
     val tutorialDone: Boolean = false,
-    val tutorialStep: Int = -1,
+    val tutorialActive: Boolean = false,
+    val tutorialSeen: Set<String> = emptySet(),
+    val sawTraitClue: Boolean = false,
+    val sawTrailClue: Boolean = false,
     // Level rules: the deadline for THIS case, set by Progression from the route's travel need +
     // the rank's slack (see docs/05-game-design-and-progression.md). 152 = the legacy fixed value.
     val caseDeadlineHours: Int = 152,
@@ -267,8 +274,14 @@ class ClaraViewModel : ViewModel() {
 
     // ---------- tutorial ----------
     /** Advance the guided tutorial when the player performs the step's taught action. */
-    private fun advanceTut(from: Int) { if (s.tutorialStep == from) s = s.copy(tutorialStep = from + 1) }
-    fun skipTutorial() { s = s.copy(tutorialStep = -1, tutorialDone = true); autosave() }
+    /** Mark a tour lesson as taught/done, so its coach-mark won't show again. No-op once the tour
+     *  is over or the lesson is already seen. */
+    private fun teach(id: String) {
+        if (s.tutorialActive && id !in s.tutorialSeen) s = s.copy(tutorialSeen = s.tutorialSeen + id)
+    }
+    /** Dismiss an informational tip (the ones with no single action to complete them). */
+    fun dismissTip(id: String) { teach(id) }
+    fun skipTutorial() { s = s.copy(tutorialActive = false, tutorialDone = true); autosave() }
 
     /** Ask for a layered hint. Spends a banked free hint if there is one; otherwise it costs the
      *  case's hint-free badge. The hint is shown as an Info overlay. */
@@ -328,17 +341,17 @@ class ClaraViewModel : ViewModel() {
         autosave()
     }
 
-    fun beginInvestigation() { s = s.copy(phase = Phase.CITY); advanceTut(0) }
+    fun beginInvestigation() { s = s.copy(phase = Phase.CITY) }
 
     // ---------- navigation ----------
     fun gotoCity() { s = s.copy(phase = Phase.CITY) }
-    fun gotoTravel() { s = s.copy(phase = Phase.TRAVEL, selectedTool = 1) }
+    fun gotoTravel() { s = s.copy(phase = Phase.TRAVEL, selectedTool = 1); teach("interview"); teach("trail"); teach("time"); teach("warrant") }
     // The player fills in the suspect's description themselves — the computer is not pre-populated.
-    fun gotoCrime() { s = s.copy(phase = Phase.CRIME, selectedTool = 3); cue(SoundCue.FLASH) }
+    fun gotoCrime() { s = s.copy(phase = Phase.CRIME, selectedTool = 3); cue(SoundCue.FLASH); teach("time") }
     fun selectTool(i: Int) { s = s.copy(selectedTool = i) }
 
     // ---------- menu bar ----------
-    fun openOverlay(o: Overlay) { s = s.copy(overlay = o); if (o is Overlay.Almanac) advanceTut(2) }
+    fun openOverlay(o: Overlay) { s = s.copy(overlay = o) }
     fun dismissOverlay() { s = s.copy(overlay = null) }
     fun menuNewCase() { s = s.copy(overlay = null, phase = Phase.BRIEFING); newCase(); cue(SoundCue.BRIEFING); autosave() }
 
@@ -408,7 +421,8 @@ class ClaraViewModel : ViewModel() {
             // L4: mark the briefing city as seen this case.
             cityLastSeen = s.cityLastSeen + (cities.first() to s.casesSolved),
             wrongFlights = 0, hintsUsed = 0, journal = emptyList(),
-            tutorialStep = if (isTutorial) 0 else -1, tutorialDone = s.tutorialDone || isTutorial,
+            tutorialActive = isTutorial, tutorialDone = s.tutorialDone || isTutorial,
+            tutorialSeen = emptySet(), sawTraitClue = false, sawTrailClue = false,
             openClue = null,
             compSex = null, compHobby = null, compHair = null, compFeature = null, compVehicle = null,
             warrantFor = null, computed = false, won = false, resultLines = emptyList(),
@@ -489,11 +503,18 @@ class ClaraViewModel : ViewModel() {
             fun lead(frag: String) = pronouns("${GameData.clueLeadIns.random()} {s} $frag.")
             fun flagText() = pronouns("${GameData.clueLeadIns.random()} {s} sketched a flag — ${info!!.flag}.")
             fun currencyText() = pronouns("${GameData.clueLeadIns.random()} {s} counted money called ${info!!.currency}.")
-            // A witness's comedic aside — usually a humor line, but occasionally a finale-nemesis tease.
-            fun witnessAside(): String? = if (shouldTeaseNemesis(st)) nemesisTease() else Humor.witnessLine(paid)
-            fun funnyText() = witnessAside() ?: "${flavourFood(st.culprit!!)}."
-            fun flourish(t: String) =
-                if (Random.nextInt(100) < 30) witnessAside()?.let { "$t $it" } ?: t else t
+            // Whiff (venue 3's no-clue outcome): a standalone witness aside, or a nemesis whisper.
+            fun funnyText() =
+                (if (shouldTeaseNemesis(st)) nemesisTease() else Humor.witnessLine(paid))
+                    ?: "${flavourFood(st.culprit!!)}."
+            // Flourish: tack a line that's ABOUT the suspect onto the clue (pronoun-matched, so it
+            // reads as the same witness carrying on) — or, occasionally, a nemesis whisper.
+            fun flourish(t: String): String {
+                if (Random.nextInt(100) >= 30) return t
+                val aside = if (shouldTeaseNemesis(st)) nemesisTease()
+                            else Humor.suspectAside(paid)?.let { suspectPronouns(it) }
+                return aside?.let { "$t $it" } ?: t
+            }
             fun nextGeneral(): String? { val g = generals.removeFirstOrNull() ?: return null; used += "g:$g"; return g }
             fun flagFree() = info?.flag != null && "flag" !in used
             fun curFree() = info?.currency != null && "cur" !in used
@@ -595,6 +616,18 @@ class ClaraViewModel : ViewModel() {
             .replace("{p}", if (female) "her" else "his")
     }
 
+    /** Rewrite a suspect-aside line's generic "They/them/their" to the culprit's singular pronoun,
+     *  so a tacked-on witness quip reads as the same person describing the same crook. */
+    private fun suspectPronouns(line: String): String {
+        val female = s.culprit?.sex == "Female"
+        return line
+            .replace(Regex("\\bThey\\b"), if (female) "She" else "He")
+            .replace(Regex("\\bthey\\b"), if (female) "she" else "he")
+            .replace(Regex("\\bthem\\b"), if (female) "her" else "him")
+            .replace(Regex("\\btheir\\b"), if (female) "her" else "his")
+            .replace(Regex("\\bthemselves\\b"), if (female) "herself" else "himself")
+    }
+
     private fun traitClue(tr: Pair<String, String>): String {
         val (cat, v) = tr
         // §19: sex is never its own clue in the original — it rides inside every trait
@@ -669,7 +702,13 @@ class ClaraViewModel : ViewModel() {
             else -> 0
         }
         s = st.copy(openClue = v, sightingLevel = level)
-        advanceTut(1)
+        // Tour: opening any venue teaches "interview"; the kind of witness arms the follow-on lesson
+        // (a description → the crime computer; a trail hint → identify & fly); at the hideout the
+        // search itself is the arrest lesson.
+        if (s.visited.size >= 3) teach("interview")   // taught once the player has tried all three venues
+        if (firstVisit && v.kind == ClueKind.TRAIT) s = s.copy(sawTraitClue = true)
+        if (firstVisit && v.kind == ClueKind.DESTINATION) s = s.copy(sawTrailClue = true)
+        if (s.atHideout) teach("arrest")
         checkDeadline()
         autosave()
     }
@@ -791,7 +830,6 @@ class ClaraViewModel : ViewModel() {
         if (s.flying != null) return
         s = s.copy(flying = city, flightHours = flightHoursTo(city))
         cue(SoundCue.TRAVEL)
-        advanceTut(3)
     }
 
     /** Flight animation finished: apply the arrival. */
@@ -830,7 +868,6 @@ class ClaraViewModel : ViewModel() {
             "hair" -> s.copy(compHair = value); "feature" -> s.copy(compFeature = value)
             else -> s.copy(compVehicle = value)
         }.copy(computed = false)
-        advanceTut(4)
         autosave()   // a computer entry is case state — persist so a reload can't rewind it
     }
 
@@ -861,13 +898,23 @@ class ClaraViewModel : ViewModel() {
         if (issuedWarrant) st = st.copy(warrantFor = m.first())
         s = st
         if (issuedWarrant) cue(SoundCue.WARRANT)   // "You now have a warrant to arrest X."
-        if (issuedWarrant) advanceTut(5)
+        // Tour: only count the computer lesson as learned once a trait a witness actually gave is in
+        // the machine — so computing early with a wrong/empty guess keeps the coaching on-screen.
+        if (enteredHeardTrait()) teach("computer")
         checkDeadline()
         autosave()
     }
 
     fun anyFilterSet(): Boolean =
         listOf(s.compSex, s.compHobby, s.compHair, s.compFeature, s.compVehicle).any { it != null }
+
+    /** True once the computer holds at least one trait a witness has actually revealed this case. */
+    private fun enteredHeardTrait(): Boolean = s.revealedTraits.any { (cat, value) ->
+        when (cat) {
+            "sex" -> s.compSex; "hobby" -> s.compHobby; "hair" -> s.compHair
+            "feature" -> s.compFeature; else -> s.compVehicle
+        } == value
+    }
 
     // ---------- endings ----------
     private fun checkDeadline() { if (s.deadlinePassed) escaped("time") }
@@ -967,7 +1014,7 @@ class ClaraViewModel : ViewModel() {
         next = next.copy(
             unlockedAchievements = next.unlockedAchievements +
                 Achievements.earned(Achievements.summarise(next)),
-            tutorialDone = true, tutorialStep = -1,
+            tutorialDone = true, tutorialActive = false,
         )
         s = next
         autosave()

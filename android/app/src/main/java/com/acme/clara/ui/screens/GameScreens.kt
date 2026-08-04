@@ -166,7 +166,10 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
 
     suspend fun typeLines(lines: List<String>) {
         var n = 0
-        for (ln in lines) {
+        // The paper sheet is short, so wrap every phrase to its width and roll ONE line at a time —
+        // otherwise a long phrase types as a single tall block and its first rows scroll off the top
+        // before it finishes. Blank strings are kept as-is (they're intentional spacer lines).
+        for (raw in lines) for (ln in if (raw.isBlank()) listOf(raw) else paperWrap(raw, 22)) {
             typing = ""
             for (ch in ln) {
                 typing += ch
@@ -510,6 +513,7 @@ fun CityScreen(vm: ClaraViewModel) = VirtualScreen { v ->
             onCancel = { if (walkingTo < 0) showVenues = false })
     }
     OverlayHost(v, vm)
+    com.acme.clara.ui.Tour(v, vm, suppressed = showVenues || walkingTo >= 0 || seeOpen)
 }
 
 /** The SEE tool's dropdown (dos_see_dropdown_open_hide_icon.png): it replaces the city/date
@@ -1227,6 +1231,9 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
         onInvestigate = { vm.selectTool(2); vm.gotoCity() })
     if (showStamp) WarrantStamp(v, reduce) { showStamp = false }
     OverlayHost(v, vm)
+    // Suppress while the printer is still clattering out the suspect list, so the player reads the
+    // result before the next tip (chase the suspect) appears.
+    com.acme.clara.ui.Tour(v, vm, suppressed = printing)
 }
 
 /** S2: the "WARRANT ISSUED · APPROVED" stamp — a ritual beat that slams in when the roster

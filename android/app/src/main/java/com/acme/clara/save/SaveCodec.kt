@@ -101,7 +101,10 @@ object SaveCodec {
         "expansionUnlocked" to s.expansionUnlocked,
         "freeHints" to s.freeHints,
         "tutorialDone" to s.tutorialDone,
-        "tutorialStep" to s.tutorialStep,
+        "tutorialActive" to s.tutorialActive,
+        "tutorialSeen" to s.tutorialSeen.toList(),
+        "sawTraitClue" to s.sawTraitClue,
+        "sawTrailClue" to s.sawTrailClue,
     )
 
     private fun readState(m: Map<*, *>): GameState {
@@ -159,7 +162,10 @@ object SaveCodec {
             hadCleanCase = bool(m["hadCleanCase"], false),
             freeHints = int(m["freeHints"]),
             tutorialDone = bool(m["tutorialDone"], false),
-            tutorialStep = int(m["tutorialStep"], -1),
+            tutorialActive = bool(m["tutorialActive"], false),
+            tutorialSeen = strList(m["tutorialSeen"]).toSet(),
+            sawTraitClue = bool(m["sawTraitClue"], false),
+            sawTrailClue = bool(m["sawTrailClue"], false),
         )
     }
 

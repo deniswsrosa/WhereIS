@@ -107,6 +107,5 @@ fun ClaraApp() {
             Phase.CHOOSE_GAME -> ChooseGameScreen(vm)
         }
         com.acme.clara.ui.CaptionOverlay(vm)
-        com.acme.clara.ui.TutorialCoach(vm)
     }
 }
