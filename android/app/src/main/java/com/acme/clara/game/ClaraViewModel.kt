@@ -487,9 +487,11 @@ class ClaraViewModel : ViewModel() {
             fun lead(frag: String) = pronouns("${GameData.clueLeadIns.random()} {s} $frag.")
             fun flagText() = pronouns("${GameData.clueLeadIns.random()} {s} sketched a flag — ${info!!.flag}.")
             fun currencyText() = pronouns("${GameData.clueLeadIns.random()} {s} counted money called ${info!!.currency}.")
-            fun funnyText() = Humor.witnessLine(paid) ?: "${flavourFood(st.culprit!!)}."
+            // A witness's comedic aside — usually a humor line, but occasionally a finale-nemesis tease.
+            fun witnessAside(): String? = if (shouldTeaseNemesis(st)) nemesisTease() else Humor.witnessLine(paid)
+            fun funnyText() = witnessAside() ?: "${flavourFood(st.culprit!!)}."
             fun flourish(t: String) =
-                if (Random.nextInt(100) < 30) Humor.witnessLine(paid)?.let { "$t $it" } ?: t else t
+                if (Random.nextInt(100) < 30) witnessAside()?.let { "$t $it" } ?: t else t
             fun nextGeneral(): String? { val g = generals.removeFirstOrNull() ?: return null; used += "g:$g"; return g }
             fun flagFree() = info?.flag != null && "flag" !in used
             fun curFree() = info?.currency != null && "cur" !in used
@@ -620,8 +622,10 @@ class ClaraViewModel : ViewModel() {
 
     // C3: the finale is always Clara San Diego, but nothing foreshadows her. Seed her name as
     // the shadowy boss behind ordinary cases so the ~14-case arc has a villain to build toward.
+    /** ~12% of the time (from case 2 on, when today's crook isn't Clara herself), a witness's
+     *  funny aside is instead a hushed tease about the finale nemesis — seeding the long arc. */
     private fun shouldTeaseNemesis(st: GameState): Boolean =
-        st.culprit?.name != "Clara San Diego" && st.casesSolved >= 1 && Random.nextInt(4) == 0
+        st.culprit?.name != "Clara San Diego" && st.casesSolved >= 1 && Random.nextInt(8) == 0
 
     private fun nemesisTease(): String = listOf(
         "The witness drops their voice: word is a woman named Clara San Diego runs the whole operation.",
