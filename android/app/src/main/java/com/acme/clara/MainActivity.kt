@@ -42,6 +42,7 @@ class MainActivity : ComponentActivity() {
             registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
                 .launch(Manifest.permission.POST_NOTIFICATIONS)
         }
+        com.acme.clara.i18n.Strings.init(this)
         setContent { ClaraApp() }
     }
 
@@ -70,6 +71,8 @@ fun ClaraApp() {
             is LaunchOutcome.Choose -> vm.toChooseGame()
         }
     }
+    // Reload the (per-language) humor corpus whenever the language changes.
+    LaunchedEffect(com.acme.clara.i18n.Strings.revision) { com.acme.clara.game.Humor.reload(context) }
     // Keep the audio engine's mute state in sync with the Options > Sound toggle.
     LaunchedEffect(vm.s.soundOn) { GameSound.setEnabled(context, vm.s.soundOn) }
     // The title theme plays over the intro and title only; it stops the moment you sit down at
@@ -94,18 +97,21 @@ fun ClaraApp() {
     androidx.compose.foundation.layout.Box(
         Modifier.fillMaxSize().background(Vga.Black).windowInsetsPadding(WindowInsets.systemBars)
     ) {
-        when (vm.s.phase) {
-            Phase.INTRO -> IntroScreen(vm)
-            Phase.TITLE -> TitleScreen(vm)
-            Phase.SIGN_ON -> SignOnScreen(vm)
-            Phase.BRIEFING -> BriefingScreen(vm)
-            Phase.CITY -> CityScreen(vm)
-            Phase.TRAVEL -> TravelScreen(vm)
-            Phase.CRIME -> CrimeScreen(vm)
-            Phase.CHASE -> ChaseScreen(vm)
-            Phase.RESULT -> ResultScreen(vm)
-            Phase.CHOOSE_GAME -> ChooseGameScreen(vm)
+        // Re-render the whole tree when the language changes so every Strings.get() re-reads.
+        androidx.compose.runtime.key(com.acme.clara.i18n.Strings.revision) {
+            when (vm.s.phase) {
+                Phase.INTRO -> IntroScreen(vm)
+                Phase.TITLE -> TitleScreen(vm)
+                Phase.SIGN_ON -> SignOnScreen(vm)
+                Phase.BRIEFING -> BriefingScreen(vm)
+                Phase.CITY -> CityScreen(vm)
+                Phase.TRAVEL -> TravelScreen(vm)
+                Phase.CRIME -> CrimeScreen(vm)
+                Phase.CHASE -> ChaseScreen(vm)
+                Phase.RESULT -> ResultScreen(vm)
+                Phase.CHOOSE_GAME -> ChooseGameScreen(vm)
+            }
+            com.acme.clara.ui.CaptionOverlay(vm)
         }
-        com.acme.clara.ui.CaptionOverlay(vm)
     }
 }

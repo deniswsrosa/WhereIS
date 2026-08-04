@@ -26,20 +26,32 @@ object Humor {
     private var self: List<Line> = emptyList()      // day_job, by occupation
     private var suspect: List<Line> = emptyList()   // on_trail, by occupation (pronoun-convertible only)
     private var arrivalFree: List<String> = emptyList(); private var arrivalAll: List<String> = emptyList()
-    @Volatile private var loaded = false
+    @Volatile private var loadedLang: String? = null
 
     // "They <present-tense/contraction>" wouldn't survive rewriting "They" -> singular "He/She".
     private val unconvertible = Regex(
         "\\bthey\\s+(are|were|have|has|do|don'?t|keep|want|seem|will|can|'re|'ve|'ll)\\b",
         RegexOption.IGNORE_CASE)
 
-    fun init(context: Context) {
-        if (loaded) return
+    fun init(context: Context) = load(context)
+
+    /** Reload for the current language (call when the language changes). */
+    fun reload(context: Context) = load(context)
+
+    private fun load(context: Context) {
+        val lang = com.acme.clara.i18n.Strings.language
+        if (loadedLang == lang) return
         synchronized(this) {
-            if (loaded) return
+            if (loadedLang == lang) return
+            val ctx = context.applicationContext
+            // Per-language humor lives in humor_<lang>.json; fall back to the English humor.json.
+            val text = runCatching {
+                val file = if (lang == "en") "humor.json" else "humor_$lang.json"
+                ctx.assets.open(file).bufferedReader().use { it.readText() }
+            }.getOrNull() ?: runCatching {
+                ctx.assets.open("humor.json").bufferedReader().use { it.readText() }
+            }.getOrNull() ?: return
             runCatching {
-                val text = context.applicationContext.assets.open("humor.json")
-                    .bufferedReader().use { it.readText() }
                 val arr = JSONArray(text)
                 val sf = ArrayList<Line>(); val pf = ArrayList<Line>()
                 val aF = ArrayList<String>(); val aA = ArrayList<String>()
@@ -55,7 +67,7 @@ object Humor {
                     }
                 }
                 self = sf; suspect = pf; arrivalFree = aF; arrivalAll = aA
-                loaded = true
+                loadedLang = lang
             }
         }
     }

@@ -94,7 +94,25 @@ object CityMeta {
             "Tokyo, with a population of about 14 million people, is the capital and largest city in Japan.", false, "city_tokyo", greeting = "In Japanese, hello is “Konnichiwa” (kohn-nee-chee-WAH).", flag = "white with a large red circle in the center", currency = "the yen"),
     ).associateBy { it.name }
 
-    fun of(name: String): CityInfo = all[name] ?: Expansion.byName[name] ?: Expansion2.byName[name]
+    fun of(name: String): CityInfo = localize(all[name] ?: Expansion.byName[name] ?: Expansion2.byName[name]
         ?: CityInfo(name, "the world", "the city",
-            "$name is one of the great cities of the world.", false)
+            "$name is one of the great cities of the world.", false))
+
+    /** Overlay the active-language translations onto a city's DISPLAY text (keys `city.<name>.<field>`).
+     *  English is a no-op — untranslated keys fall back to the Kotlin value, so the build never breaks
+     *  and partial translations degrade gracefully. Name/region/currency stay canonical (region is a
+     *  logic switch-key; currency names are language-neutral and templated by the clue). */
+    private fun localize(c: CityInfo): CityInfo {
+        if (com.acme.clara.i18n.Strings.language == "en") return c
+        val s = com.acme.clara.i18n.Strings
+        val n = c.name
+        return c.copy(
+            description = s.opt("city.$n.description") ?: c.description,
+            landmark = s.opt("city.$n.landmark") ?: c.landmark,
+            greeting = c.greeting?.let { s.opt("city.$n.greeting") ?: it },
+            flag = c.flag?.let { s.opt("city.$n.flag") ?: it },
+            clues = if (c.clues.isEmpty()) c.clues
+                    else c.clues.mapIndexed { i, cl -> s.opt("city.$n.clue.$i") ?: cl },
+        )
+    }
 }

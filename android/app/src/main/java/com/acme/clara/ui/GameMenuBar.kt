@@ -70,6 +70,7 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
                 com.acme.clara.notify.Reminders.setEnabled(menuCtx, !com.acme.clara.notify.Reminders.enabled(menuCtx))
             },
             MenuItemDef(" Joystick") { vm.showJoystick() },
+            MenuItemDef(" Language...") { vm.openOverlay(Overlay.Language) },
         ))
         MenuTitle(v, "Acme", listOf(
             MenuItemDef("Hint") { vm.requestHint() },
@@ -129,6 +130,7 @@ fun OverlayHost(v: Virtual, vm: ClaraViewModel) {
     val o = vm.s.overlay ?: return
     if (o is Overlay.Dossier) { DossierWindow(v, o.suspect) { vm.dismissOverlay() }; return }
     if (o is Overlay.ConfirmQuit) { ConfirmQuitDialog(v, vm); return }
+    if (o is Overlay.Language) { LanguageWindow(v, vm); return }
     if (o is Overlay.MostWanted) { MostWantedWindow(v, vm); return }
     if (o is Overlay.Commendations) { CommendationsWindow(v, vm); return }
     if (o is Overlay.Almanac) { AlmanacWindow(v, vm); return }
@@ -147,6 +149,7 @@ fun OverlayHost(v: Virtual, vm: ClaraViewModel) {
         else listOf("${vm.s.detectiveName}", "${GameData.ranks[vm.s.rankIndex]} — ${vm.s.casesSolved} case(s)")
         is Overlay.Dossier -> "" to emptyList()   // handled by DossierWindow above
         Overlay.ConfirmQuit -> "" to emptyList()  // handled by ConfirmQuitDialog above
+        Overlay.Language -> "" to emptyList()     // handled by LanguageWindow above
         Overlay.MostWanted -> "" to emptyList()   // handled by MostWantedWindow above
         Overlay.Commendations -> "" to emptyList()// handled by CommendationsWindow above
         Overlay.Almanac -> "" to emptyList()      // handled by AlmanacWindow above
@@ -204,6 +207,37 @@ private fun QuitButton(v: Virtual, label: String, onClick: () -> Unit) {
         .clickable(onClick = onClick).padding(horizontal = v.w(10), vertical = v.w(2)),
         contentAlignment = Alignment.Center) {
         Text(label, style = v.text(8.5f, color = Vga.Red, bold = true))
+    }
+}
+
+/** Options > Language — pick the interface language; each row is shown in its own language. */
+@Composable
+private fun LanguageWindow(v: Virtual, vm: ClaraViewModel) {
+    Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
+        contentAlignment = Alignment.Center) {
+        Column(
+            Modifier.fillMaxWidth(0.72f).fillMaxHeight(0.9f).background(Vga.Blue).padding(v.w(6)),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(com.acme.clara.i18n.Strings.get("menu.language.title"),
+                style = v.text(10, color = Vga.Yellow, bold = true))
+            Spacer(Modifier.height(v.w(4)))
+            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
+                com.acme.clara.i18n.Strings.LANGUAGES.forEach { (code, name) ->
+                    val sel = code == com.acme.clara.i18n.Strings.language
+                    Box(Modifier.fillMaxWidth().padding(vertical = v.w(0.8f))
+                        .then(if (sel) Modifier.background(Vga.White) else Modifier)
+                        .clickable { com.acme.clara.i18n.Strings.setLanguage(code); vm.dismissOverlay() }
+                        .padding(vertical = v.w(2)),
+                        contentAlignment = Alignment.Center) {
+                        Text(name, style = v.text(9, color = if (sel) Vga.Blue else Vga.White, bold = sel))
+                    }
+                }
+            }
+            Spacer(Modifier.height(v.w(3)))
+            DosButton("CLOSE", fill = Vga.Green, textColor = Vga.White,
+                style = v.text(9, bold = true)) { vm.dismissOverlay() }
+        }
     }
 }
 

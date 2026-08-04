@@ -42,6 +42,8 @@ sealed interface Overlay {
     data object Passport : Overlay
     /** Game > Quit — the original's "Do you really want to quit?" Yes/No dialog. */
     data object ConfirmQuit : Overlay
+    /** Options > Language — pick the interface language. */
+    data object Language : Overlay
     /** One suspect's dossier — the white typed-on window from the original's Dossiers menu. */
     data class Dossier(val suspect: Suspect) : Overlay
     data class Info(val title: String, val lines: List<String>) : Overlay
@@ -345,7 +347,13 @@ class ClaraViewModel : ViewModel() {
 
     // ---------- navigation ----------
     fun gotoCity() { s = s.copy(phase = Phase.CITY) }
-    fun gotoTravel() { s = s.copy(phase = Phase.TRAVEL, selectedTool = 1); teach("interview"); teach("trail"); teach("time"); teach("warrant") }
+    fun gotoTravel() {
+        val wrongCity = !s.onTrack
+        s = s.copy(phase = Phase.TRAVEL, selectedTool = 1)
+        teach("interview"); teach("time"); teach("warrant")
+        // "trail" is taught on the actual flight (travelTo), so its coach can guide the map pick.
+        if (wrongCity) teach("wrongflight")   // they took the hint and are flying back
+    }
     // The player fills in the suspect's description themselves — the computer is not pre-populated.
     fun gotoCrime() { s = s.copy(phase = Phase.CRIME, selectedTool = 3); cue(SoundCue.FLASH); teach("time") }
     fun selectTool(i: Int) { s = s.copy(selectedTool = i) }
@@ -834,6 +842,7 @@ class ClaraViewModel : ViewModel() {
         if (s.flying != null) return
         s = s.copy(flying = city, flightHours = flightHoursTo(city))
         cue(SoundCue.TRAVEL)
+        teach("trail")   // committing to a flight completes the follow-the-trail lesson
     }
 
     /** Flight animation finished: apply the arrival. */
