@@ -379,10 +379,12 @@ class ClaraViewModel : ViewModel() {
         val cityPool = activeCities()
         val picked = SpacedRepetition.pickRoute(cityPool, s.cityLastSeen, s.casesSolved, routeLen)
         val cities = capNewPerCase(picked, s.cityLastSeen.keys, Progression.newPerCase(s.rankIndex), cityPool)
-        // Level rules: the case deadline covers the route's real travel (+ overnight) plus this
-        // rank's slack, so every case is completable and slack is the shrinking fairness margin.
-        val flightSum = cities.zipWithNext { a, b -> flightCost(a, b) }.sum()
-        val caseDeadline = Progression.caseDeadlineHours(s.rankIndex, flightSum, routeLen)
+        // Deadline = a simulation of an efficient run's clock (a couple of witness opens per city +
+        // the real flights, with the same overnight rolls) plus this rank's slack. Simulating rather
+        // than approximating means slack stays a true margin whatever the flight lengths — the linear
+        // formula was tuned on the free career's short hops and left the long-flight paid grades
+        // unwinnable.
+        val caseDeadline = estimateEfficientClock(cities) + Progression.slackHours(s.rankIndex)
         // the guided first case runs once, on a brand-new career's opening Rookie case
         val isTutorial = !s.tutorialDone && s.casesSolved == 0 && s.rankIndex == 0
         android.util.Log.d("Carmen", "case: culprit=${culprit.name} route=$cities")
@@ -689,6 +691,26 @@ class ClaraViewModel : ViewModel() {
         if (hour >= 22) { clock += (24 - hour) + 8; slept = true }
         else if (hour < 8) { clock += 8 - hour; slept = true }
         return st.copy(clock = clock, sleeping = st.sleeping || slept)
+    }
+
+    /** The overnight roll as a pure number, for estimating a case's clock at generation time. */
+    private fun rollClock(clock: Int, hours: Int): Int {
+        var c = clock + hours
+        val hour = (9 + c) % 24
+        if (hour >= 22) c += (24 - hour) + 8 else if (hour < 8) c += 8 - hour
+        return c
+    }
+
+    /** Estimate the clock an efficient run of this route burns: a couple of witness opens per city
+     *  (more early, while you're still building the warrant) plus the real flight between each, with
+     *  the same overnight rolls play incurs — then a short hideout search. The deadline adds slack. */
+    private fun estimateEfficientClock(cities: List<String>): Int {
+        var clock = 0
+        cities.zipWithNext().forEachIndexed { i, (a, b) ->
+            clock = rollClock(clock, if (i < 2) 8 else 6)     // investigate (warrant-building costs more early)
+            clock = rollClock(clock, flightCost(a, b))         // fly to the next city
+        }
+        return rollClock(clock, 7)                             // search the hideout
     }
 
     // ---------- travel ----------

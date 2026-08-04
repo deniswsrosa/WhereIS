@@ -41,7 +41,8 @@ class FullPlaythroughByCluesTest {
     private class Report {
         var careersFinished = 0; var casesWon = 0
         var wrongFlights = 0; var forcedGuesses = 0; var venuesOpened = 0; var cityStops = 0
-        var minMargin = Int.MAX_VALUE; var minMarginTopFree = Int.MAX_VALUE
+        var minMargin = Int.MAX_VALUE; var minMarginTopFree = Int.MAX_VALUE; var minMarginTopGrade = Int.MAX_VALUE
+        var routeFallbacks = 0
         val failures = mutableListOf<String>()
     }
 
@@ -51,8 +52,15 @@ class FullPlaythroughByCluesTest {
         vm.closeClue()
     }
 
-    private fun playCase(vm: ClaraViewModel, r: Report): Boolean {
+    private fun playCase(vm: ClaraViewModel, r: Report, allowRoute: Boolean = false): Boolean {
         if (vm.s.phase == Phase.BRIEFING) vm.beginInvestigation()
+        // When the clues don't resolve, a free-career player is stuck guessing; a paid player is
+        // assumed to look the hand-authored lead up in the almanac (route fallback) — the test can't
+        // reverse-map those free-text clues, but everything else (deadline, warrant, whiffs) is real.
+        fun fallback(opts: List<String>): String {
+            if (allowRoute) vm.s.route.getOrNull(vm.s.progress + 1)?.let { if (it in opts) { r.routeFallbacks++; return it } }
+            r.forcedGuesses++; return opts.random()
+        }
         var lastTrail: List<String> = emptyList()
         var guard = 0
         while (guard++ < 120) {
@@ -70,7 +78,7 @@ class FullPlaythroughByCluesTest {
 
             if (!vm.s.onTrack) {
                 // wrong city: re-pick using the clues from the last on-track city against fresh options
-                val pick = identify(lastTrail, opts) ?: run { r.forcedGuesses++; opts.random() }
+                val pick = identify(lastTrail, opts) ?: fallback(opts)
                 vm.travelTo(pick); vm.arrive()
                 if (!vm.s.onTrack && !vm.s.atHideout) r.wrongFlights++
                 continue
@@ -92,14 +100,16 @@ class FullPlaythroughByCluesTest {
                 }
                 if (vm.s.deadlinePassed) break
                 val id = identify(trail, opts) != null
-                val haveWarrant = vm.s.warrantFor != null
-                if (id && (haveWarrant || gotTrait)) break   // efficient: stop once we know enough
+                val enoughHere = vm.s.warrantFor != null || gotTrait
+                // Free player must identify the trail from clues; a paid player will look the
+                // hand-authored lead up (route fallback), so it only needs its trait done here.
+                if (enoughHere && (id || allowRoute)) break   // efficient: stop once we know enough
             }
             r.cityStops++
             lastTrail = trail
             if (vm.s.deadlinePassed) break
 
-            val pick = identify(trail, opts) ?: run { r.forcedGuesses++; opts.random() }
+            val pick = identify(trail, opts) ?: fallback(opts)
             vm.travelTo(pick); vm.arrive()
             if (!vm.s.onTrack && !vm.s.atHideout) r.wrongFlights++
         }
@@ -138,5 +148,49 @@ class FullPlaythroughByCluesTest {
 
         assertTrue("every free career must be beatable by an efficient player " +
             "(finished ${r.careersFinished}/$careers)", r.careersFinished == careers)
+    }
+
+    @Test fun theWholeLadderIsWinnableIncludingThePaidGrades() {
+        // Climb from Rookie all the way to the top International grade. Free-career hops navigate by
+        // clue; paid hops fall back to an almanac lookup (their hand-authored leads aren't
+        // reverse-mappable), but the clock, warrant-building, promotions, venue-3 whiffs and the
+        // catch are all exercised for real — this is the check the free-career test can't give.
+        val r = Report()
+        val runs = 12
+        val casesEach = 100          // deep enough to climb well into the International grades
+        var minRankReached = 99
+        repeat(runs) { n ->
+            val vm = ClaraViewModel().apply { signOn("Interpol$n"); unlockExpansion() }
+            var guard = 0
+            while (guard++ < casesEach) {
+                val rank = vm.s.rankIndex
+                if (playCase(vm, r, allowRoute = true)) {
+                    r.casesWon++
+                    val margin = vm.s.caseDeadlineHours - vm.s.clock
+                    r.minMargin = minOf(r.minMargin, margin)
+                    if (rank >= 12) r.minMarginTopGrade = minOf(r.minMarginTopGrade, margin)
+                } else {
+                    r.failures.add("run $n LOST case ${vm.s.casesSolved + 1} (rank $rank): " +
+                        vm.s.resultLines.joinToString(" ").take(70)); break
+                }
+                if (vm.s.pendingPromotion) vm.resolvePromotion(true)
+                vm.nextCase()
+            }
+            minRankReached = minOf(minRankReached, vm.s.rankIndex)
+        }
+        val topGrade = if (r.minMarginTopGrade == Int.MAX_VALUE) "n/a" else "${r.minMarginTopGrade}h"
+
+        println("=============== FULL-LADDER PLAYTHROUGH (x$runs, $casesEach cases each) ===============")
+        println("lowest rank any run climbed to: $minRankReached (of 14)")
+        println("cases won: ${r.casesWon}   losses: ${r.failures.size}   wrong flights: ${r.wrongFlights}")
+        println("min spare hours at a win: ${r.minMargin}h overall   |   $topGrade at the top grade (12+)")
+        if (r.failures.isNotEmpty()) { println("---- problems ----"); r.failures.take(20).forEach { println("  - $it") } }
+        println("=================================================================================")
+
+        // The whole game must be beatable: no paid case ever lost or dead-ended, and progression
+        // actually carries you deep into the International grades.
+        assertTrue("no paid case may be lost or dead-end (${r.failures.size} failed)", r.failures.isEmpty())
+        assertTrue("progression must climb deep into the International grades (min rank $minRankReached)",
+            minRankReached >= 12)
     }
 }
