@@ -35,7 +35,7 @@ class ChooseGameScreenTest {
         compose.onNodeWithText("Ada").assertIsDisplayed()
         compose.onNodeWithText("Grace").assertIsDisplayed()
 
-        compose.onNodeWithText("— New Game —").performClick()
+        compose.onNodeWithText("+  NEW DETECTIVE").performClick()
         assertEquals("New Game routes to sign-on for a fresh career", Phase.SIGN_ON, vm.s.phase)
     }
 }

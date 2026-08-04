@@ -39,6 +39,6 @@ class AccessibilityTest {
         compose.setContent { ChooseGameScreen(vm) }
 
         compose.onNodeWithContentDescription("Continue Ada").assertIsDisplayed()
-        compose.onNodeWithContentDescription("Start a new game").assertIsDisplayed()
+        compose.onNodeWithContentDescription("+  NEW DETECTIVE").assertIsDisplayed()
     }
 }
