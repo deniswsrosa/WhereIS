@@ -1,5 +1,6 @@
 package com.acme.clara.ui.screens
 
+import com.acme.clara.audio.GameSound
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -38,6 +39,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.acme.clara.data.CityMeta
 import com.acme.clara.data.GameData
+import com.acme.clara.data.Progression
 import com.acme.clara.data.WorldMap
 import com.acme.clara.game.ClaraViewModel
 import com.acme.clara.game.Overlay
@@ -70,11 +72,9 @@ fun IntroScreen(vm: ClaraViewModel) = VirtualScreen { v ->
         // captions were baked into the DOS captures with the original's wording; the
         // bitmaps are wiped clean and the (reworded) lines drawn at runtime instead
         0 -> {
-            PixelImage("intro_presents", Modifier.fillMaxSize())
-            v.At(0, 161, 320, 18, Alignment.Center) {
-                Text("Acme Detective Agency Presents",
-                    style = v.text(9, color = Vga.White, bold = true))
-            }
+            // studio logo card: DENIX INC on a clean white background
+            Box(Modifier.fillMaxSize().background(Vga.White))
+            PixelImage("logo_denix", Modifier.fillMaxSize())
         }
         3 -> {
             PixelImage("intro_acme_agency", Modifier.fillMaxSize())
@@ -162,11 +162,18 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
     var input by remember { mutableStateOf("") }
     val scroll = rememberScrollState()
     val focus = remember { FocusRequester() }
+    val ctx = androidx.compose.ui.platform.LocalContext.current
 
     suspend fun typeLines(lines: List<String>) {
+        var n = 0
         for (ln in lines) {
             typing = ""
-            for (ch in ln) { typing += ch; delay(16) }
+            for (ch in ln) {
+                typing += ch
+                // dot-matrix clatter: a click on every other character (skipping spaces)
+                if (!ch.isWhitespace() && n++ % 2 == 0) GameSound.typeClick(ctx)
+                delay(16)
+            }
             printed.add(ln); typing = ""
             delay(110)
         }
@@ -290,11 +297,30 @@ private fun YellowButton(v: Virtual, label: String, onClick: () -> Unit) {
     }
 }
 
+/** The country blurb at the top, with the approved "say-hello" line (from the welcome cards)
+ *  pinned to the bottom of the panel in a smaller, greyed-out font so it reads as secondary
+ *  "did you know" text (e.g. In Arabic, hello is "Salaam" (sah-LAAM).). */
+@Composable
+private fun CountryText(v: Virtual, info: com.acme.clara.data.CityInfo) {
+    Column(Modifier.fillMaxSize()) {
+        Text(info.description, style = v.text(8.5f, color = Vga.White))
+        if (info.greeting != null) {
+            Spacer(Modifier.weight(1f))
+            Text(info.greeting!!, style = v.text(7f, color = Vga.LightGray))
+        }
+    }
+}
+
 /* ----------------------------- CITY ----------------------------- */
 @Composable
 private fun CityPhoto(city: String, v: Virtual, modifier: Modifier) {
     val info = CityMeta.of(city)
-    if (info.drawable != null) PixelImage(info.drawable, modifier)
+    // Resolve the briefing postcard: the explicit drawable first, then derive city_<slug> /
+    // country_<slug> from the name (many expansion cities ship a sprite but leave drawable null),
+    // and only if none exist fall back to the procedural VGA card rather than a blank box.
+    val slug = snake(city)
+    val resolved = listOfNotNull(info.drawable, "city_$slug", "country_$slug").firstOrNull { spriteExists(it) }
+    if (resolved != null) PixelImage(resolved, modifier)
     else VgaCityCard(city, info.region, v, modifier)
 }
 
@@ -459,15 +485,17 @@ fun CityScreen(vm: ClaraViewModel) = VirtualScreen { v ->
         v.At(149, 13, 167, 145) {
             Box(Modifier.fillMaxSize().background(Vga.Black)
                 .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(4))) {
-                Text(if (s.onTrack) info.description
-                    else "You look around. Nothing here seems out of the ordinary...",
+                if (s.onTrack) CountryText(v, info)
+                else Text("You look around. Nothing here seems out of the ordinary...",
                     style = v.text(8.5f, color = Vga.White))
             }
         }
     }
+    // Tapping a tool while a witness is on screen dismisses that witness first, so the player can
+    // go straight from a testimony to the venue list (or SEE) without an extra tap to close it.
     GameToolbar(v, vm, seeLabel = if (seeOpen) "HIDE" else null,
-        onSee = { vm.selectTool(0); seeOpen = !seeOpen },
-        onInvestigate = { vm.selectTool(2); showVenues = true })
+        onSee = { vm.selectTool(0); vm.closeClue(); seeOpen = !seeOpen },
+        onInvestigate = { vm.selectTool(2); vm.closeClue(); showVenues = true })
 
     // Investigate: pick one of 3 locations, shown as buildings + names (matches the original picker)
     if (showVenues && s.openClue == null) {

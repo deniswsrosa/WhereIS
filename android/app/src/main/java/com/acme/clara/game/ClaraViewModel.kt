@@ -7,7 +7,9 @@ import androidx.lifecycle.ViewModel
 import com.acme.clara.data.CityInfo
 import com.acme.clara.data.CityMeta
 import com.acme.clara.data.Expansion
+import com.acme.clara.data.Expansion2
 import com.acme.clara.data.GameData
+import com.acme.clara.data.Progression
 import com.acme.clara.data.Suspect
 import com.acme.clara.data.WorldMap
 import com.acme.clara.save.SaveData
@@ -157,9 +159,12 @@ data class GameState(
     // the guided first case: tutorialStep 0..6 while it runs (-1 = none); tutorialDone once seen
     val tutorialDone: Boolean = false,
     val tutorialStep: Int = -1,
+    // Level rules: the deadline for THIS case, set by Progression from the route's travel need +
+    // the rank's slack (see docs/05-game-design-and-progression.md). 152 = the legacy fixed value.
+    val caseDeadlineHours: Int = 152,
 ) {
     val revealedTraits: List<Pair<String, String>> get() = revealOrder.take(revealedCount)
-    val deadlinePassed: Boolean get() = clock > DEADLINE_HOURS
+    val deadlinePassed: Boolean get() = clock > caseDeadlineHours
     val hideout: String get() = route.lastOrNull() ?: ""
     val atHideout: Boolean get() = currentCity == hideout && onTrack
     companion object {
@@ -340,6 +345,7 @@ class ClaraViewModel : ViewModel() {
     /** Grant the paid-tier entitlement: the 68 expansion destinations + new venues enter the pool
      *  from the next case on. Called by the paywall after a successful purchase. Idempotent. */
     fun unlockExpansion() { if (!s.expansionUnlocked) { s = s.copy(expansionUnlocked = true); autosave() } }
+
     fun menuQuitToTitle() { profileId = null; s = GameState(phase = Phase.TITLE) }
     /** Game ▸ New Game — start a fresh career (a new saved profile). Names it on the sign-on screen. */
     fun newGameFlow() { profileId = null; s = GameState(phase = Phase.SIGN_ON) }
@@ -357,19 +363,26 @@ class ClaraViewModel : ViewModel() {
     private fun newCase() {
         val carmen = GameData.suspects.first { it.name == "Clara San Diego" }
         val pool = GameData.suspects.filter { it.name != "Clara San Diego" }
-        // Clara is only ever the culprit on the very last case of the career (1990 rules:
-        // catching her is guaranteed, then the detective is retired from the roster)
-        val culprit = if (s.casesSolved >= GameState.CAREER_CASES - 1) carmen else pool.random()
+        // Clara is the culprit on the final case of the free career (case 14). Catching her retires
+        // free players; paid players are promoted into the International track and keep going — so she
+        // is forced only on that one case, not on every case after it.
+        val culprit = if (s.casesSolved == GameState.CAREER_CASES - 1) carmen else pool.random()
 
         val order = discriminatingOrder(culprit)
-        // cities per case by rank (ADG analysis of the 1990 release): Rookie 5, Sleuth 6,
-        // Private Eye 7, Investigator 8, Ace Detective 9. H3 welcome-back warm-up trims one hop.
+        // Route length per rank from the level rules (free 5..9, International 9..12); the H3
+        // welcome-back warm-up trims one hop.
         val warm = s.warmUpNextCase
-        val routeLen = ((5 + s.rankIndex).coerceAtMost(9) - if (warm) 1 else 0).coerceAtLeast(4)
+        val routeLen = (Progression.hops(s.rankIndex) - if (warm) 1 else 0).coerceAtLeast(4)
 
-        // L4: pick the route on a spaced-repetition curve so geography recurs for review,
-        // never touching solvability (only which cities appear, not any clue).
-        val cities = SpacedRepetition.pickRoute(activeCities(), s.cityLastSeen, s.casesSolved, routeLen)
+        // L4: pick the route on a spaced-repetition curve so geography recurs for review, then cap
+        // brand-new (never-seen) countries to this rank's allowance so the world stays learnable.
+        val cityPool = activeCities()
+        val picked = SpacedRepetition.pickRoute(cityPool, s.cityLastSeen, s.casesSolved, routeLen)
+        val cities = capNewPerCase(picked, s.cityLastSeen.keys, Progression.newPerCase(s.rankIndex), cityPool)
+        // Level rules: the case deadline covers the route's real travel (+ overnight) plus this
+        // rank's slack, so every case is completable and slack is the shrinking fairness margin.
+        val flightSum = cities.zipWithNext { a, b -> flightCost(a, b) }.sum()
+        val caseDeadline = Progression.caseDeadlineHours(s.rankIndex, flightSum, routeLen)
         // the guided first case runs once, on a brand-new career's opening Rookie case
         val isTutorial = !s.tutorialDone && s.casesSolved == 0 && s.rankIndex == 0
         android.util.Log.d("Carmen", "case: culprit=${culprit.name} route=$cities")
@@ -381,6 +394,7 @@ class ClaraViewModel : ViewModel() {
             progress = 0,
             currentCity = cities.first(),
             clock = 0,
+            caseDeadlineHours = caseDeadline,
             onTrack = true,
             revealOrder = order,
             // H3 warm-up: the first (most telling) trait is already on the board.
@@ -396,7 +410,7 @@ class ClaraViewModel : ViewModel() {
             openClue = null,
             compSex = null, compHobby = null, compHair = null, compFeature = null, compVehicle = null,
             warrantFor = null, computed = false, won = false, resultLines = emptyList(),
-            selectedTool = 2, sightingLevel = 0, sleeping = false, careerOver = false,
+            selectedTool = -1, sightingLevel = 0, sleeping = false, careerOver = false,
         )
         buildVenues()
         s = s.copy(departOptions = makeDepartOptions())
@@ -465,19 +479,21 @@ class ClaraViewModel : ViewModel() {
                     slot++
                     list.add(Venue(p, occ, ClueKind.DESTINATION, destinationClue(nextCity)))
                 } else {
-                    // trait clue if any left, else danger/flavour
-                    val idx = st.revealedCount + list.count { it.kind == ClueKind.TRAIT }
-                    val tr = st.revealOrder.getOrNull(idx)
-                    if (tr != null) {
-                        list.add(Venue(p, occ, ClueKind.TRAIT, traitClue(tr), tr))
-                    } else {
-                        // out of discriminating traits: a food/flavour remark (still a full
-                        // DOS sentence, so no extra lead-in — matches "She mentioned…"). C3:
-                        // occasionally this pure-flavour slot teases the finale nemesis instead,
-                        // seeding the long arc cases before you ever meet her (never a real clue).
-                        val flav = if (shouldTeaseNemesis(st)) nemesisTease()
-                                   else "${flavourFood(st.culprit!!)}."
-                        list.add(Venue(p, occ, ClueKind.DANGER, flav))
+                    // Non-destination venue. Reveal the next unseen trait; once the whole
+                    // description is known, cycle back through the traits so a witness re-confirms
+                    // one (traitClue re-phrases it each time) instead of parroting the same flavour
+                    // filler. C3: an occasional nemesis whisper adds colour (never a real clue).
+                    val n = st.revealOrder.size
+                    val slotIdx = st.revealedCount + list.count { it.kind == ClueKind.TRAIT }
+                    when {
+                        shouldTeaseNemesis(st) ->
+                            list.add(Venue(p, occ, ClueKind.DANGER, nemesisTease()))
+                        n > 0 -> {
+                            val tr = st.revealOrder[slotIdx % n]
+                            list.add(Venue(p, occ, ClueKind.TRAIT, traitClue(tr), tr))
+                        }
+                        else ->
+                            list.add(Venue(p, occ, ClueKind.DANGER, "${flavourFood(st.culprit!!)}."))
                     }
                 }
             }
@@ -507,13 +523,22 @@ class ClaraViewModel : ViewModel() {
         )
         info.flag?.let { options += "{s} sketched a flag with $it" }
         info.currency?.let { options += "{s} counted money called $it" }
-        info.greeting?.let { options += "{s} practiced a hello that sounded like “$it”" }
+        // the greeting is a full "In X, hello is …(pron)." line; the clue only wants the sound,
+        // so pull the parenthetical pronunciation out of it.
+        info.greeting?.let { g ->
+            val sound = Regex("\\(([^)]+)\\)").find(g)?.groupValues?.get(1) ?: g
+            options += "{s} practiced a hello that sounded like “$sound”"
+        }
         return options.random()
     }
 
-    /** Cities in play: the free original 30, plus the paid expansion once unlocked. */
-    private fun activeCities(): List<String> =
-        if (s.expansionUnlocked) GameData.cities + Expansion.names else GameData.cities
+    /** Cities in play: the free original 30, plus the paid destinations of every recognition wave
+     *  unlocked at the current rank (International grades 5..14 reveal waves 0..9, famous first). */
+    private fun activeCities(): List<String> {
+        if (!s.expansionUnlocked) return GameData.cities
+        val extra = Progression.citiesUpToWave(Progression.unlockedMaxWave(s.rankIndex))
+        return GameData.cities + extra
+    }
 
     /** Venues in play: base 12, plus the expansion's once unlocked. */
     private fun activeVenues(): List<String> =
@@ -649,27 +674,66 @@ class ClaraViewModel : ViewModel() {
             s.currentCity != s.hideout -> s.hideout   // strayed after the hideout: allow the way back
             else -> null
         }
-        val links = Random.nextInt(2, 5)              // 2-4 connections, like the original
-        val decoys = activeCities()
-            .filter { it != next && it != s.currentCity && it !in s.route }
-            .shuffled().take(if (next != null) links - 1 else links)
-        return if (next != null) (decoys + next).shuffled() else decoys
+        val want = Random.nextInt(2, 5)               // 2-4 connections, like the original
+        // Keep the fly-to markers legible on the world map: greedily choose decoys that stay a
+        // minimum distance from the origin and from every option already picked, so two close
+        // cities (e.g. New Delhi & Kathmandu) never stack their dots/labels on top of each other.
+        val chosen = mutableListOf<String>()
+        next?.let { chosen.add(it) }
+        val pool = activeCities().filter { it != next && it != s.currentCity && it !in s.route }.shuffled()
+        for (c in pool) {
+            if (chosen.size >= want) break
+            if (mapTooClose(s.currentCity, c) || chosen.any { mapTooClose(it, c) }) continue
+            chosen.add(c)
+        }
+        // Dense region (couldn't find enough spaced cities): pad with any remaining so the player
+        // still gets a full set of choices, even if a pair ends up a little close.
+        if (chosen.size < want) for (c in pool) { if (chosen.size >= want) break; if (c !in chosen) chosen.add(c) }
+        return chosen.shuffled()
+    }
+
+    /** True if two cities sit so close on the world map that their dots/labels would overlap.
+     *  Unpositioned places (the new-country expansion) draw no dot, so they're never "too close". */
+    private fun mapTooClose(a: String, b: String): Boolean {
+        val pa = WorldMap.of(a) ?: return false
+        val pb = WorldMap.of(b) ?: return false
+        val d = kotlin.math.hypot(((pa.x - pb.x) * WorldMap.WV).toDouble(), ((pa.y - pb.y) * WorldMap.HV).toDouble())
+        return d < 24.0
     }
 
     /** Flight time from the current city, scaled by map distance (the original's travel
      *  times depend on how far apart the cities are; short hops ~2-3 h). Deterministic, so
      *  the DEPART preview shows exactly what the flight will cost. */
-    fun flightHoursTo(city: String): Int {
-        val a = WorldMap.of(s.currentCity)
-        val b = WorldMap.of(city)
+    fun flightHoursTo(city: String): Int = flightCost(s.currentCity, city)
+
+    /** Flight hours between any two places (distance-scaled 2..14h; 4h when either is unpositioned,
+     *  e.g. the new-country expansion). Basis for a case's travel need and its deadline. */
+    private fun flightCost(from: String, to: String): Int {
+        val a = WorldMap.of(from)
+        val b = WorldMap.of(to)
         return if (a != null && b != null) {
             val d = kotlin.math.hypot(((a.x - b.x) * 2f).toDouble(), (a.y - b.y).toDouble())
             (2 + d * 6).toInt().coerceIn(2, 14)
         } else 4
     }
 
+    /** Level rules: hold first-sightings to at most `cap` per case. Surplus never-seen cities are
+     *  swapped for already-seen ones from the pool so most hops reinforce known geography. Early
+     *  cases (nothing seen yet) are naturally all-new — nothing to swap in — and pass through. */
+    private fun capNewPerCase(route: List<String>, seen: Set<String>, cap: Int, pool: List<String>): List<String> {
+        val newIdx = route.indices.filter { route[it] !in seen }
+        if (newIdx.size <= cap) return route
+        val fill = pool.filter { it in seen && it !in route }.shuffled().toMutableList()
+        val out = route.toMutableList()
+        for (i in newIdx.drop(cap)) {
+            if (fill.isEmpty()) break
+            out[i] = fill.removeAt(0)
+        }
+        return out
+    }
+
     /** Hours remaining before the Sunday 5 p.m. deadline. */
-    fun hoursLeft(): Int = (GameState.DEADLINE_HOURS - s.clock).coerceAtLeast(0)
+    fun hoursLeft(): Int = (s.caseDeadlineHours - s.clock).coerceAtLeast(0)
 
     /** Start the flight: the travel screen animates the red route line, then calls arrive(). */
     fun travelTo(city: String) {
@@ -693,11 +757,12 @@ class ClaraViewModel : ViewModel() {
                 st.copy(currentCity = city, onTrack = true)   // flew back to the hideout
             else -> st.copy(currentCity = city, onTrack = false, wrongFlights = st.wrongFlights + 1)
         }
-        // DOS: after arriving in a new city the toolbar selection is INVESTIGATE.
+        // No tool is pre-selected on arrival: the green selection border appears only once the
+        // player actually taps a tool, so it never reads as a persistent tutorial highlight.
         // Passport (C4): log every place we actually land in — right trail or wrong — so the
         // painted world map fills in from day one (revealed only once the expansion is bought).
         // L4: stamp its last-seen case index for spaced-repetition scheduling.
-        s = st.copy(selectedTool = 2, visitedPlaces = st.visitedPlaces + city,
+        s = st.copy(selectedTool = -1, visitedPlaces = st.visitedPlaces + city,
             cityLastSeen = st.cityLastSeen + (city to st.casesSolved))
         if (s.deadlinePassed) { escaped("time"); return }
         s = s.copy(phase = Phase.CITY)
@@ -823,12 +888,16 @@ class ClaraViewModel : ViewModel() {
         if (streak > 0 && streak % 7 == 0 && freezes < 1) freezes = 1        // earn a weekly freeze
         if (streak >= 2) lines += "🔥 $streak-day case streak!"
         val newCases = s.casesSolved + 1
-        // jailing Carmen herself concludes the career — no promotion, straight to the
-        // Hall of Fame report and off the roster
-        val careerOver = c.name == "Clara San Diego"
-        // promotion cadence observed in the original: after case 1, then "four more cases
-        // until your next promotion" — thresholds 1, 5, 9, 13
-        val promote = !careerOver && s.rankIndex < GameData.ranks.lastIndex && newCases in setOf(1, 5, 9, 13)
+        val paid = s.expansionUnlocked
+        // Jailing Clara ends the free career (retire to the Hall of Fame). If the paid International
+        // track is unlocked, catching her instead promotes you into it — the world still needs you.
+        val careerOver = c.name == "Clara San Diego" && !paid
+        // Free promotion cadence (1990 rules): cases 1, 5, 9, 13 -> Sleuth..Ace. International grades
+        // then promote once every 8 cases past the free arc (cases 14, 22, 30, ...).
+        val freeThreshold = newCases in setOf(1, 5, 9, 13)
+        val intlThreshold = paid && newCases >= GameState.CAREER_CASES &&
+            (newCases - GameState.CAREER_CASES) % 8 == 0
+        val promote = !careerOver && s.rankIndex < GameData.ranks.lastIndex && (freeThreshold || intlThreshold)
         if (promote) {
             lines += "Well done, ${s.detectiveName} - a promotion is yours."
             lines += "One last puzzle stands between you and the promotion."
@@ -862,7 +931,9 @@ class ClaraViewModel : ViewModel() {
 
     /** Cases remaining until the next promotion threshold (1, 5, 9, 13). */
     fun casesToNextPromotion(): Int {
-        val next = listOf(1, 5, 9, 13).firstOrNull { it > s.casesSolved } ?: return 0
+        val thresholds = if (s.expansionUnlocked)
+            listOf(1, 5, 9, 13) + (GameState.CAREER_CASES..200 step 8) else listOf(1, 5, 9, 13)
+        val next = thresholds.firstOrNull { it > s.casesSolved } ?: return 0
         return next - s.casesSolved
     }
 
@@ -909,7 +980,7 @@ class ClaraViewModel : ViewModel() {
 
     /** Compact time-until-deadline hint, e.g. "3d 4h left" or "18h left" when close. */
     fun deadlineLabel(offsetHours: Int = 0): String {
-        val left = (GameState.DEADLINE_HOURS - s.clock - offsetHours).coerceAtLeast(0)
+        val left = (s.caseDeadlineHours - s.clock - offsetHours).coerceAtLeast(0)
         return if (left >= 24) "${left / 24}d ${left % 24}h left" else "${left}h left"
     }
 }

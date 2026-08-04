@@ -21,6 +21,11 @@ object GameSound {
     private var stinger: MediaPlayer? = null
     private var enabled = true
 
+    // Short PCM click for the HQ printer teletype, played via SoundPool so rapid repeats overlap
+    // cheaply (MediaPlayer can't). Loaded lazily on the first keystroke.
+    private var pool: android.media.SoundPool? = null
+    private var clickId = 0
+
     private const val DIR = "audio"
     private const val THEME = "theme.mid"
 
@@ -50,6 +55,29 @@ object GameSound {
         cueFile[cue]?.let { jingle(context, it) }
     }
 
+    /** A single dot-matrix printer click, for the HQ teletype. Cheap and overlappable; no-op if
+     *  sound is off or the sample hasn't finished loading yet (the first few keystrokes). */
+    fun typeClick(context: Context) {
+        if (!enabled) return
+        if (pool == null) {
+            val sp = android.media.SoundPool.Builder().setMaxStreams(6)
+                .setAudioAttributes(
+                    android.media.AudioAttributes.Builder()
+                        .setUsage(android.media.AudioAttributes.USAGE_GAME)
+                        .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build()
+                ).build()
+            clickId = runCatching {
+                context.applicationContext.assets.openFd("$DIR/type_click.wav").use { sp.load(it, 1) }
+            }.getOrDefault(0)
+            pool = sp
+        }
+        if (clickId != 0) {
+            val rate = 0.92f + kotlin.random.Random.nextFloat() * 0.16f   // slight pitch jitter
+            pool?.play(clickId, 0.35f, 0.35f, 1, 0, rate)
+        }
+    }
+
     fun setEnabled(context: Context, on: Boolean) {
         enabled = on
         if (!on) { stopTheme(); stinger?.release(); stinger = null }
@@ -67,6 +95,17 @@ object GameSound {
     fun stopTheme() {
         theme?.let { runCatching { it.stop() }; it.release() }
         theme = null
+    }
+
+    /** Pause the looping theme so it never keeps playing while the app is in the background;
+     *  paired with [resumeTheme] on return. No-op if no theme is currently loaded. */
+    fun pauseTheme() { theme?.let { runCatching { if (it.isPlaying) it.pause() } } }
+
+    /** Resume a theme that [pauseTheme] paused (only if it's still the active title-screen theme
+     *  and sound is on). No-op once the theme has been stopped for gameplay. */
+    fun resumeTheme() {
+        if (!enabled) return
+        theme?.let { runCatching { if (!it.isPlaying) it.start() } }
     }
 
     /** Play a one-shot stinger by asset filename (stops the theme underneath, like the DOS

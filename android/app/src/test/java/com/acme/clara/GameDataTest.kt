@@ -1,6 +1,7 @@
 package com.acme.clara
 
 import com.acme.clara.data.GameData
+import com.acme.clara.data.Progression
 import com.acme.clara.data.WorldMap
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -87,10 +88,14 @@ class GameDataTest {
         assertEquals("Clara San Diego", GameData.dossierMenuNames.first())
     }
 
-    @Test fun fiveRanksAndPromotionQuizFilledIn() {
-        assertEquals(5, GameData.ranks.size)
+    @Test fun rankLadderFreeAndInternational() {
+        assertEquals("free career is 5 ranks", 5, Progression.FREE_RANKS)
         assertEquals("Rookie", GameData.ranks.first())
-        assertEquals("Ace Detective", GameData.ranks.last())
+        assertEquals("free ladder tops out at Ace Detective",
+            "Ace Detective", GameData.ranks[Progression.FREE_RANKS - 1])
+        assertEquals("15 ranks: 5 free + 10 International grades", 15, GameData.ranks.size)
+        assertEquals("Chief Director", GameData.ranks.last())
+        assertEquals("last rank index matches LAST_RANK", Progression.LAST_RANK, GameData.ranks.lastIndex)
         assertTrue(GameData.promotionQuiz.isNotEmpty())
         for ((q, a) in GameData.promotionQuiz) {
             assertTrue("quiz question should have a blank", q.contains("_"))

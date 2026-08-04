@@ -179,12 +179,24 @@ object GameData {
         "No",
         ":"
     )
+    // Ranks 0..4 are the free career (Progression.FREE_RANKS). Ranks 5..14 are the paid
+    // "International" grades — one per recognition wave (see data/Progression.kt).
     val ranks = listOf(
         "Rookie",
         "Sleuth",
         "Private Eye",
         "Investigator",
-        "Ace Detective"
+        "Ace Detective",
+        "Special Agent",
+        "Field Inspector",
+        "Senior Inspector",
+        "Inspector",
+        "Chief Inspector",
+        "Superintendent",
+        "Commander",
+        "Deputy Director",
+        "Director",
+        "Chief Director"
     )
 
     // Suspect-trait sentences verbatim from the DOS EXE. Pronoun slots {S}/{s}/{p}

@@ -46,9 +46,11 @@ class MainActivity : ComponentActivity() {
     }
 
     // Schedule the "come back" reminder when the app leaves the foreground; cancel it on return.
-    override fun onStart() { super.onStart(); WelcomeBackNotifier.cancel(this) }
+    // Also pause/resume the title theme with the lifecycle so it never plays in the background.
+    override fun onStart() { super.onStart(); WelcomeBackNotifier.cancel(this); GameSound.resumeTheme() }
     override fun onStop() {
         super.onStop()
+        GameSound.pauseTheme()
         if (Reminders.enabled(this)) WelcomeBackNotifier.schedule(this)   // on by default
     }
 }
@@ -69,11 +71,11 @@ fun ClaraApp() {
     }
     // Keep the audio engine's mute state in sync with the Options > Sound toggle.
     LaunchedEffect(vm.s.soundOn) { GameSound.setEnabled(context, vm.s.soundOn) }
-    // The title theme plays over the front-of-house screens (intro/title/sign-on) and stops
-    // once the investigation proper begins, like the original.
+    // The title theme plays over the intro and title only; it stops the moment you sit down at
+    // the HQ printer (sign-on), where the teletype clatter takes over, and stays off in-game.
     LaunchedEffect(vm.s.phase, vm.s.soundOn) {
         when (vm.s.phase) {
-            Phase.INTRO, Phase.TITLE, Phase.SIGN_ON -> GameSound.startTheme(context)
+            Phase.INTRO, Phase.TITLE -> GameSound.startTheme(context)
             else -> GameSound.stopTheme()
         }
     }

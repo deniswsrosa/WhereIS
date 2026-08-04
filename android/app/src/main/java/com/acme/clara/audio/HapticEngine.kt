@@ -17,10 +17,11 @@ object HapticEngine {
     fun play(context: Context, cue: HapticCue, enabled: Boolean) {
         if (!enabled || cue == HapticCue.NONE) return
         val vib = vibrator(context)?.takeIf { it.hasVibrator() } ?: return
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vib.vibrate(effect(cue))
-        } else {
-            legacy(vib, cue)
+        // Never let touch feedback take down the app: a device may report a vibrator yet deny the
+        // VIBRATE permission (throws SecurityException), so treat any failure as a silent no-op.
+        runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) vib.vibrate(effect(cue))
+            else legacy(vib, cue)
         }
     }
 

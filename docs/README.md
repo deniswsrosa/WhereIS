@@ -84,6 +84,7 @@ ephemeral `/private/tmp/.../scratchpad` are NOT part of the repo.
 | `02-dosbox-capture-pipeline.md` | How we got real city art: driving the actual DOS game in DOSBox-X and screenshotting all 30 cities. The full automation recipe. |
 | `03-city-art-pipeline.md` | Turning a 640×400 capture into a shipping `city_*.png` asset and wiring it into `CityMeta.kt`. |
 | `04-reverse-engineering.md` | Everything learned decompiling `CARMEN.EXE` and the `CITIES.DAT` image codec — the format, the cracked LZSS decompressor, and the wall we hit (and why DOSBox capture won instead). |
+| `05-game-design-and-progression.md` | How the game plays: the 231-destination roster, free/paid split, and the recognition-wave difficulty ladder (patents, hops, clock/slack, and the game-theory fairness check). Marks **[Current]** code vs **[Proposed]** expansion design. |
 
 ---
 

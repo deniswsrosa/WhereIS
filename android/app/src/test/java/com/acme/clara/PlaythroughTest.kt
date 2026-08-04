@@ -77,7 +77,8 @@ class PlaythroughTest {
         assertTrue("the career ends by jailing the ring-leader", vm.s.careerOver)
         assertEquals("the finale culprit is Clara", "Clara San Diego", lastCulprit)
         assertEquals("14 cases make a career", 14, vm.s.casesSolved)
-        assertEquals("all promotions climbed the ladder", GameData.ranks.lastIndex, vm.s.rankIndex)
+        assertEquals("the free career tops out at Ace Detective",
+            "Ace Detective", GameData.ranks[vm.s.rankIndex])
         assertFalse("no promotion after the finale", vm.s.pendingPromotion)
         assertTrue("the report reaches the Hall of Fame",
             vm.s.resultLines.any { it.contains("Hall of Fame") })

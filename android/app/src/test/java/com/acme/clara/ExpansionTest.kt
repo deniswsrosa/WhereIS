@@ -3,6 +3,7 @@ package com.acme.clara
 import com.acme.clara.data.CityMeta
 import com.acme.clara.data.Expansion
 import com.acme.clara.data.GameData
+import com.acme.clara.data.Progression
 import com.acme.clara.data.WorldMap
 import com.acme.clara.game.ClaraViewModel
 import com.acme.clara.save.SaveCodec
@@ -53,7 +54,8 @@ class ExpansionTest {
     }
 
     @Test fun structuredAttributesAreAttached() {
-        assertEquals("GOO-ten tahk", Expansion.byName["Berlin"]?.greeting)
+        // Berlin's say-hello line teaches the local greeting with its pronunciation.
+        assertTrue(Expansion.byName["Berlin"]?.greeting?.contains("Guten Tag") == true)
         assertEquals("rubles", Expansion.byName["Novosibirsk"]?.currency)
         assertEquals("pesos", Expansion.byName["Philippines"]?.currency)
     }
@@ -135,13 +137,16 @@ class ExpansionTest {
         }
     }
 
-    @Test fun unlockedCareerReachesExpansionCities() {
-        val vm = ClaraViewModel().apply { signOn("Ace"); unlockExpansion() }
+    @Test fun unlockDuringFreeRanksStaysOnOriginals() {
+        // Wave model: unlocking grants the *ability* to earn countries, but during the free career
+        // (ranks 0..4) only the original 30 appear — waves reveal at the International grades.
+        val vm = ClaraViewModel().apply { signOn("Rookie"); unlockExpansion() }
         assertTrue(vm.s.expansionUnlocked)
+        assertEquals("no wave unlocked in the free ranks", -1, Progression.unlockedMaxWave(vm.s.rankIndex))
         val seen = mutableSetOf<String>()
-        repeat(100) { vm.menuNewCase(); seen += vm.s.route }
-        assertTrue("expansion cities should appear once unlocked", seen.any { it in Expansion.names })
-        assertTrue("free cities still appear too", seen.any { it in base })
+        repeat(60) { vm.menuNewCase(); seen += vm.s.route }
+        assertTrue("free cities appear", seen.any { it in base })
+        assertTrue("no expansion city while still in the free ranks", seen.none { it in Expansion.names })
     }
 
     @Test fun entitlementRoundTripsThroughSave() {

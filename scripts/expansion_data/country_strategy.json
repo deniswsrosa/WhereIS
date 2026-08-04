@@ -1,0 +1,1731 @@
+[
+{
+"name": "Algeria",
+"slug": "algeria",
+"continent": "Africa",
+"region": "North Africa",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_algeria.png",
+"kind": "country"
+}
+},
+{
+"name": "Angola",
+"slug": "angola",
+"continent": "Africa",
+"region": "Southern Africa",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_angola.png",
+"kind": "country"
+}
+},
+{
+"name": "Benin",
+"slug": "benin",
+"continent": "Africa",
+"region": "West Africa",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_benin.png",
+"kind": "country"
+}
+},
+{
+"name": "Botswana",
+"slug": "botswana",
+"continent": "Africa",
+"region": "Southern Africa",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_botswana.png",
+"kind": "country"
+}
+},
+{
+"name": "Burkina Faso",
+"slug": "burkina_faso",
+"continent": "Africa",
+"region": "West Africa",
+"tier": 3,
+"hints": 5,
+"postcard": {
+"has": true,
+"file": "country_burkina_faso.png",
+"kind": "country"
+}
+},
+{
+"name": "Burundi",
+"slug": "burundi",
+"continent": "Africa",
+"region": "East Africa (the African Great Lakes)",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_burundi.png",
+"kind": "country"
+}
+},
+{
+"name": "Cabo Verde",
+"slug": "cabo_verde",
+"continent": "Africa",
+"region": "the Atlantic islands off West Africa",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_cabo_verde.png",
+"kind": "country"
+}
+},
+{
+"name": "Cameroon",
+"slug": "cameroon",
+"continent": "Africa",
+"region": "Central Africa",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_cameroon.png",
+"kind": "country"
+}
+},
+{
+"name": "Central African Republic",
+"slug": "central_african_republic",
+"continent": "Africa",
+"region": "the heart of Central Africa",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_central_african_republic.png",
+"kind": "country"
+}
+},
+{
+"name": "Chad",
+"slug": "chad",
+"continent": "Africa",
+"region": "the Sahel of north-central Africa",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_chad.png",
+"kind": "country"
+}
+},
+{
+"name": "Congo (Republic of the)",
+"slug": "congo_republic",
+"continent": "Africa",
+"region": "Central Africa",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_congo_republic.png",
+"kind": "country"
+}
+},
+{
+"name": "Côte d'Ivoire",
+"slug": "cote_divoire",
+"continent": "Africa",
+"region": "West Africa",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_cote_divoire.png",
+"kind": "country"
+}
+},
+{
+"name": "DR Congo",
+"slug": "dr_congo",
+"continent": "Africa",
+"region": "Central Africa",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_dr_congo.png",
+"kind": "country"
+}
+},
+{
+"name": "Djibouti",
+"slug": "djibouti",
+"continent": "Africa",
+"region": "the Horn of Africa",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_djibouti.png",
+"kind": "country"
+}
+},
+{
+"name": "Equatorial Guinea",
+"slug": "equatorial_guinea",
+"continent": "Africa",
+"region": "Central Africa",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_equatorial_guinea.png",
+"kind": "country"
+}
+},
+{
+"name": "Eritrea",
+"slug": "eritrea",
+"continent": "Africa",
+"region": "the Horn of Africa",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_eritrea.png",
+"kind": "country"
+}
+},
+{
+"name": "Eswatini",
+"slug": "eswatini",
+"continent": "Africa",
+"region": "Southern Africa",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_eswatini.png",
+"kind": "country"
+}
+},
+{
+"name": "Ethiopia",
+"slug": "ethiopia",
+"continent": "Africa",
+"region": "the Horn of Africa",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_ethiopia.png",
+"kind": "country"
+}
+},
+{
+"name": "Gabon",
+"slug": "gabon",
+"continent": "Africa",
+"region": "Central Africa",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_gabon.png",
+"kind": "country"
+}
+},
+{
+"name": "Gambia",
+"slug": "gambia",
+"continent": "Africa",
+"region": "West Africa",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_gambia.png",
+"kind": "country"
+}
+},
+{
+"name": "Ghana",
+"slug": "ghana",
+"continent": "Africa",
+"region": "West Africa",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_ghana.png",
+"kind": "country"
+}
+},
+{
+"name": "Guinea",
+"slug": "guinea",
+"continent": "Africa",
+"region": "West Africa",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_guinea.png",
+"kind": "country"
+}
+},
+{
+"name": "Guinea-Bissau",
+"slug": "guinea_bissau",
+"continent": "Africa",
+"region": "West Africa",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_guinea_bissau.png",
+"kind": "country"
+}
+},
+{
+"name": "Lesotho",
+"slug": "lesotho",
+"continent": "Africa",
+"region": "Southern Africa",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_lesotho.png",
+"kind": "country"
+}
+},
+{
+"name": "Liberia",
+"slug": "liberia",
+"continent": "Africa",
+"region": "West Africa",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_liberia.png",
+"kind": "country"
+}
+},
+{
+"name": "Libya",
+"slug": "libya",
+"continent": "Africa",
+"region": "North Africa",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_libya.png",
+"kind": "country"
+}
+},
+{
+"name": "Madagascar",
+"slug": "madagascar",
+"continent": "Africa",
+"region": "the Indian Ocean, off East Africa",
+"tier": 2,
+"hints": 5,
+"postcard": {
+"has": true,
+"file": "city_madagascar.png",
+"kind": "city"
+}
+},
+{
+"name": "Malawi",
+"slug": "malawi",
+"continent": "Africa",
+"region": "Southeast Africa",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_malawi.png",
+"kind": "country"
+}
+},
+{
+"name": "Mauritania",
+"slug": "mauritania",
+"continent": "Africa",
+"region": "the Sahara in Northwest Africa",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_mauritania.png",
+"kind": "country"
+}
+},
+{
+"name": "Mozambique",
+"slug": "mozambique",
+"continent": "Africa",
+"region": "Southeast Africa",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_mozambique.png",
+"kind": "country"
+}
+},
+{
+"name": "Namibia",
+"slug": "namibia",
+"continent": "Africa",
+"region": "Southern Africa",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "city_namibia.png",
+"kind": "city"
+}
+},
+{
+"name": "Niger",
+"slug": "niger",
+"continent": "Africa",
+"region": "the Sahel in West Africa",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_niger.png",
+"kind": "country"
+}
+},
+{
+"name": "Nigeria",
+"slug": "nigeria",
+"continent": "Africa",
+"region": "West Africa",
+"tier": 1,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_nigeria.png",
+"kind": "country"
+}
+},
+{
+"name": "Sao Tome and Principe",
+"slug": "sao_tome_and_principe",
+"continent": "Africa",
+"region": "the Gulf of Guinea (Central Africa)",
+"tier": 4,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_sao_tome_and_principe.png",
+"kind": "country"
+}
+},
+{
+"name": "Senegal",
+"slug": "senegal",
+"continent": "Africa",
+"region": "West Africa",
+"tier": 2,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_senegal.png",
+"kind": "country"
+}
+},
+{
+"name": "Seychelles",
+"slug": "seychelles",
+"continent": "Africa",
+"region": "the Indian Ocean (East Africa)",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_seychelles.png",
+"kind": "country"
+}
+},
+{
+"name": "Sierra Leone",
+"slug": "sierra_leone",
+"continent": "Africa",
+"region": "West Africa",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_sierra_leone.png",
+"kind": "country"
+}
+},
+{
+"name": "Somalia",
+"slug": "somalia",
+"continent": "Africa",
+"region": "the Horn of Africa",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_somalia.png",
+"kind": "country"
+}
+},
+{
+"name": "South Sudan",
+"slug": "south_sudan",
+"continent": "Africa",
+"region": "East-Central Africa",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_south_sudan.png",
+"kind": "country"
+}
+},
+{
+"name": "Sudan",
+"slug": "sudan",
+"continent": "Africa",
+"region": "Northeast Africa",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_sudan.png",
+"kind": "country"
+}
+},
+{
+"name": "Tanzania",
+"slug": "tanzania",
+"continent": "Africa",
+"region": "East Africa",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "city_tanzania.png",
+"kind": "city"
+}
+},
+{
+"name": "Togo",
+"slug": "togo",
+"continent": "Africa",
+"region": "West Africa",
+"tier": 4,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_togo.png",
+"kind": "country"
+}
+},
+{
+"name": "Tunisia",
+"slug": "tunisia",
+"continent": "Africa",
+"region": "North Africa",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_tunisia.png",
+"kind": "country"
+}
+},
+{
+"name": "Uganda",
+"slug": "uganda",
+"continent": "Africa",
+"region": "East Africa",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_uganda.png",
+"kind": "country"
+}
+},
+{
+"name": "Zambia",
+"slug": "zambia",
+"continent": "Africa",
+"region": "Southern Africa",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_zambia.png",
+"kind": "country"
+}
+},
+{
+"name": "Zimbabwe",
+"slug": "zimbabwe",
+"continent": "Africa",
+"region": "Southern Africa",
+"tier": 2,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_zimbabwe.png",
+"kind": "country"
+}
+},
+{
+"name": "Afghanistan",
+"slug": "afghanistan",
+"continent": "Asia",
+"region": "Central Asia",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_afghanistan.png",
+"kind": "country"
+}
+},
+{
+"name": "Armenia",
+"slug": "armenia",
+"continent": "Asia",
+"region": "the Caucasus",
+"tier": 3,
+"hints": 5,
+"postcard": {
+"has": true,
+"file": "country_armenia.png",
+"kind": "country"
+}
+},
+{
+"name": "Azerbaijan",
+"slug": "azerbaijan",
+"continent": "Asia",
+"region": "the South Caucasus (Western Asia)",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_azerbaijan.png",
+"kind": "country"
+}
+},
+{
+"name": "Bahrain",
+"slug": "bahrain",
+"continent": "Asia",
+"region": "the Persian Gulf (Middle East)",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_bahrain.png",
+"kind": "country"
+}
+},
+{
+"name": "Bangladesh",
+"slug": "bangladesh",
+"continent": "Asia",
+"region": "South Asia",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_bangladesh.png",
+"kind": "country"
+}
+},
+{
+"name": "Brunei",
+"slug": "brunei",
+"continent": "Asia",
+"region": "Southeast Asia (island of Borneo)",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_brunei.png",
+"kind": "country"
+}
+},
+{
+"name": "Cyprus",
+"slug": "cyprus",
+"continent": "Asia",
+"region": "the eastern Mediterranean",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_cyprus.png",
+"kind": "country"
+}
+},
+{
+"name": "Georgia",
+"slug": "georgia",
+"continent": "Asia",
+"region": "the Caucasus",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_georgia.png",
+"kind": "country"
+}
+},
+{
+"name": "Iran",
+"slug": "iran",
+"continent": "Asia",
+"region": "the Middle East (Western Asia)",
+"tier": 1,
+"hints": 5,
+"postcard": {
+"has": true,
+"file": "country_iran.png",
+"kind": "country"
+}
+},
+{
+"name": "Kazakhstan",
+"slug": "kazakhstan",
+"continent": "Asia",
+"region": "Central Asia",
+"tier": 3,
+"hints": 5,
+"postcard": {
+"has": true,
+"file": "city_astana.png",
+"kind": "city"
+}
+},
+{
+"name": "Kuwait",
+"slug": "kuwait",
+"continent": "Asia",
+"region": "the Persian Gulf (Middle East)",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_kuwait.png",
+"kind": "country"
+}
+},
+{
+"name": "Kyrgyzstan",
+"slug": "kyrgyzstan",
+"continent": "Asia",
+"region": "Central Asia",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_kyrgyzstan.png",
+"kind": "country"
+}
+},
+{
+"name": "Laos",
+"slug": "laos",
+"continent": "Asia",
+"region": "Southeast Asia",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_laos.png",
+"kind": "country"
+}
+},
+{
+"name": "Lebanon",
+"slug": "lebanon",
+"continent": "Asia",
+"region": "the eastern Mediterranean (the Levant)",
+"tier": 2,
+"hints": 5,
+"postcard": {
+"has": true,
+"file": "country_lebanon.png",
+"kind": "country"
+}
+},
+{
+"name": "Maldives",
+"slug": "maldives",
+"continent": "Asia",
+"region": "the Indian Ocean (South Asia)",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_maldives.png",
+"kind": "country"
+}
+},
+{
+"name": "North Korea",
+"slug": "north_korea",
+"continent": "Asia",
+"region": "East Asia (the Korean Peninsula)",
+"tier": 1,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_north_korea.png",
+"kind": "country"
+}
+},
+{
+"name": "Oman",
+"slug": "oman",
+"continent": "Asia",
+"region": "the Arabian Peninsula (Middle East)",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_oman.png",
+"kind": "country"
+}
+},
+{
+"name": "Pakistan",
+"slug": "pakistan",
+"continent": "Asia",
+"region": "South Asia",
+"tier": 1,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_pakistan.png",
+"kind": "country"
+}
+},
+{
+"name": "Palestine",
+"slug": "palestine",
+"continent": "Asia",
+"region": "the Middle East (the Levant)",
+"tier": 2,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_palestine.png",
+"kind": "country"
+}
+},
+{
+"name": "Qatar",
+"slug": "qatar",
+"continent": "Asia",
+"region": "the Persian Gulf (Middle East)",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_qatar.png",
+"kind": "country"
+}
+},
+{
+"name": "Saudi Arabia",
+"slug": "saudi_arabia",
+"continent": "Asia",
+"region": "the Arabian Peninsula (Middle East)",
+"tier": 1,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_saudi_arabia.png",
+"kind": "country"
+}
+},
+{
+"name": "South Korea",
+"slug": "south_korea",
+"continent": "Asia",
+"region": "East Asia",
+"tier": 1,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_south_korea.png",
+"kind": "country"
+}
+},
+{
+"name": "Syria",
+"slug": "syria",
+"continent": "Asia",
+"region": "the Middle East (Western Asia)",
+"tier": 2,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_syria.png",
+"kind": "country"
+}
+},
+{
+"name": "Tajikistan",
+"slug": "tajikistan",
+"continent": "Asia",
+"region": "Central Asia",
+"tier": 4,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_tajikistan.png",
+"kind": "country"
+}
+},
+{
+"name": "Timor-Leste",
+"slug": "timor_leste",
+"continent": "Asia",
+"region": "Southeast Asia",
+"tier": 4,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_timor_leste.png",
+"kind": "country"
+}
+},
+{
+"name": "Yemen",
+"slug": "yemen",
+"continent": "Asia",
+"region": "the Arabian Peninsula (Middle East)",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_yemen.png",
+"kind": "country"
+}
+},
+{
+"name": "Albania",
+"slug": "albania",
+"continent": "Europe",
+"region": "the Balkans (Southeast Europe)",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_albania.png",
+"kind": "country"
+}
+},
+{
+"name": "Andorra",
+"slug": "andorra",
+"continent": "Europe",
+"region": "the Pyrenees (Southwest Europe)",
+"tier": 4,
+"hints": 5,
+"postcard": {
+"has": true,
+"file": "country_andorra.png",
+"kind": "country"
+}
+},
+{
+"name": "Belarus",
+"slug": "belarus",
+"continent": "Europe",
+"region": "Eastern Europe",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_belarus.png",
+"kind": "country"
+}
+},
+{
+"name": "Belgium",
+"slug": "belgium",
+"continent": "Europe",
+"region": "Western Europe",
+"tier": 1,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_belgium.png",
+"kind": "country"
+}
+},
+{
+"name": "Bosnia and Herzegovina",
+"slug": "bosnia_and_herzegovina",
+"continent": "Europe",
+"region": "the Balkans (Southeast Europe)",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_bosnia_and_herzegovina.png",
+"kind": "country"
+}
+},
+{
+"name": "Bulgaria",
+"slug": "bulgaria",
+"continent": "Europe",
+"region": "the Balkans (Southeast Europe)",
+"tier": 2,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_bulgaria.png",
+"kind": "country"
+}
+},
+{
+"name": "Estonia",
+"slug": "estonia",
+"continent": "Europe",
+"region": "Northern Europe (the Baltics)",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_estonia.png",
+"kind": "country"
+}
+},
+{
+"name": "Finland",
+"slug": "finland",
+"continent": "Europe",
+"region": "Northern Europe (the Nordics)",
+"tier": 1,
+"hints": 5,
+"postcard": {
+"has": true,
+"file": "country_finland.png",
+"kind": "country"
+}
+},
+{
+"name": "Kosovo",
+"slug": "kosovo",
+"continent": "Europe",
+"region": "the Balkans (Southeast Europe)",
+"tier": 4,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_kosovo.png",
+"kind": "country"
+}
+},
+{
+"name": "Latvia",
+"slug": "latvia",
+"continent": "Europe",
+"region": "the Baltics (Northern Europe)",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_latvia.png",
+"kind": "country"
+}
+},
+{
+"name": "Liechtenstein",
+"slug": "liechtenstein",
+"continent": "Europe",
+"region": "Central Europe (the Alps)",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_liechtenstein.png",
+"kind": "country"
+}
+},
+{
+"name": "Lithuania",
+"slug": "lithuania",
+"continent": "Europe",
+"region": "the Baltics (Northern Europe)",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_lithuania.png",
+"kind": "country"
+}
+},
+{
+"name": "Luxembourg",
+"slug": "luxembourg",
+"continent": "Europe",
+"region": "Western Europe",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_luxembourg.png",
+"kind": "country"
+}
+},
+{
+"name": "Malta",
+"slug": "malta",
+"continent": "Europe",
+"region": "the central Mediterranean (Southern Europe)",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_malta.png",
+"kind": "country"
+}
+},
+{
+"name": "Moldova",
+"slug": "moldova",
+"continent": "Europe",
+"region": "Eastern Europe",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_moldova.png",
+"kind": "country"
+}
+},
+{
+"name": "Montenegro",
+"slug": "montenegro",
+"continent": "Europe",
+"region": "the Balkans (Southern Europe)",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_montenegro.png",
+"kind": "country"
+}
+},
+{
+"name": "North Macedonia",
+"slug": "north_macedonia",
+"continent": "Europe",
+"region": "the Balkans (Southeast Europe)",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_north_macedonia.png",
+"kind": "country"
+}
+},
+{
+"name": "Romania",
+"slug": "romania",
+"continent": "Europe",
+"region": "Eastern Europe",
+"tier": 2,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_romania.png",
+"kind": "country"
+}
+},
+{
+"name": "Serbia",
+"slug": "serbia",
+"continent": "Europe",
+"region": "the Balkans (Southeast Europe)",
+"tier": 2,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_serbia.png",
+"kind": "country"
+}
+},
+{
+"name": "Slovakia",
+"slug": "slovakia",
+"continent": "Europe",
+"region": "Central Europe",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_slovakia.png",
+"kind": "country"
+}
+},
+{
+"name": "Slovenia",
+"slug": "slovenia",
+"continent": "Europe",
+"region": "Central Europe",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_slovenia.png",
+"kind": "country"
+}
+},
+{
+"name": "Sweden",
+"slug": "sweden",
+"continent": "Europe",
+"region": "Northern Europe (Scandinavia)",
+"tier": 1,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_sweden.png",
+"kind": "country"
+}
+},
+{
+"name": "Switzerland",
+"slug": "switzerland",
+"continent": "Europe",
+"region": "Central Europe (the Alps)",
+"tier": 1,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "city_switzerland.png",
+"kind": "city"
+}
+},
+{
+"name": "Ukraine",
+"slug": "ukraine",
+"continent": "Europe",
+"region": "Eastern Europe",
+"tier": 1,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_ukraine.png",
+"kind": "country"
+}
+},
+{
+"name": "Antigua and Barbuda",
+"slug": "antigua_and_barbuda",
+"continent": "Americas",
+"region": "the Caribbean (Leeward Islands)",
+"tier": 4,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_antigua_and_barbuda.png",
+"kind": "country"
+}
+},
+{
+"name": "Bahamas",
+"slug": "bahamas",
+"continent": "Americas",
+"region": "the Caribbean (near Florida)",
+"tier": 2,
+"hints": 5,
+"postcard": {
+"has": true,
+"file": "country_bahamas.png",
+"kind": "country"
+}
+},
+{
+"name": "Barbados",
+"slug": "barbados",
+"continent": "Americas",
+"region": "the Caribbean (Lesser Antilles)",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_barbados.png",
+"kind": "country"
+}
+},
+{
+"name": "Belize",
+"slug": "belize",
+"continent": "Americas",
+"region": "Central America (the Caribbean coast)",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "city_belize.png",
+"kind": "city"
+}
+},
+{
+"name": "Colombia",
+"slug": "colombia",
+"continent": "Americas",
+"region": "northern South America",
+"tier": 1,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_colombia.png",
+"kind": "country"
+}
+},
+{
+"name": "Costa Rica",
+"slug": "costa_rica",
+"continent": "Americas",
+"region": "Central America",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_costa_rica.png",
+"kind": "country"
+}
+},
+{
+"name": "Cuba",
+"slug": "cuba",
+"continent": "Americas",
+"region": "the Caribbean",
+"tier": 1,
+"hints": 5,
+"postcard": {
+"has": true,
+"file": "country_cuba.png",
+"kind": "country"
+}
+},
+{
+"name": "Dominica",
+"slug": "dominica",
+"continent": "Americas",
+"region": "the Caribbean",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_dominica.png",
+"kind": "country"
+}
+},
+{
+"name": "Dominican Republic",
+"slug": "dominican_republic",
+"continent": "Americas",
+"region": "the Caribbean",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_dominican_republic.png",
+"kind": "country"
+}
+},
+{
+"name": "Ecuador",
+"slug": "ecuador",
+"continent": "Americas",
+"region": "South America (the Andes)",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "city_galapagos.png",
+"kind": "city"
+}
+},
+{
+"name": "El Salvador",
+"slug": "el_salvador",
+"continent": "Americas",
+"region": "Central America",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_el_salvador.png",
+"kind": "country"
+}
+},
+{
+"name": "Grenada",
+"slug": "grenada",
+"continent": "Americas",
+"region": "the Caribbean",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_grenada.png",
+"kind": "country"
+}
+},
+{
+"name": "Guatemala",
+"slug": "guatemala",
+"continent": "Americas",
+"region": "Central America",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_guatemala.png",
+"kind": "country"
+}
+},
+{
+"name": "Guyana",
+"slug": "guyana",
+"continent": "Americas",
+"region": "the north coast of South America",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_guyana.png",
+"kind": "country"
+}
+},
+{
+"name": "Haiti",
+"slug": "haiti",
+"continent": "Americas",
+"region": "the Caribbean",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_haiti.png",
+"kind": "country"
+}
+},
+{
+"name": "Honduras",
+"slug": "honduras",
+"continent": "Americas",
+"region": "Central America",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_honduras.png",
+"kind": "country"
+}
+},
+{
+"name": "Jamaica",
+"slug": "jamaica",
+"continent": "Americas",
+"region": "the Caribbean",
+"tier": 1,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_jamaica.png",
+"kind": "country"
+}
+},
+{
+"name": "Nicaragua",
+"slug": "nicaragua",
+"continent": "Americas",
+"region": "Central America",
+"tier": 3,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_nicaragua.png",
+"kind": "country"
+}
+},
+{
+"name": "Panama",
+"slug": "panama",
+"continent": "Americas",
+"region": "Central America",
+"tier": 2,
+"hints": 5,
+"postcard": {
+"has": true,
+"file": "city_panama.png",
+"kind": "city"
+}
+},
+{
+"name": "Paraguay",
+"slug": "paraguay",
+"continent": "Americas",
+"region": "central South America",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_paraguay.png",
+"kind": "country"
+}
+},
+{
+"name": "Saint Kitts and Nevis",
+"slug": "saint_kitts_and_nevis",
+"continent": "Americas",
+"region": "the Caribbean",
+"tier": 4,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_saint_kitts_and_nevis.png",
+"kind": "country"
+}
+},
+{
+"name": "Saint Lucia",
+"slug": "saint_lucia",
+"continent": "Americas",
+"region": "the eastern Caribbean",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_saint_lucia.png",
+"kind": "country"
+}
+},
+{
+"name": "Saint Vincent and the Grenadines",
+"slug": "saint_vincent_and_the_grenadines",
+"continent": "Americas",
+"region": "the Caribbean",
+"tier": 4,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_saint_vincent_and_the_grenadines.png",
+"kind": "country"
+}
+},
+{
+"name": "Suriname",
+"slug": "suriname",
+"continent": "Americas",
+"region": "northern South America",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_suriname.png",
+"kind": "country"
+}
+},
+{
+"name": "Trinidad and Tobago",
+"slug": "trinidad_and_tobago",
+"continent": "Americas",
+"region": "the southern Caribbean",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_trinidad_and_tobago.png",
+"kind": "country"
+}
+},
+{
+"name": "Uruguay",
+"slug": "uruguay",
+"continent": "Americas",
+"region": "southern South America",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_uruguay.png",
+"kind": "country"
+}
+},
+{
+"name": "Venezuela",
+"slug": "venezuela",
+"continent": "Americas",
+"region": "northern South America",
+"tier": 2,
+"hints": 5,
+"postcard": {
+"has": true,
+"file": "country_venezuela.png",
+"kind": "country"
+}
+},
+{
+"name": "Fiji",
+"slug": "fiji",
+"continent": "Oceania",
+"region": "the South Pacific (Oceania)",
+"tier": 2,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_fiji.png",
+"kind": "country"
+}
+},
+{
+"name": "Kiribati",
+"slug": "kiribati",
+"continent": "Oceania",
+"region": "the central Pacific (Oceania)",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_kiribati.png",
+"kind": "country"
+}
+},
+{
+"name": "Marshall Islands",
+"slug": "marshall_islands",
+"continent": "Oceania",
+"region": "the central Pacific (Micronesia)",
+"tier": 4,
+"hints": 3,
+"postcard": {
+"has": true,
+"file": "country_marshall_islands.png",
+"kind": "country"
+}
+},
+{
+"name": "Micronesia",
+"slug": "micronesia",
+"continent": "Oceania",
+"region": "the western Pacific (Micronesia)",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_micronesia.png",
+"kind": "country"
+}
+},
+{
+"name": "Nauru",
+"slug": "nauru",
+"continent": "Oceania",
+"region": "the central Pacific (Micronesia)",
+"tier": 4,
+"hints": 5,
+"postcard": {
+"has": true,
+"file": "country_nauru.png",
+"kind": "country"
+}
+},
+{
+"name": "New Zealand",
+"slug": "new_zealand",
+"continent": "Oceania",
+"region": "the South Pacific (Oceania)",
+"tier": 1,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_new_zealand.png",
+"kind": "country"
+}
+},
+{
+"name": "Samoa",
+"slug": "samoa",
+"continent": "Oceania",
+"region": "the South Pacific (Polynesia)",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_samoa.png",
+"kind": "country"
+}
+},
+{
+"name": "Solomon Islands",
+"slug": "solomon_islands",
+"continent": "Oceania",
+"region": "the South Pacific (Melanesia)",
+"tier": 4,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_solomon_islands.png",
+"kind": "country"
+}
+},
+{
+"name": "Tonga",
+"slug": "tonga",
+"continent": "Oceania",
+"region": "the South Pacific (Polynesia)",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_tonga.png",
+"kind": "country"
+}
+},
+{
+"name": "Vanuatu",
+"slug": "vanuatu",
+"continent": "Oceania",
+"region": "the South Pacific (Oceania)",
+"tier": 3,
+"hints": 4,
+"postcard": {
+"has": true,
+"file": "country_vanuatu.png",
+"kind": "country"
+}
+}
+]

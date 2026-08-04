@@ -27,7 +27,7 @@ class TutorialCoachTest {
         compose.setContent { TutorialCoach(vm) }
 
         compose.onNodeWithText("Interpol needs you. Read the case, then tap BEGIN.").assertIsDisplayed()
-        compose.onNodeWithText("TUTORIAL   1 / 7").assertIsDisplayed()
+        compose.onNodeWithText("STEP 1 OF 7").assertIsDisplayed()
 
         compose.onNodeWithText("SKIP").performClick()
         assertEquals("SKIP ends the tutorial", -1, vm.s.tutorialStep)
