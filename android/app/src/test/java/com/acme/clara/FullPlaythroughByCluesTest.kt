@@ -22,7 +22,8 @@ class FullPlaythroughByCluesTest {
         val info = CityMeta.of(city)
         if (info.landmark.isNotBlank() && clue.contains(info.landmark, ignoreCase = true)) return true
         info.flag?.let { if (clue.contains(it)) return true }
-        info.currency?.let { if (clue.contains(it)) return true }
+        // the currency clue drops the article ("the euro" -> "euro"), so match on the bare name
+        info.currency?.removePrefix("the ")?.let { if (clue.contains(it)) return true }
         info.greeting?.let { g ->
             Regex("\\(([^)]+)\\)").find(g)?.groupValues?.get(1)?.let { if (clue.contains(it)) return true }
         }

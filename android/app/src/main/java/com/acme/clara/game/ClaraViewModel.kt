@@ -502,17 +502,21 @@ class ClaraViewModel : ViewModel() {
 
             fun lead(frag: String) = pronouns("${GameData.clueLeadIns.random()} {s} $frag.")
             fun flagText() = pronouns("${GameData.clueLeadIns.random()} {s} sketched a flag — ${info!!.flag}.")
-            fun currencyText() = pronouns("${GameData.clueLeadIns.random()} {s} counted money called ${info!!.currency}.")
-            // Whiff (venue 3's no-clue outcome): a standalone witness aside, or a nemesis whisper.
-            fun funnyText() =
-                (if (shouldTeaseNemesis(st)) nemesisTease() else Humor.witnessLine(paid))
+            // Currency is stored with its article ("the euro") for the almanac; drop it here so the
+            // clue reads "money called euro" rather than the awkward "money called the euro".
+            fun currencyText() = pronouns("${GameData.clueLeadIns.random()} {s} counted money called ${info!!.currency!!.removePrefix("the ")}.")
+            // Whiff (venue 3's no-clue outcome): a standalone aside from THIS witness's own
+            // occupation (so it fits the teller), or a nemesis whisper.
+            fun funnyText(occ: String) =
+                (if (shouldTeaseNemesis(st)) nemesisTease() else Humor.witnessLine(occ, paid))
                     ?: "${flavourFood(st.culprit!!)}."
-            // Flourish: tack a line that's ABOUT the suspect onto the clue (pronoun-matched, so it
-            // reads as the same witness carrying on) — or, occasionally, a nemesis whisper.
-            fun flourish(t: String): String {
+            // Flourish: tack a line that's ABOUT the suspect onto the clue — drawn from THIS witness's
+            // occupation and pronoun-matched, so it reads as the same witness carrying on — or,
+            // occasionally, a nemesis whisper.
+            fun flourish(t: String, occ: String): String {
                 if (Random.nextInt(100) >= 30) return t
                 val aside = if (shouldTeaseNemesis(st)) nemesisTease()
-                            else Humor.suspectAside(paid)?.let { suspectPronouns(it) }
+                            else Humor.suspectAside(occ, paid)?.let { suspectPronouns(it) }
                 return aside?.let { "$t $it" } ?: t
             }
             fun nextGeneral(): String? { val g = generals.removeFirstOrNull() ?: return null; used += "g:$g"; return g }
@@ -522,10 +526,10 @@ class ClaraViewModel : ViewModel() {
             fun trailVenue(p: String, occ: String): Venue {
                 val g = nextGeneral()
                 return when {
-                    g != null -> Venue(p, occ, ClueKind.DESTINATION, flourish(lead(g)))
-                    flagFree() -> { used += "flag"; Venue(p, occ, ClueKind.DESTINATION, flourish(flagText())) }
-                    curFree() -> { used += "cur"; Venue(p, occ, ClueKind.DESTINATION, flourish(currencyText())) }
-                    else -> Venue(p, occ, ClueKind.DANGER, funnyText())
+                    g != null -> Venue(p, occ, ClueKind.DESTINATION, flourish(lead(g), occ))
+                    flagFree() -> { used += "flag"; Venue(p, occ, ClueKind.DESTINATION, flourish(flagText(), occ)) }
+                    curFree() -> { used += "cur"; Venue(p, occ, ClueKind.DESTINATION, flourish(currencyText(), occ)) }
+                    else -> Venue(p, occ, ClueKind.DANGER, funnyText(occ))
                 }
             }
 
@@ -541,16 +545,16 @@ class ClaraViewModel : ViewModel() {
                     else -> null
                 }
                 when (useFlag) {
-                    true -> { used += "flag"; Venue(places[2], occs[2], ClueKind.DESTINATION, flourish(flagText())) }
-                    false -> { used += "cur"; Venue(places[2], occs[2], ClueKind.DESTINATION, flourish(currencyText())) }
-                    null -> Venue(places[2], occs[2], ClueKind.DANGER, funnyText())
+                    true -> { used += "flag"; Venue(places[2], occs[2], ClueKind.DESTINATION, flourish(flagText(), occs[2])) }
+                    false -> { used += "cur"; Venue(places[2], occs[2], ClueKind.DESTINATION, flourish(currencyText(), occs[2])) }
+                    null -> Venue(places[2], occs[2], ClueKind.DANGER, funnyText(occs[2]))
                 }
-            } else Venue(places[2], occs[2], ClueKind.DANGER, funnyText())
+            } else Venue(places[2], occs[2], ClueKind.DANGER, funnyText(occs[2]))
 
             // Venue 2 — trait until the warrant is in hand, then a 2nd distinct trail hint.
             val v2 = if (!hasMandate && st.revealOrder.isNotEmpty()) {
                 val tr = st.revealOrder[st.revealedCount % st.revealOrder.size]
-                Venue(places[1], occs[1], ClueKind.TRAIT, flourish(traitClue(tr)), tr)
+                Venue(places[1], occs[1], ClueKind.TRAIT, flourish(traitClue(tr), occs[1]), tr)
             } else trailVenue(places[1], occs[1])
 
             list.add(v1); list.add(v2); list.add(v3)
