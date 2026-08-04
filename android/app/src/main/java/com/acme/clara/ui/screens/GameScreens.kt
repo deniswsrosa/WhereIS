@@ -301,12 +301,18 @@ private fun YellowButton(v: Virtual, label: String, onClick: () -> Unit) {
  *  pinned to the bottom of the panel in a smaller, greyed-out font so it reads as secondary
  *  "did you know" text (e.g. In Arabic, hello is "Salaam" (sah-LAAM).). */
 @Composable
-private fun CountryText(v: Virtual, info: com.acme.clara.data.CityInfo) {
+private fun CountryText(v: Virtual, info: com.acme.clara.data.CityInfo, paid: Boolean = false) {
+    // The secondary grey line usually teaches the local greeting, but ~30% of arrivals crack a
+    // joke instead. Rolled once per city so it stays put across recompositions.
+    val bottom = remember(info.name) {
+        val funny = if (kotlin.random.Random.nextInt(100) < 30) com.acme.clara.game.Humor.arrivalLine(paid) else null
+        funny ?: info.greeting
+    }
     Column(Modifier.fillMaxSize()) {
         Text(info.description, style = v.text(8.5f, color = Vga.White))
-        if (info.greeting != null) {
+        if (bottom != null) {
             Spacer(Modifier.weight(1f))
-            Text(info.greeting!!, style = v.text(7f, color = Vga.LightGray))
+            Text(bottom, style = v.text(7f, color = Vga.LightGray))
         }
     }
 }
@@ -485,7 +491,7 @@ fun CityScreen(vm: ClaraViewModel) = VirtualScreen { v ->
         v.At(149, 13, 167, 145) {
             Box(Modifier.fillMaxSize().background(Vga.Black)
                 .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(4))) {
-                if (s.onTrack) CountryText(v, info)
+                if (s.onTrack) CountryText(v, info, vm.s.expansionUnlocked)
                 else Text("You look around. Nothing here seems out of the ordinary...",
                     style = v.text(8.5f, color = Vga.White))
             }

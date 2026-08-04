@@ -471,65 +471,90 @@ class ClaraViewModel : ViewModel() {
                     "Word on the street says the gang is hiding somewhere in town."))
             }
         } else {
-            val nextCity = st.route.getOrNull(st.progress + 1)
-            var slot = 0
-            places.forEachIndexed { i, p ->
-                val occ = occs[i]
-                if (slot == 0 && nextCity != null) {
-                    slot++
-                    list.add(Venue(p, occ, ClueKind.DESTINATION, destinationClue(nextCity)))
-                } else {
-                    // Non-destination venue. Reveal the next unseen trait; once the whole
-                    // description is known, cycle back through the traits so a witness re-confirms
-                    // one (traitClue re-phrases it each time) instead of parroting the same flavour
-                    // filler. C3: an occasional nemesis whisper adds colour (never a real clue).
-                    val n = st.revealOrder.size
-                    val slotIdx = st.revealedCount + list.count { it.kind == ClueKind.TRAIT }
-                    when {
-                        shouldTeaseNemesis(st) ->
-                            list.add(Venue(p, occ, ClueKind.DANGER, nemesisTease()))
-                        n > 0 -> {
-                            val tr = st.revealOrder[slotIdx % n]
-                            list.add(Venue(p, occ, ClueKind.TRAIT, traitClue(tr), tr))
-                        }
-                        else ->
-                            list.add(Venue(p, occ, ClueKind.DANGER, "${flavourFood(st.culprit!!)}."))
-                    }
+            // On-track city (the 3-venue spec):
+            //  · Venue 1  → a general trail hint (where the thief headed).
+            //  · Venue 2  → a suspect trait until the warrant is issued, then a 2nd distinct trail hint.
+            //  · Venue 3  → the "bet": a rank-scaled chance to show the destination's flag/currency
+            //               (65/35), otherwise a funny witness aside (no clue). Free career: always pays.
+            // No hint repeats within the city (assign V1 → V3 → V2); a real clue sometimes gets a witty
+            // flourish (~30%).
+            val info = st.route.getOrNull(st.progress + 1)?.let { CityMeta.of(it) }
+            val paid = st.expansionUnlocked
+            val hasMandate = st.warrantFor != null
+            val used = HashSet<String>()
+            val generals = ArrayDeque((info?.let { generalCluePool(it) } ?: emptyList()).shuffled())
+
+            fun lead(frag: String) = pronouns("${GameData.clueLeadIns.random()} {s} $frag.")
+            fun flagText() = pronouns("${GameData.clueLeadIns.random()} {s} sketched a flag — ${info!!.flag}.")
+            fun currencyText() = pronouns("${GameData.clueLeadIns.random()} {s} counted money called ${info!!.currency}.")
+            fun funnyText() = Humor.witnessLine(paid) ?: "${flavourFood(st.culprit!!)}."
+            fun flourish(t: String) =
+                if (Random.nextInt(100) < 30) Humor.witnessLine(paid)?.let { "$t $it" } ?: t else t
+            fun nextGeneral(): String? { val g = generals.removeFirstOrNull() ?: return null; used += "g:$g"; return g }
+            fun flagFree() = info?.flag != null && "flag" !in used
+            fun curFree() = info?.currency != null && "cur" !in used
+
+            fun trailVenue(p: String, occ: String): Venue {
+                val g = nextGeneral()
+                return when {
+                    g != null -> Venue(p, occ, ClueKind.DESTINATION, flourish(lead(g)))
+                    flagFree() -> { used += "flag"; Venue(p, occ, ClueKind.DESTINATION, flourish(flagText())) }
+                    curFree() -> { used += "cur"; Venue(p, occ, ClueKind.DESTINATION, flourish(currencyText())) }
+                    else -> Venue(p, occ, ClueKind.DANGER, funnyText())
                 }
             }
+
+            // Venue 1 — a general trail hint.
+            val v1 = trailVenue(places[0], occs[0])
+
+            // Venue 3 — the bet.
+            val v3 = if (Random.nextDouble() < venue3Chance(st.rankIndex)) {
+                val useFlag = when {
+                    flagFree() && curFree() -> Random.nextInt(100) < 65
+                    flagFree() -> true
+                    curFree() -> false
+                    else -> null
+                }
+                when (useFlag) {
+                    true -> { used += "flag"; Venue(places[2], occs[2], ClueKind.DESTINATION, flourish(flagText())) }
+                    false -> { used += "cur"; Venue(places[2], occs[2], ClueKind.DESTINATION, flourish(currencyText())) }
+                    null -> Venue(places[2], occs[2], ClueKind.DANGER, funnyText())
+                }
+            } else Venue(places[2], occs[2], ClueKind.DANGER, funnyText())
+
+            // Venue 2 — trait until the warrant is in hand, then a 2nd distinct trail hint.
+            val v2 = if (!hasMandate && st.revealOrder.isNotEmpty()) {
+                val tr = st.revealOrder[st.revealedCount % st.revealOrder.size]
+                Venue(places[1], occs[1], ClueKind.TRAIT, flourish(traitClue(tr)), tr)
+            } else trailVenue(places[1], occs[1])
+
+            list.add(v1); list.add(v2); list.add(v3)
         }
+        // Shuffle so the trail clue isn't always the first building — otherwise a player learns to
+        // check the same slot every time. Indices stay self-consistent for visited/openVenue.
+        list.shuffle()
         s = s.copy(venues = list, visited = emptySet(), openClue = null)
     }
 
-    private fun destinationClue(next: String): String {
-        val info = CityMeta.of(next)
-        val lead = GameData.clueLeadIns.random()
-        // Like the original, the destination is never named outright — the witness cites a
-        // forward-looking fact you look up. Expansion cities carry hand-authored, reviewed leads
-        // (one per angle); the original 30 fall back to the region+landmark templates.
-        val frag = if (info.clues.isNotEmpty()) pronouns("{s} " + info.clues.random())
-            else pronouns(templatedClueFragment(info))
-        return "$lead $frag."
-    }
-
-    /** Build a clue fragment from a city's structured attributes — a template per clue type
-     *  (region · landmark · flag · currency · language), matching the 1990 game's clue mix.
-     *  region + landmark are always available; flag/currency/greeting fire when the almanac has them. */
-    private fun templatedClueFragment(info: CityInfo): String {
-        val options = mutableListOf(
-            "{s} was headed for a country in ${info.region}",
-            "{s} planned to visit a place known for ${info.landmark}",
-            "{s} was headed somewhere in ${info.region}, near ${info.landmark}",
+    /** The destination's general "where next" hints as subject-less fragments (never flag/currency —
+     *  those are their own venues). Expansion cities carry hand-authored leads; the original 30 have
+     *  a single landmark fragment, so their 2nd trail slot falls through to the flag/currency. */
+    private fun generalCluePool(info: CityInfo): List<String> =
+        if (info.clues.isNotEmpty()) info.clues
+        else listOf(
+            listOf(
+                "planned to visit a place known for ${info.landmark}",
+                "was headed somewhere in ${info.region}, near ${info.landmark}",
+            ).random()
         )
-        info.flag?.let { options += "{s} sketched a flag with $it" }
-        info.currency?.let { options += "{s} counted money called $it" }
-        // the greeting is a full "In X, hello is …(pron)." line; the clue only wants the sound,
-        // so pull the parenthetical pronunciation out of it.
-        info.greeting?.let { g ->
-            val sound = Regex("\\(([^)]+)\\)").find(g)?.groupValues?.get(1) ?: g
-            options += "{s} practiced a hello that sounded like “$sound”"
-        }
-        return options.random()
+
+    /** Venue-3 payoff odds by rank: 100% for the whole free career, then linear down to 50% at the
+     *  top International grade — so late-game the flag/currency bet can whiff into a joke. */
+    private fun venue3Chance(rank: Int): Double {
+        if (rank < Progression.FREE_RANKS) return 1.0
+        val span = (Progression.LAST_RANK - Progression.FREE_RANKS).coerceAtLeast(1)
+        val t = (rank - Progression.FREE_RANKS).toDouble() / span
+        return (1.0 - 0.5 * t).coerceIn(0.5, 1.0)
     }
 
     /** Cities in play: the free original 30, plus the paid destinations of every recognition wave

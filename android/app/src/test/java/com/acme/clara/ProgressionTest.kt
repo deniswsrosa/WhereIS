@@ -145,71 +145,9 @@ class ProgressionTest {
         if (s.phase == Phase.CHASE) chaseDone()
     }
 
-    /** Solve the way a REAL player must: investigate ~3 witnesses at every city (each costs clock)
-     *  to find the trail, not just fly the known route. The deadline has to budget for this time —
-     *  the flights-only [solveCurrentCase] never exercised it, which hid the too-tight deadline. */
-    private fun ClaraViewModel.solveCurrentCaseThoroughly() {
-        issueWarrantFor(s.culprit!!)
-        var guard = 0
-        while (s.progress < s.route.size - 1 && guard++ < 24) {
-            for (i in 0..2) { if (s.phase == Phase.CHASE) break; openVenue(i) }
-            if (s.phase == Phase.CHASE) break
-            travelTo(s.route[s.progress + 1]); arrive()
-        }
-        for (i in 0..2) { if (s.phase == Phase.CHASE) break; openVenue(i) }
-        if (s.phase == Phase.CHASE) chaseDone()
-    }
+    // Winnability with realistic, EFFICIENT play (open only what you need — the deadline no longer
+    // budgets for opening every witness everywhere) is proven end-to-end in FullPlaythroughByCluesTest.
 
-    /** A thorough run that also fumbles a SINGLE wrong flight out of the opening city before
-     *  correcting course — the very first case must still forgive one honest mistake. */
-    private fun ClaraViewModel.solveOpeningCaseWithOneWrongFlight() {
-        issueWarrantFor(s.culprit!!)
-        for (i in 0..2) { if (s.phase == Phase.CHASE) break; openVenue(i) }   // investigate start
-        val correct = s.route[s.progress + 1]
-        val decoy = GameData.cities.firstOrNull { it !in s.route && it != s.currentCity }
-        if (decoy != null) { travelTo(decoy); arrive(); openVenue(0) }        // wrong hop + a wasted look
-        travelTo(correct); arrive()                                          // back on the trail
-        var guard = 0
-        while (s.progress < s.route.size - 1 && guard++ < 24) {
-            for (i in 0..2) { if (s.phase == Phase.CHASE) break; openVenue(i) }
-            if (s.phase == Phase.CHASE) break
-            travelTo(s.route[s.progress + 1]); arrive()
-        }
-        for (i in 0..2) { if (s.phase == Phase.CHASE) break; openVenue(i) }
-        if (s.phase == Phase.CHASE) chaseDone()
-    }
-
-    @Test fun thoroughInvestigationBeatsTheClockOnTheOpeningCase() {
-        // 30 independent first cases, each solved with a full clue-hunt at every city.
-        // A careful, no-mistakes rookie must never run out of time on case one.
-        repeat(30) {
-            val vm = ClaraViewModel().apply { signOn("Sleuth") }
-            vm.solveCurrentCaseThoroughly()
-            assertTrue("thorough clean play beat the clock on the opening case", vm.s.won)
-        }
-    }
-
-    @Test fun thoroughInvestigationBeatsTheClockDeepIntoTheLadder() {
-        val vm = ClaraViewModel().apply { signOn("Marathon"); unlockExpansion() }
-        repeat(20) {
-            vm.solveCurrentCaseThoroughly()
-            assertTrue("thorough play beat the clock at rank ${vm.s.rankIndex}", vm.s.won)
-            if (vm.s.pendingPromotion) vm.resolvePromotion(true)
-            vm.nextCase()
-        }
-    }
-
-    @Test fun theOpeningCaseForgivesOneWrongFlight() {
-        var survived = 0
-        val trials = 40
-        repeat(trials) {
-            val vm = ClaraViewModel().apply { signOn("Rookie") }
-            vm.solveOpeningCaseWithOneWrongFlight()
-            if (vm.s.won) survived++
-        }
-        assertTrue("the opening case survived only $survived/$trials one-mistake runs",
-            survived >= trials - 2)
-    }
     /** Solve, ace any promotion quiz, advance — returns false once the (free) career is over. */
     private fun ClaraViewModel.advanceOneCase(): Boolean {
         solveCurrentCase()

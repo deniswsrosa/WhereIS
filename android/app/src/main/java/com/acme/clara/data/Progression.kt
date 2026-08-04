@@ -38,20 +38,14 @@ object Progression {
         if (maxWave < 0) emptyList() else wave.filterValues { it <= maxWave }.keys.toList()
 
     /**
-     * The case deadline in clock-hours: the route's travel need (real flight hours inflated
-     * ~1.8x for the overnight rests perfect play still incurs, floored per hop) plus this
-     * rank's slack. Always covers a clean run of the route; slack is the margin for mistakes.
+     * The case deadline in clock-hours, budgeted for EFFICIENT play (not exhaustive searching):
+     * the flights, a per-hop clue-hunt allowance (landmark at each city + a couple of trait opens
+     * early + the odd 3h bet), and this rank's slack. An efficient run always beats the clock, but
+     * late cases are tight enough that a wrong bet or a mis-flight can cost you.
      */
     fun caseDeadlineHours(rank: Int, routeFlightHours: Int, hops: Int): Int {
-        // A case's clock is spent on three real things, all of which the deadline must cover:
-        //  1. flights between cities (×1.6 to buffer the overnight rolls those flights trigger),
-        //  2. INVESTIGATION — the clue-hunt at every city, ~3 witnesses at 2-3 h plus overnights,
-        //     which a player MUST do to learn the route (the old formula budgeted flights only,
-        //     making cases unwinnable in real play), and
-        //  3. this rank's slack — the shrinking fairness margin that lets early cases forgive a
-        //     wrong flight while top grades punish one.
-        val travel = (routeFlightHours * 1.4).roundToInt()
-        val investigate = hops * 14
+        val travel = (routeFlightHours * 0.8).roundToInt()
+        val investigate = hops * 12    // ~efficient clue-hunt + overnight, per city
         return travel + investigate + slackHours(rank)
     }
 }

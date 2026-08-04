@@ -36,7 +36,10 @@ class ExpansionTest {
             assertTrue("${c.name} region", c.region.isNotBlank())
             assertTrue("${c.name} landmark", c.landmark.isNotBlank())
             assertTrue("${c.name} description", c.description.length > 20)
-            assertTrue("${c.name} has 2-3 clues", c.clues.size in 2..3)
+            // Flag/currency were pulled into their own fields, so clues[] is now the pure "general
+            // hint" pool (1-3); with the flag every city still clears the 3-hint minimum.
+            assertTrue("${c.name} has general clues", c.clues.isNotEmpty())
+            assertTrue("${c.name} has a flag (Antarctica excepted)", c.name == "Antarctica" || c.flag != null)
             assertTrue("${c.name} has coordinates", Expansion.latLon.containsKey(c.name))
             assertNotNull("${c.name} has a map dot", Expansion.pos[c.name])
         }
@@ -56,8 +59,9 @@ class ExpansionTest {
     @Test fun structuredAttributesAreAttached() {
         // Berlin's say-hello line teaches the local greeting with its pronunciation.
         assertTrue(Expansion.byName["Berlin"]?.greeting?.contains("Guten Tag") == true)
-        assertEquals("rubles", Expansion.byName["Novosibirsk"]?.currency)
-        assertEquals("pesos", Expansion.byName["Philippines"]?.currency)
+        // Currencies were normalised to the "the <money>" form used in the money clue template.
+        assertTrue(Expansion.byName["Novosibirsk"]?.currency?.contains("ruble") == true)
+        assertTrue(Expansion.byName["Philippines"]?.currency?.contains("peso") == true)
     }
 
     @Test fun cityMetaResolvesExpansionCities() {

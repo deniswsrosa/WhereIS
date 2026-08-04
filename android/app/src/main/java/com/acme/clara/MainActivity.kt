@@ -61,6 +61,7 @@ fun ClaraApp() {
     val context = LocalContext.current
     // Bind persistence and decide the launch: 0 saves → sign-on, 1 → continue, 2+ → picker.
     LaunchedEffect(Unit) {
+        com.acme.clara.game.Humor.init(context)
         val store = SaveStore(context)
         vm.bindRepository(store)
         when (val outcome = decideLaunch(store.list())) {

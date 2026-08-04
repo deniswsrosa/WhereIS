@@ -1,0 +1,1261 @@
+{
+ "expansion68": {
+  "Abu Simbel": {
+   "country": "Egypt",
+   "flag": "red, white and black bands with a golden eagle in the center",
+   "currency": "the Egyptian pound",
+   "sharedCurrency": false
+  },
+  "Cape Town": {
+   "country": "South Africa",
+   "flag": "a green Y-shape splitting bands of red, blue, black, gold and white",
+   "currency": "the rand",
+   "sharedCurrency": false
+  },
+  "Casablanca": {
+   "country": "Morocco",
+   "flag": "red with a green five-pointed star in the middle",
+   "currency": "the dirham",
+   "sharedCurrency": false
+  },
+  "Kenya": {
+   "country": "Kenya",
+   "flag": "black, red and green bands with a Maasai shield and crossed spears",
+   "currency": "the shilling",
+   "sharedCurrency": false
+  },
+  "Marrakech": {
+   "country": "Morocco",
+   "flag": "red with a green five-pointed star in the middle",
+   "currency": "the dirham",
+   "sharedCurrency": false
+  },
+  "Mauritius": {
+   "country": "Mauritius",
+   "flag": "four bands of red, blue, yellow and green",
+   "currency": "the Mauritian rupee",
+   "sharedCurrency": false
+  },
+  "Amsterdam": {
+   "country": "Netherlands",
+   "flag": "three bands of red, white and blue",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "Berlin": {
+   "country": "Germany",
+   "flag": "three bands of black, red and gold",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "Cologne": {
+   "country": "Germany",
+   "flag": "three bands of black, red and gold",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "Copenhagen": {
+   "country": "Denmark",
+   "flag": "red with a white cross shifted toward the mast",
+   "currency": "the Danish krone",
+   "sharedCurrency": true
+  },
+  "Dubrovnik": {
+   "country": "Croatia",
+   "flag": "red, white and blue bands with a checkered shield",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "Edinburgh": {
+   "country": "Scotland",
+   "flag": "a white diagonal cross on a blue field",
+   "currency": "the pound sterling",
+   "sharedCurrency": true
+  },
+  "Ireland": {
+   "country": "Ireland",
+   "flag": "three bands of green, white and orange",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "Krakow": {
+   "country": "Poland",
+   "flag": "two bands, white above red",
+   "currency": "the złoty",
+   "sharedCurrency": false
+  },
+  "Lisbon": {
+   "country": "Portugal",
+   "flag": "green and red with a shield and a golden sphere",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "Monaco": {
+   "country": "Monaco",
+   "flag": "two bands, red above white",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "Mont Saint-Michel": {
+   "country": "France",
+   "flag": "three bands of blue, white and red",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "Neuschwanstein": {
+   "country": "Germany",
+   "flag": "three bands of black, red and gold",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "Northern Ireland": {
+   "country": "United Kingdom",
+   "flag": "the Union Jack — layered red and white crosses on blue",
+   "currency": "the pound sterling",
+   "sharedCurrency": true
+  },
+  "Pisa": {
+   "country": "Italy",
+   "flag": "three bands of green, white and red",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "Pompeii": {
+   "country": "Italy",
+   "flag": "three bands of green, white and red",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "Prague": {
+   "country": "Czechia",
+   "flag": "white above red with a blue triangle at the mast",
+   "currency": "the Czech koruna",
+   "sharedCurrency": false
+  },
+  "Saint Petersburg": {
+   "country": "Russia",
+   "flag": "three bands of white, blue and red",
+   "currency": "the ruble",
+   "sharedCurrency": false
+  },
+  "Santorini": {
+   "country": "Greece",
+   "flag": "blue and white stripes with a white cross in the corner",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "Scottish Highlands": {
+   "country": "Scotland",
+   "flag": "a white diagonal cross on a blue field",
+   "currency": "the pound sterling",
+   "sharedCurrency": true
+  },
+  "Stonehenge": {
+   "country": "England",
+   "flag": "a red cross on a white field",
+   "currency": "the pound sterling",
+   "sharedCurrency": true
+  },
+  "Svalbard": {
+   "country": "Norway",
+   "flag": "red with a blue-and-white cross",
+   "currency": "the Norwegian krone",
+   "sharedCurrency": false
+  },
+  "Valencia": {
+   "country": "Spain",
+   "flag": "red and yellow bands with a coat of arms",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "Vatican City": {
+   "country": "Vatican",
+   "flag": "yellow and white halves with crossed keys and a papal tiara",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "Venice": {
+   "country": "Italy",
+   "flag": "three bands of green, white and red",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "Vienna": {
+   "country": "Austria",
+   "flag": "three bands of red, white and red",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "Cappadocia": {
+   "country": "Turkey",
+   "flag": "red with a white crescent moon and star",
+   "currency": "the Turkish lira",
+   "sharedCurrency": false
+  },
+  "Dubai": {
+   "country": "United Arab Emirates",
+   "flag": "green, white and black bands with a red stripe at the mast",
+   "currency": "the UAE dirham",
+   "sharedCurrency": false
+  },
+  "Jerusalem": {
+   "country": "Israel",
+   "flag": "a blue Star of David between two blue stripes on white",
+   "currency": "the shekel",
+   "sharedCurrency": false
+  },
+  "Jordan": {
+   "country": "Jordan",
+   "flag": "black, white and green bands with a red triangle and a white star",
+   "currency": "the Jordanian dinar",
+   "sharedCurrency": false
+  },
+  "Bali": {
+   "country": "Indonesia",
+   "flag": "two bands, red above white",
+   "currency": "the rupiah",
+   "sharedCurrency": false
+  },
+  "Bhutan": {
+   "country": "Bhutan",
+   "flag": "a white dragon across a diagonal split of yellow and orange",
+   "currency": "the ngultrum",
+   "sharedCurrency": false
+  },
+  "Cambodia": {
+   "country": "Cambodia",
+   "flag": "blue and red bands with a white temple in the center",
+   "currency": "the riel",
+   "sharedCurrency": false
+  },
+  "Mount Everest": {
+   "country": "Nepal",
+   "flag": "a crimson double-pennant shape with a white moon and sun",
+   "currency": "the Nepalese rupee",
+   "sharedCurrency": false
+  },
+  "Gujarat": {
+   "country": "India",
+   "flag": "saffron, white and green bands with a navy spoked wheel",
+   "currency": "the Indian rupee",
+   "sharedCurrency": false
+  },
+  "Ha Long Bay": {
+   "country": "Vietnam",
+   "flag": "red with a single yellow five-pointed star",
+   "currency": "the dong",
+   "sharedCurrency": false
+  },
+  "Hong Kong": {
+   "country": "Hong Kong",
+   "flag": "red with a white five-petaled orchid flower",
+   "currency": "the Hong Kong dollar",
+   "sharedCurrency": false
+  },
+  "Kuala Lumpur": {
+   "country": "Malaysia",
+   "flag": "red and white stripes with a blue corner holding a yellow crescent and star",
+   "currency": "the ringgit",
+   "sharedCurrency": false
+  },
+  "Mongolia": {
+   "country": "Mongolia",
+   "flag": "a blue band between two red bands, with a yellow soyombo symbol",
+   "currency": "the tugrik",
+   "sharedCurrency": false
+  },
+  "Myanmar": {
+   "country": "Myanmar",
+   "flag": "yellow, green and red bands with a large white star",
+   "currency": "the kyat",
+   "sharedCurrency": false
+  },
+  "Novosibirsk": {
+   "country": "Russia",
+   "flag": "three bands of white, blue and red",
+   "currency": "the ruble",
+   "sharedCurrency": false
+  },
+  "Philippines": {
+   "country": "Philippines",
+   "flag": "blue and red bands with a white triangle, a golden sun and three stars",
+   "currency": "the peso",
+   "sharedCurrency": false
+  },
+  "Samarkand": {
+   "country": "Uzbekistan",
+   "flag": "blue, white and green bands with a crescent moon and twelve stars",
+   "currency": "the som",
+   "sharedCurrency": false
+  },
+  "Taipei": {
+   "country": "Taiwan",
+   "flag": "red with a blue corner holding a white sun",
+   "currency": "the New Taiwan dollar",
+   "sharedCurrency": false
+  },
+  "Turkmenistan": {
+   "country": "Turkmenistan",
+   "flag": "green with a carpet-pattern stripe and a crescent with five stars",
+   "currency": "the manat",
+   "sharedCurrency": false
+  },
+  "Chichen Itza": {
+   "country": "Mexico",
+   "flag": "green, white and red bands with an eagle perched on a cactus",
+   "currency": "the peso",
+   "sharedCurrency": false
+  },
+  "Grand Canyon": {
+   "country": "United States",
+   "flag": "fifty white stars on blue with thirteen red-and-white stripes",
+   "currency": "the US dollar",
+   "sharedCurrency": true
+  },
+  "Greenland": {
+   "country": "Greenland",
+   "flag": "white and red halves with a counter-colored circle",
+   "currency": "the Danish krone",
+   "sharedCurrency": true
+  },
+  "Las Vegas": {
+   "country": "United States",
+   "flag": "fifty white stars on blue with thirteen red-and-white stripes",
+   "currency": "the US dollar",
+   "sharedCurrency": true
+  },
+  "Los Angeles": {
+   "country": "United States",
+   "flag": "fifty white stars on blue with thirteen red-and-white stripes",
+   "currency": "the US dollar",
+   "sharedCurrency": true
+  },
+  "Mount Rushmore": {
+   "country": "United States",
+   "flag": "fifty white stars on blue with thirteen red-and-white stripes",
+   "currency": "the US dollar",
+   "sharedCurrency": true
+  },
+  "San Francisco": {
+   "country": "United States",
+   "flag": "fifty white stars on blue with thirteen red-and-white stripes",
+   "currency": "the US dollar",
+   "sharedCurrency": true
+  },
+  "Seattle": {
+   "country": "United States",
+   "flag": "fifty white stars on blue with thirteen red-and-white stripes",
+   "currency": "the US dollar",
+   "sharedCurrency": true
+  },
+  "Toronto": {
+   "country": "Canada",
+   "flag": "a red maple leaf between two red bands",
+   "currency": "the Canadian dollar",
+   "sharedCurrency": false
+  },
+  "Washington DC": {
+   "country": "United States",
+   "flag": "fifty white stars on blue with thirteen red-and-white stripes",
+   "currency": "the US dollar",
+   "sharedCurrency": true
+  },
+  "Iguazu Falls": {
+   "country": "Brazil",
+   "flag": "green with a yellow diamond and a blue globe crossed by a starry band",
+   "currency": "the real",
+   "sharedCurrency": false
+  },
+  "Maranhao": {
+   "country": "Brazil",
+   "flag": "green with a yellow diamond and a blue globe crossed by a starry band",
+   "currency": "the real",
+   "sharedCurrency": false
+  },
+  "Salar de Uyuni": {
+   "country": "Bolivia",
+   "flag": "red, yellow and green bands with a coat of arms",
+   "currency": "the boliviano",
+   "sharedCurrency": false
+  },
+  "Antarctica": {
+   "country": "Antarctica",
+   "flag": "— no national flag —",
+   "currency": "— no currency —",
+   "sharedCurrency": false
+  },
+  "Easter Island": {
+   "country": "Chile",
+   "flag": "red and white with a blue corner and a single white star",
+   "currency": "the Chilean peso",
+   "sharedCurrency": false
+  },
+  "Honolulu": {
+   "country": "United States (Hawaii)",
+   "flag": "fifty white stars on blue with thirteen red-and-white stripes",
+   "currency": "the US dollar",
+   "sharedCurrency": true
+  },
+  "Palau": {
+   "country": "Palau",
+   "flag": "light blue with a large yellow full moon",
+   "currency": "the US dollar",
+   "sharedCurrency": true
+  },
+  "Tuvalu": {
+   "country": "Tuvalu",
+   "flag": "light blue with a Union Jack in the corner and nine yellow stars",
+   "currency": "the Australian dollar",
+   "sharedCurrency": true
+  }
+ },
+ "expansion2_extracted": {
+  "Algeria": {
+   "flag": "green and white with a red crescent moon and a red star",
+   "currency": "Algerian dinar",
+   "ownCurrency": true
+  },
+  "Angola": {
+   "flag": "red and black with a golden star, a machete, and half of a gear wheel",
+   "currency": "Angolan kwanza",
+   "ownCurrency": true
+  },
+  "Benin": {
+   "flag": "a green stripe down the side, with yellow and red bands beside it",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Botswana": {
+   "flag": "sky blue with a black-and-white stripe across the middle",
+   "currency": null,
+   "ownCurrency": true
+  },
+  "Burkina Faso": {
+   "flag": "red on top, green below, with a single yellow star in the middle",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Burundi": {
+   "flag": "a white diagonal cross (an X) splitting it into red and green, with three red stars in the center",
+   "currency": "Burundian franc",
+   "ownCurrency": true
+  },
+  "Cabo Verde": {
+   "flag": "deep blue with a ring of ten little yellow stars and a band of white and red",
+   "currency": "Cabo Verdean escudo",
+   "ownCurrency": true
+  },
+  "Cameroon": {
+   "flag": "three tall stripes of green, red, and yellow with a single yellow star in the middle",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Central African Republic": {
+   "flag": "four stripes of blue, white, green, and yellow crossed by a red band, with a yellow star in the corner",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Chad": {
+   "flag": "blue, yellow, and red",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Congo (Republic of the)": {
+   "flag": "a yellow diagonal stripe with green in one corner and red in the other",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Côte d'Ivoire": {
+   "flag": "studied a flag in a guidebook: three stripes of orange, white, and green",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "DR Congo": {
+   "flag": "traced a flag: sky-blue with a red-and-yellow diagonal stripe and a single yellow star",
+   "currency": "Congolese franc",
+   "ownCurrency": true
+  },
+  "Djibouti": {
+   "flag": "drew a flag with light-blue and green bands, a white triangle, and a red star",
+   "currency": "Djiboutian franc",
+   "ownCurrency": true
+  },
+  "Equatorial Guinea": {
+   "flag": "doodled a flag with green, white, and red stripes and a blue triangle by the pole",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Eritrea": {
+   "flag": "drew a flag with a red triangle, a green triangle, a blue triangle, and a golden wreath",
+   "currency": "nakfa",
+   "ownCurrency": true
+  },
+  "Eswatini": {
+   "flag": "pinned on a flag badge: blue and red bands with an African shield, two spears and a staff across the middle",
+   "currency": "lilangeni",
+   "ownCurrency": true
+  },
+  "Ethiopia": {
+   "flag": "green, yellow and red bands with a bright blue circle and a golden star",
+   "currency": "birr",
+   "ownCurrency": true
+  },
+  "Gabon": {
+   "flag": "traced a flag: three wide stripes of green, yellow and blue",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Gambia": {
+   "flag": "red, blue and green stripes split by thin white lines",
+   "currency": "dalasi",
+   "ownCurrency": true
+  },
+  "Ghana": {
+   "flag": "studied a flag in a guidebook: red, gold and green stripes with a single black star in the middle",
+   "currency": "cedi",
+   "ownCurrency": true
+  },
+  "Guinea": {
+   "flag": "red, yellow, and green",
+   "currency": "Guinean franc",
+   "ownCurrency": true
+  },
+  "Guinea-Bissau": {
+   "flag": "traced a flag: a red stripe with a black star, beside yellow and green bands",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Lesotho": {
+   "flag": "blue, white, and green with a black African hat in the middle",
+   "currency": "loti",
+   "ownCurrency": true
+  },
+  "Liberia": {
+   "flag": "red and white stripes with a single white star on blue",
+   "currency": "Liberian dollar",
+   "ownCurrency": true
+  },
+  "Libya": {
+   "flag": "sketched a flag with red, black, and green bands and a white crescent moon and star",
+   "currency": "Libyan dinar",
+   "ownCurrency": true
+  },
+  "Madagascar": {
+   "flag": "drew a flag with a white stripe, then red on top and green below",
+   "currency": null,
+   "ownCurrency": true
+  },
+  "Malawi": {
+   "flag": "black, red, and green stripes with a red rising sun in the top black stripe",
+   "currency": "Malawian kwacha",
+   "ownCurrency": true
+  },
+  "Mauritania": {
+   "flag": "studied a flag in a guidebook: bright green with a golden crescent moon and star, and a red stripe at the top and bottom",
+   "currency": "ouguiya",
+   "ownCurrency": true
+  },
+  "Mozambique": {
+   "flag": "drew a flag with green, black, and yellow stripes, a red triangle, a yellow star, and a rifle",
+   "currency": "Mozambican metical",
+   "ownCurrency": true
+  },
+  "Namibia": {
+   "flag": "sketched a flag with a red stripe cutting across and a golden sun in the corner",
+   "currency": null,
+   "ownCurrency": true
+  },
+  "Niger": {
+   "flag": "traced a flag with orange, white, and green stripes and a small orange circle in the middle",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Nigeria": {
+   "flag": "three tall stripes of green, white, and green",
+   "currency": "Nigerian naira",
+   "ownCurrency": true
+  },
+  "Sao Tome and Principe": {
+   "flag": "pinned on a flag badge: green and yellow stripes with two little black stars and a red triangle at the side",
+   "currency": "dobra",
+   "ownCurrency": true
+  },
+  "Senegal": {
+   "flag": "green, yellow and red stripes with a single green star in the middle",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Seychelles": {
+   "flag": "studied a flag in a guidebook: colorful bands of blue, yellow, red, white and green fanning out from one corner",
+   "currency": "Seychellois rupee",
+   "ownCurrency": true
+  },
+  "Sierra Leone": {
+   "flag": "green, white and blue",
+   "currency": "leone",
+   "ownCurrency": true
+  },
+  "Somalia": {
+   "flag": "plain sky-blue with a single white five-pointed star",
+   "currency": "Somali shilling",
+   "ownCurrency": true
+  },
+  "South Sudan": {
+   "flag": "black, red, and green bands with a gold star in a blue triangle",
+   "currency": "South Sudanese pound",
+   "ownCurrency": true
+  },
+  "Sudan": {
+   "flag": "red, white, and black stripes with a green triangle at the pole",
+   "currency": "Sudanese pound",
+   "ownCurrency": true
+  },
+  "Tanzania": {
+   "flag": "pinned on a flag badge: green and blue halves split by a black stripe edged in gold",
+   "currency": "Tanzanian shilling",
+   "ownCurrency": true
+  },
+  "Togo": {
+   "flag": "traced a flag: green and yellow stripes with a white star on a red square",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Tunisia": {
+   "flag": "studied a flag in a guidebook: a red banner with a red crescent moon and star inside a white circle",
+   "currency": "Tunisian dinar",
+   "ownCurrency": true
+  },
+  "Uganda": {
+   "flag": "drew a flag with black, yellow, and red stripes and a grey crowned crane standing in the middle",
+   "currency": "Ugandan shilling",
+   "ownCurrency": true
+  },
+  "Zambia": {
+   "flag": "sketched a green flag with red, black, and orange stripes in one corner and an orange eagle above them",
+   "currency": "Zambian kwacha",
+   "ownCurrency": true
+  },
+  "Zimbabwe": {
+   "flag": "traced a flag with green, yellow, red, and black stripes and a golden bird on a white triangle",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Afghanistan": {
+   "flag": "black, red, and green up-and-down stripes with a white mosque and wheat wreath in the middle",
+   "currency": "Afghani",
+   "ownCurrency": true
+  },
+  "Armenia": {
+   "flag": "three simple stripes of red, blue, and orange",
+   "currency": "Armenian dram",
+   "ownCurrency": true
+  },
+  "Azerbaijan": {
+   "flag": "blue, red, and green stripes with a white crescent moon and star",
+   "currency": "the manat",
+   "ownCurrency": true
+  },
+  "Bahrain": {
+   "flag": "red with a white zigzag band down one side, like a row of little white triangles",
+   "currency": "the dinar",
+   "ownCurrency": true
+  },
+  "Bangladesh": {
+   "flag": "a green field with a big red circle in the middle",
+   "currency": "the taka",
+   "ownCurrency": true
+  },
+  "Brunei": {
+   "flag": "sketched a yellow flag with black and white diagonal stripes and a red crest in the center",
+   "currency": "the Brunei dollar",
+   "ownCurrency": true
+  },
+  "Cyprus": {
+   "flag": "traced a flag: white with a copper-colored island shape and two green olive branches below it",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Georgia": {
+   "flag": "a white banner with one big red cross and four little red crosses",
+   "currency": "lari",
+   "ownCurrency": true
+  },
+  "Iran": {
+   "flag": "pinned on a flag badge: green, white, and red stripes with a red tulip-like emblem in the middle",
+   "currency": "rial",
+   "ownCurrency": true
+  },
+  "Kazakhstan": {
+   "flag": "sky blue with a golden sun and a soaring golden eagle",
+   "currency": null,
+   "ownCurrency": true
+  },
+  "Kuwait": {
+   "flag": "green, white, and red stripes with a black shape near the pole",
+   "currency": "dinar",
+   "ownCurrency": true
+  },
+  "Kyrgyzstan": {
+   "flag": "studied a flag in a guidebook: bright red with a yellow sun and a little round yurt-roof design in the center",
+   "currency": "som",
+   "ownCurrency": true
+  },
+  "Laos": {
+   "flag": "red on top and bottom, blue in the middle, with a big white circle like a full moon",
+   "currency": "kip",
+   "ownCurrency": true
+  },
+  "Lebanon": {
+   "flag": "red and white stripes with a single green cedar tree in the middle",
+   "currency": "Lebanese pound",
+   "ownCurrency": true
+  },
+  "Maldives": {
+   "flag": "a red border around a green box with a white crescent moon",
+   "currency": "rufiyaa",
+   "ownCurrency": true
+  },
+  "North Korea": {
+   "flag": "traced a flag: blue and red stripes with a red star inside a white circle",
+   "currency": "North Korean won",
+   "ownCurrency": true
+  },
+  "Oman": {
+   "flag": "red, white and green with a curved dagger in the corner",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Pakistan": {
+   "flag": "dark green with a white stripe, a white crescent moon and a star",
+   "currency": "Pakistani rupee",
+   "ownCurrency": true
+  },
+  "Palestine": {
+   "flag": "pinned on a flag badge: black, white and green stripes with a red triangle on the side",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Qatar": {
+   "flag": "studied a flag in a guidebook: deep maroon and white with a zig-zag line joining the two colors",
+   "currency": "Qatari riyal",
+   "ownCurrency": true
+  },
+  "Saudi Arabia": {
+   "flag": "bright green with flowing white Arabic writing above a white sword",
+   "currency": "Saudi riyal",
+   "ownCurrency": true
+  },
+  "South Korea": {
+   "flag": "white with a red-and-blue swirl and four sets of little black bars",
+   "currency": "South Korean won",
+   "ownCurrency": true
+  },
+  "Syria": {
+   "flag": "drew a flag with green, white, and black stripes and three little red stars in the middle",
+   "currency": "Syrian pound",
+   "ownCurrency": true
+  },
+  "Tajikistan": {
+   "flag": "traced a flag with red, white, and green stripes, a golden crown, and seven little stars",
+   "currency": "Tajikistani somoni",
+   "ownCurrency": true
+  },
+  "Timor-Leste": {
+   "flag": "a black triangle, a yellow arrow, and a white star on a red background",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Yemen": {
+   "flag": "pinned on a flag badge: three simple stripes of red, white, and black",
+   "currency": "Yemeni rial",
+   "ownCurrency": true
+  },
+  "Albania": {
+   "flag": "bright red with a black two-headed eagle in the middle",
+   "currency": "Albanian lek",
+   "ownCurrency": true
+  },
+  "Andorra": {
+   "flag": "studied a flag in a guidebook: blue, yellow, and red stripes with a little crest in the middle",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Belarus": {
+   "flag": "doodled a red-and-green flag with a red-and-white woven pattern down one side",
+   "currency": "Belarusian ruble",
+   "ownCurrency": true
+  },
+  "Belgium": {
+   "flag": "three tall stripes of black, yellow, and red",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Bosnia and Herzegovina": {
+   "flag": "pinned on a flag badge: blue, with a yellow triangle and a line of white stars",
+   "currency": "convertible mark",
+   "ownCurrency": true
+  },
+  "Bulgaria": {
+   "flag": "white, green, and red",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Estonia": {
+   "flag": "three stripes of blue, black, and white",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Finland": {
+   "flag": "studied a flag in a guidebook: white with a blue cross stretched across it",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Kosovo": {
+   "flag": "deep blue with a golden map of the country and a row of six little white stars",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Latvia": {
+   "flag": "dark reddish-brown with one white stripe across the middle",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Liechtenstein": {
+   "flag": "blue on top, red on the bottom, with a little gold crown in the corner",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Lithuania": {
+   "flag": "yellow on top, green in the middle, red at the bottom",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Luxembourg": {
+   "flag": "studied a flag in a guidebook: three stripes, red on top, white in the middle, light blue at the bottom",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Malta": {
+   "flag": "half white and half red with a little grey cross in the top corner",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Moldova": {
+   "flag": "traced a flag: blue, yellow and red stripes with an eagle holding a shield in the middle",
+   "currency": "the Moldovan leu",
+   "ownCurrency": true
+  },
+  "Montenegro": {
+   "flag": "red with a golden border and a golden two-headed eagle",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "North Macedonia": {
+   "flag": "drew a flag: bright red with a golden sun in the center shooting out wide rays",
+   "currency": "the Macedonian denar",
+   "ownCurrency": true
+  },
+  "Romania": {
+   "flag": "doodled a flag with three tall stripes of blue, yellow and red",
+   "currency": "the Romanian leu",
+   "ownCurrency": true
+  },
+  "Serbia": {
+   "flag": "red, blue and white stripes with a shield topped by a double-headed eagle",
+   "currency": "the Serbian dinar",
+   "ownCurrency": true
+  },
+  "Slovakia": {
+   "flag": "pinned on a flag badge: white, blue and red stripes with a red shield showing a white double cross standing on three blue hills",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Slovenia": {
+   "flag": "white, blue and red stripes with a shield of three snowy peaks and three gold stars",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Sweden": {
+   "flag": "traced a flag: deep blue with a bright yellow cross reaching to the edges",
+   "currency": "krona",
+   "ownCurrency": true
+  },
+  "Switzerland": {
+   "flag": "studied a flag in a guidebook: a red square with a bold white cross in the very center",
+   "currency": "Swiss franc",
+   "ownCurrency": true
+  },
+  "Ukraine": {
+   "flag": "blue on top like the sky, yellow below like a wheat field",
+   "currency": "hryvnia",
+   "ownCurrency": true
+  },
+  "Antigua and Barbuda": {
+   "flag": "doodled a flag with a bright yellow rising sun over bands of black, blue and white on a red field",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Bahamas": {
+   "flag": "turquoise, gold and turquoise stripes with a black triangle on the side",
+   "currency": "Bahamian dollar",
+   "ownCurrency": true
+  },
+  "Barbados": {
+   "flag": "pinned on a flag badge: blue, gold, blue with a black three-pointed trident in the middle",
+   "currency": "Barbadian dollar",
+   "ownCurrency": true
+  },
+  "Belize": {
+   "flag": "traced a flag: deep blue with a red stripe top and bottom and two woodcutters in a white circle",
+   "currency": "Belize dollar",
+   "ownCurrency": true
+  },
+  "Colombia": {
+   "flag": "a wide yellow band on top with blue and red below it",
+   "currency": "Colombian peso",
+   "ownCurrency": true
+  },
+  "Costa Rica": {
+   "flag": "eyed a flag in a guidebook: blue and white stripes with a wide red band across the middle",
+   "currency": "Costa Rican colón",
+   "ownCurrency": true
+  },
+  "Cuba": {
+   "flag": "drew a flag with blue and white stripes and a single white star in a red triangle",
+   "currency": "Cuban peso",
+   "ownCurrency": true
+  },
+  "Dominica": {
+   "flag": "doodled a green flag with a cross of yellow, black, and white and a purple-and-green parrot in a red circle at the center",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Dominican Republic": {
+   "flag": "sketched a flag split into blue and red boxes with a white cross running through it",
+   "currency": "Dominican peso",
+   "ownCurrency": true
+  },
+  "Ecuador": {
+   "flag": "doodled a flag with yellow, blue, and red stripes and a condor perched over a mountain",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "El Salvador": {
+   "flag": "a blue stripe, a white stripe, and another blue stripe with a little emblem in the middle",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Grenada": {
+   "flag": "a red border with green and yellow triangles, seven little stars, and a tiny nutmeg",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Guatemala": {
+   "flag": "a blue stripe, a white stripe, and a blue stripe, with a bright green bird in the middle",
+   "currency": "quetzal",
+   "ownCurrency": true
+  },
+  "Guyana": {
+   "flag": "green with a big golden arrow and a red triangle, the “Golden Arrowhead”",
+   "currency": null,
+   "ownCurrency": true
+  },
+  "Haiti": {
+   "flag": "a blue band above a red band with a little palm tree in the center",
+   "currency": "gourde",
+   "ownCurrency": true
+  },
+  "Honduras": {
+   "flag": "a blue stripe, a white stripe, and a blue stripe with five little blue stars in the middle",
+   "currency": "lempira",
+   "ownCurrency": true
+  },
+  "Jamaica": {
+   "flag": "traced a flag with a golden X splitting it into green and black triangles",
+   "currency": "Jamaican dollar",
+   "ownCurrency": true
+  },
+  "Nicaragua": {
+   "flag": "blue, white, blue with a ring of volcanoes in the middle",
+   "currency": null,
+   "ownCurrency": true
+  },
+  "Panama": {
+   "flag": "four squares: a red one, a blue one, and two white ones each holding a star",
+   "currency": "balboa",
+   "ownCurrency": true
+  },
+  "Paraguay": {
+   "flag": "pinned on a flag badge with red, white, and blue stripes and a little round star emblem in the middle",
+   "currency": "guaraní",
+   "ownCurrency": true
+  },
+  "Saint Kitts and Nevis": {
+   "flag": "a black diagonal band, two white stars, and green and red triangles",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Saint Lucia": {
+   "flag": "studied a flag in a guidebook: a blue banner with a black-and-yellow triangle shaped like a mountain peak",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Saint Vincent and the Grenadines": {
+   "flag": "drew a flag with blue, yellow, and green stripes and three little green diamonds shaped like a V",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Suriname": {
+   "flag": "sketched a flag with green, white, and red stripes and a single yellow star in the middle",
+   "currency": "Surinamese dollar",
+   "ownCurrency": true
+  },
+  "Trinidad and Tobago": {
+   "flag": "red, with a black diagonal stripe edged in white",
+   "currency": "Trinidad and Tobago dollar",
+   "ownCurrency": true
+  },
+  "Uruguay": {
+   "flag": "pinned on a flag badge: blue and white stripes with a golden smiling sun in the corner",
+   "currency": "Uruguayan peso",
+   "ownCurrency": true
+  },
+  "Venezuela": {
+   "flag": "traced a flag: yellow, blue, and red stripes topped with an arc of white stars",
+   "currency": "bolívar",
+   "ownCurrency": true
+  },
+  "Fiji": {
+   "flag": "studied a flag in a guidebook: light blue, with a little Union Jack and a shield",
+   "currency": "Fijian dollar",
+   "ownCurrency": true
+  },
+  "Kiribati": {
+   "flag": "doodled a flag with a golden bird flying over a rising sun, above three white ocean waves",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Marshall Islands": {
+   "flag": "dark blue, with orange-over-white stripes sweeping up to a white star",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Micronesia": {
+   "flag": "drew a flag: plain light blue with four little white stars in a diamond",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "Nauru": {
+   "flag": "doodled a blue flag with one thin yellow stripe across the middle and a single white star below it",
+   "currency": null,
+   "ownCurrency": false
+  },
+  "New Zealand": {
+   "flag": "blue with a Union Jack and four red stars of the Southern Cross",
+   "currency": "New Zealand dollar",
+   "ownCurrency": true
+  },
+  "Samoa": {
+   "flag": "pinned on a flag badge: bright red with a small blue corner holding five white stars",
+   "currency": "tala",
+   "ownCurrency": true
+  },
+  "Solomon Islands": {
+   "flag": "blue and green split by a yellow diagonal stripe, five white stars in the corner",
+   "currency": "Solomon Islands dollar",
+   "ownCurrency": true
+  },
+  "Tonga": {
+   "flag": "mostly red with a white corner holding a red cross",
+   "currency": "paʻanga",
+   "ownCurrency": true
+  },
+  "Vanuatu": {
+   "flag": "red and green with a black triangle and a little curled boar's tusk",
+   "currency": null,
+   "ownCurrency": true
+  }
+ },
+ "original30": {
+  "Athens": {
+   "country": "Greece",
+   "flag": "blue and white stripes with a white cross in the corner",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "Baghdad": {
+   "country": "Iraq",
+   "flag": "red, white and black bands with green Arabic script",
+   "currency": "the Iraqi dinar",
+   "sharedCurrency": false
+  },
+  "Bamako": {
+   "country": "Mali",
+   "flag": "three bands of green, yellow and red",
+   "currency": "the CFA franc",
+   "sharedCurrency": true
+  },
+  "Bangkok": {
+   "country": "Thailand",
+   "flag": "red, white and blue bands, the blue one twice as thick",
+   "currency": "the baht",
+   "sharedCurrency": false
+  },
+  "Budapest": {
+   "country": "Hungary",
+   "flag": "three bands of red, white and green",
+   "currency": "the forint",
+   "sharedCurrency": false
+  },
+  "Buenos Aires": {
+   "country": "Argentina",
+   "flag": "light blue and white bands with a golden sun",
+   "currency": "the Argentine peso",
+   "sharedCurrency": false
+  },
+  "Cairo": {
+   "country": "Egypt",
+   "flag": "red, white and black bands with a golden eagle",
+   "currency": "the Egyptian pound",
+   "sharedCurrency": false
+  },
+  "Colombo": {
+   "country": "Sri Lanka",
+   "flag": "a golden lion holding a sword beside green and orange stripes",
+   "currency": "the Sri Lankan rupee",
+   "sharedCurrency": false
+  },
+  "Istanbul": {
+   "country": "Turkey",
+   "flag": "red with a white crescent moon and star",
+   "currency": "the Turkish lira",
+   "sharedCurrency": false
+  },
+  "Kathmandu": {
+   "country": "Nepal",
+   "flag": "a crimson double-pennant shape with a white moon and sun",
+   "currency": "the Nepalese rupee",
+   "sharedCurrency": false
+  },
+  "Kigali": {
+   "country": "Rwanda",
+   "flag": "blue, yellow and green bands with a golden sun",
+   "currency": "the Rwandan franc",
+   "sharedCurrency": false
+  },
+  "Lima": {
+   "country": "Peru",
+   "flag": "red, white and red vertical bands",
+   "currency": "the sol",
+   "sharedCurrency": false
+  },
+  "London": {
+   "country": "United Kingdom",
+   "flag": "the Union Jack — layered red and white crosses on blue",
+   "currency": "the pound sterling",
+   "sharedCurrency": true
+  },
+  "Mexico City": {
+   "country": "Mexico",
+   "flag": "green, white and red bands with an eagle on a cactus",
+   "currency": "the peso",
+   "sharedCurrency": false
+  },
+  "Montreal": {
+   "country": "Canada",
+   "flag": "a red maple leaf between two red bands",
+   "currency": "the Canadian dollar",
+   "sharedCurrency": false
+  },
+  "Moroni": {
+   "country": "Comoros",
+   "flag": "yellow, white, red and blue bands with a green triangle holding a crescent and four stars",
+   "currency": "the Comorian franc",
+   "sharedCurrency": false
+  },
+  "Moscow": {
+   "country": "Russia",
+   "flag": "three bands of white, blue and red",
+   "currency": "the ruble",
+   "sharedCurrency": false
+  },
+  "New Delhi": {
+   "country": "India",
+   "flag": "saffron, white and green bands with a navy spoked wheel",
+   "currency": "the Indian rupee",
+   "sharedCurrency": false
+  },
+  "New York": {
+   "country": "United States",
+   "flag": "fifty white stars on blue with thirteen red-and-white stripes",
+   "currency": "the US dollar",
+   "sharedCurrency": true
+  },
+  "Oslo": {
+   "country": "Norway",
+   "flag": "red with a blue-and-white cross",
+   "currency": "the Norwegian krone",
+   "sharedCurrency": false
+  },
+  "Paris": {
+   "country": "France",
+   "flag": "three bands of blue, white and red",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "Peking": {
+   "country": "China",
+   "flag": "red with one large yellow star and four smaller stars",
+   "currency": "the yuan",
+   "sharedCurrency": false
+  },
+  "Port Moresby": {
+   "country": "Papua New Guinea",
+   "flag": "a diagonal split — a bird of paradise on red, the Southern Cross on black",
+   "currency": "the kina",
+   "sharedCurrency": false
+  },
+  "Reykjavik": {
+   "country": "Iceland",
+   "flag": "blue with a red-and-white cross",
+   "currency": "the Icelandic króna",
+   "sharedCurrency": false
+  },
+  "Rio de Janeiro": {
+   "country": "Brazil",
+   "flag": "green with a yellow diamond and a blue globe crossed by a starry band",
+   "currency": "the real",
+   "sharedCurrency": false
+  },
+  "Rome": {
+   "country": "Italy",
+   "flag": "three bands of green, white and red",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "San Marino": {
+   "country": "San Marino",
+   "flag": "white above light blue with a shield of three towers",
+   "currency": "the euro",
+   "sharedCurrency": true
+  },
+  "Singapore": {
+   "country": "Singapore",
+   "flag": "red above white with a white crescent moon and five stars",
+   "currency": "the Singapore dollar",
+   "sharedCurrency": false
+  },
+  "Sydney": {
+   "country": "Australia",
+   "flag": "blue with a Union Jack and the white stars of the Southern Cross",
+   "currency": "the Australian dollar",
+   "sharedCurrency": false
+  },
+  "Tokyo": {
+   "country": "Japan",
+   "flag": "white with a large red circle in the center",
+   "currency": "the yen",
+   "sharedCurrency": false
+  }
+ }
+}
