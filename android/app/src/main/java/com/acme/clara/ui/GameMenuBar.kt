@@ -39,6 +39,7 @@ import com.acme.clara.game.ClaraViewModel
 import com.acme.clara.game.MostWanted
 import com.acme.clara.game.Overlay
 import com.acme.clara.game.WantedEntry
+import com.acme.clara.i18n.Strings
 import com.acme.clara.ui.theme.Vga
 
 private data class MenuItemDef(val label: String, val enabled: Boolean = true, val action: () -> Unit)
@@ -56,33 +57,35 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
         // Menu contents match the DOS EXE menu resources: Game = About Clara... / New /
         // Save (always grayed — no save slots in the remake yet) / Quit (with the original
         // "Do you really want to quit?" confirm); Options = Sound / Joystick.
-        MenuTitle(v, "Game", listOf(
-            MenuItemDef("About Clara...") { vm.openOverlay(Overlay.About) },
-            MenuItemDef("New") { vm.menuNewCase() },
-            MenuItemDef("New Game") { vm.newGameFlow() },
-            MenuItemDef("Quit") { vm.openOverlay(Overlay.ConfirmQuit) },
+        // A leading check/space marks Options toggle state; keep it out of the translated label.
+        fun chk(on: Boolean, label: String) = (if (on) "√" else " ") + Strings.ui(label)
+        MenuTitle(v, Strings.ui("Game"), listOf(
+            MenuItemDef(Strings.ui("About Clara...")) { vm.openOverlay(Overlay.About) },
+            MenuItemDef(Strings.ui("New")) { vm.menuNewCase() },
+            MenuItemDef(Strings.ui("New Game")) { vm.newGameFlow() },
+            MenuItemDef(Strings.ui("Quit")) { vm.openOverlay(Overlay.ConfirmQuit) },
         ))
-        MenuTitle(v, "Options", listOf(
-            MenuItemDef(if (s.soundOn) "√Sound" else " Sound") { vm.toggleSound() },
-            MenuItemDef(if (s.hapticsOn) "√Haptics" else " Haptics") { vm.toggleHaptics() },
-            MenuItemDef(if (s.captionsOn) "√Captions" else " Captions") { vm.toggleCaptions() },
-            MenuItemDef(if (com.acme.clara.notify.Reminders.enabled(menuCtx)) "√Reminders" else " Reminders") {
+        MenuTitle(v, Strings.ui("Options"), listOf(
+            MenuItemDef(chk(s.soundOn, "Sound")) { vm.toggleSound() },
+            MenuItemDef(chk(s.hapticsOn, "Haptics")) { vm.toggleHaptics() },
+            MenuItemDef(chk(s.captionsOn, "Captions")) { vm.toggleCaptions() },
+            MenuItemDef(chk(com.acme.clara.notify.Reminders.enabled(menuCtx), "Reminders")) {
                 com.acme.clara.notify.Reminders.setEnabled(menuCtx, !com.acme.clara.notify.Reminders.enabled(menuCtx))
             },
-            MenuItemDef(" Joystick") { vm.showJoystick() },
-            MenuItemDef(" Language...") { vm.openOverlay(Overlay.Language) },
+            MenuItemDef(" " + Strings.ui("Joystick")) { vm.showJoystick() },
+            MenuItemDef(" " + Strings.ui("Language...")) { vm.openOverlay(Overlay.Language) },
         ))
-        MenuTitle(v, "Acme", listOf(
-            MenuItemDef("Hint") { vm.requestHint() },
-            MenuItemDef("Detective Roster") { vm.openOverlay(Overlay.Roster) },
-            MenuItemDef("World Database") { vm.openOverlay(Overlay.Almanac) },
-            MenuItemDef("Passport") { vm.openOverlay(Overlay.Passport) },
-            MenuItemDef("Most Wanted") { vm.openOverlay(Overlay.MostWanted) },
-            MenuItemDef("Commendations") { vm.openOverlay(Overlay.Commendations) },
-            MenuItemDef("Hall of Fame") { vm.openOverlay(Overlay.HallOfFame) },
+        MenuTitle(v, Strings.ui("Acme"), listOf(
+            MenuItemDef(Strings.ui("Hint")) { vm.requestHint() },
+            MenuItemDef(Strings.ui("Detective Roster")) { vm.openOverlay(Overlay.Roster) },
+            MenuItemDef(Strings.ui("World Database")) { vm.openOverlay(Overlay.Almanac) },
+            MenuItemDef(Strings.ui("Passport")) { vm.openOverlay(Overlay.Passport) },
+            MenuItemDef(Strings.ui("Most Wanted")) { vm.openOverlay(Overlay.MostWanted) },
+            MenuItemDef(Strings.ui("Commendations")) { vm.openOverlay(Overlay.Commendations) },
+            MenuItemDef(Strings.ui("Hall of Fame")) { vm.openOverlay(Overlay.HallOfFame) },
         ))
         // Dossiers menu lists the ten suspects under their EXE short names
-        MenuTitle(v, "Dossiers", GameData.suspects.mapIndexed { i, su ->
+        MenuTitle(v, Strings.ui("Dossiers"), GameData.suspects.mapIndexed { i, su ->
             MenuItemDef(GameData.dossierMenuNames.getOrElse(i) { su.name }) {
                 vm.openOverlay(Overlay.Dossier(su))
             }

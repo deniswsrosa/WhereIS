@@ -32,8 +32,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import com.acme.clara.game.ClaraViewModel
+import com.acme.clara.game.ClueKind
 import com.acme.clara.game.GameState
 import com.acme.clara.game.Phase
+import com.acme.clara.i18n.Strings
 import com.acme.clara.ui.theme.Vga
 
 /**
@@ -108,44 +110,74 @@ private fun lessonFor(s: GameState): Shown? {
     val seen = s.tutorialSeen
     fun un(id: String) = id !in seen
 
+    if (un("wrongflight") && !s.onTrack && s.phase == Phase.CITY && s.route.isNotEmpty())
+        return Shown("wrongflight", TOOL_DEPART, Strings.ui("WRONG TURN"),
+            Strings.ui("This isn't where the suspect went — nobody here has seen them. Tap the plane and fly back to try the right city."), false)
+
     if (un("interview") && s.phase == Phase.CITY && s.onTrack && s.visited.size < 3)
-        return Shown("interview", TOOL_INVESTIGATE, "QUESTION THE WITNESSES",
-            "Open a place and talk to a witness — try all three here (${s.visited.size}/3). Each offers something different: where the suspect fled, what they look like, or just gossip.", false)
+        return Shown("interview", TOOL_INVESTIGATE, Strings.ui("QUESTION THE WITNESSES"),
+            Strings.ui("Open a place and talk to a witness — try all three here ({0}/3). Each offers something different: where the suspect fled, what they look like, or just gossip.", s.visited.size), false)
 
     if (un("time") && s.phase == Phase.CITY && "interview" in seen)
-        return Shown("time", CLOCK, "MIND THE CLOCK",
-            "Three interviews — and look how far the clock jumped. You're on a deadline, so from here on you needn't question everyone: once you have a lead and a description, move on.", true)
+        return Shown("time", CLOCK, Strings.ui("MIND THE CLOCK"),
+            Strings.ui("Three interviews — and look how far the clock jumped. You're on a deadline, so from here on you needn't question everyone: once you have a lead and a description, move on."), true)
 
     if (un("computer") && s.sawTraitClue && s.warrantFor == null) when (s.phase) {
-        Phase.CITY -> return Shown("computer", TOOL_CRIME, "RECORD THE THIEF",
-            "A witness described the crook. Open the crime computer to log what you heard — one detail per city.", false)
+        Phase.CITY -> return Shown("computer", TOOL_CRIME, Strings.ui("RECORD THE THIEF"),
+            Strings.ui("A witness described the crook. Open the crime computer to log what you heard — one detail per city."), false)
         Phase.CRIME -> {
             // Keep coaching the exact row for a clue you've heard but not yet entered — repeating the
             // hint — and only prompt COMPUTE once it's actually in, so you can't compute prematurely.
             val need = s.revealedTraits.firstOrNull { (c, v) -> compVal(s, c) != v }
             return if (need != null) {
                 val label = rowLabelOf(need.first)
-                Shown("computer", crtRow(rowIndexOf(need.first)), "ENTER THE CLUE",
-                    "A witness said the thief's ${label.lowercase()} is “${need.second}”. Tap the $label row, then tap it again until it reads ${need.second}.", false)
-            } else Shown("computer", CRT_COMPUTE, "RUN THE COMPUTER",
-                "That clue's logged. Tap COMPUTE — if several suspects still match, gather more as you travel until one is left.", false)
+                Shown("computer", crtRow(rowIndexOf(need.first)), Strings.ui("ENTER THE CLUE"),
+                    Strings.ui("A witness said the thief's {0} is “{1}”. Tap the {2} row, then tap it again until it reads {1}.", label.lowercase(), need.second, label), false)
+            } else Shown("computer", CRT_COMPUTE, Strings.ui("RUN THE COMPUTER"),
+                Strings.ui("That clue's logged. Tap COMPUTE — if several suspects still match, gather more as you travel until one is left."), false)
         }
         else -> {}
     }
 
-    if (un("trail") && s.sawTrailClue && (s.phase == Phase.CITY || s.phase == Phase.CRIME))
-        return Shown("trail", TOOL_DEPART, "CHASE THE SUSPECT",
-            "Your witnesses hinted where the suspect fled next. Not sure of a place? Open Acme ▸ World Database to read up on each possible destination. Then tap the plane to fly there and stay on the chase.", false)
+    if (un("trail") && s.sawTrailClue) when (s.phase) {
+        Phase.CITY, Phase.CRIME -> return Shown("trail", TOOL_DEPART, Strings.ui("CHASE THE SUSPECT"),
+            Strings.ui("Your witnesses hinted where the suspect fled next. Not sure of a place? Open Acme ▸ World Database to read up on each destination. Then tap the plane to fly there."), false)
+        Phase.TRAVEL -> {
+            // On the map, remind the player of the witness's hint and spotlight the destination list.
+            val clue = s.journal.lastOrNull { it.city == s.currentCity && it.kind == ClueKind.DESTINATION }?.text
+            return Shown("trail", TRAVEL_LIST, Strings.ui("WHERE NEXT?"),
+                if (clue != null) Strings.ui("Remember what the witness said: “{0}”  Pick the destination that fits.", clue)
+                else Strings.ui("Pick the destination your witnesses pointed to."), false)
+        }
+        else -> {}
+    }
 
     if (un("warrant") && s.warrantFor != null && (s.phase == Phase.CITY || s.phase == Phase.CRIME))
-        return Shown("warrant", CLOCK, "WARRANT ISSUED",
-            "That's your suspect! Now just follow the trail to their hideout and close in.", true)
+        return Shown("warrant", CLOCK, Strings.ui("WARRANT ISSUED"),
+            Strings.ui("That's your suspect! Now just follow the trail to their hideout and close in."), true)
 
     if (un("arrest") && s.warrantFor != null && s.atHideout && s.phase == Phase.CITY)
-        return Shown("arrest", TOOL_INVESTIGATE, "MAKE THE ARREST",
-            "This is the hideout — search the venues here to catch them red-handed.", false)
+        return Shown("arrest", TOOL_INVESTIGATE, Strings.ui("MAKE THE ARREST"),
+            Strings.ui("This is the hideout — search the venues here to catch them red-handed."), false)
 
     return null
+}
+
+/** During a guided step, only the control that step is about is tappable — everything else on the
+ *  toolbar is disabled so the Rookie can't wander off. Tools: 0 SEE · 1 DEPART · 2 INVESTIGATE ·
+ *  3 CRIME. Returns true (all enabled) whenever the tour is off or the current step doesn't force. */
+fun tourAllowsTool(s: GameState, tool: Int): Boolean {
+    if (!s.tutorialActive) return true
+    val shown = lessonFor(s) ?: return true
+    val allowed: Set<Int> = when (shown.id) {
+        "wrongflight" -> setOf(1)                                     // fly back
+        "interview" -> setOf(2)                                       // question witnesses
+        "computer" -> if (s.phase == Phase.CRIME) emptySet() else setOf(3)  // open it, then stay in it
+        "trail" -> setOf(1)                                           // depart
+        "arrest" -> setOf(2)                                          // search to arrest
+        else -> setOf(0, 1, 2, 3)                                     // info tips (clock, warrant): no lock
+    }
+    return tool in allowed
 }
 
 private class R(val x: Float, val y: Float, val w: Float, val h: Float)
@@ -156,6 +188,7 @@ private val TOOL_INVESTIGATE = R(232.5f, 163f, 41.75f, 32f)  // toolbar: magnify
 private val TOOL_CRIME = R(274.25f, 163f, 41.75f, 32f)       // toolbar: crime computer
 private val CLOCK = R(4f, 13f, 141f, 30f)                    // top-left city name / clock box
 private val CRT_COMPUTE = R(162f, 84f, 142f, 11f)          // crime computer: the COMPUTE row
+private val TRAVEL_LIST = R(3f, 12f, 143f, 92f)            // travel screen: the destination dropdown
 
 // The five CRT trait rows (image-relative y = 9 + i*10 inside the CRT box at 150,16 → absolute).
 private fun crtRow(i: Int) = R(162f, 24f + i * 10f, 142f, 11f)
@@ -216,8 +249,8 @@ private fun TipPanel(v: Virtual, vm: ClaraViewModel, shown: Shown) {
             Modifier.fillMaxWidth().padding(start = v.w(6), end = v.w(5), bottom = v.w(4)),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (shown.info) Pill(v, "GOT IT", primary = true) { vm.dismissTip(shown.id) }
-            else Text("▸ try it", style = v.text(6.5f, Vga.LightGreen, bold = true))
+            if (shown.info) Pill(v, Strings.ui("GOT IT"), primary = true) { vm.dismissTip(shown.id) }
+            else Text("▸ " + Strings.ui("try it"), style = v.text(6.5f, Vga.LightGreen, bold = true))
             Spacer(Modifier.weight(1f))
             Pill(v, "Skip tour", primary = false) { vm.skipTutorial() }
         }

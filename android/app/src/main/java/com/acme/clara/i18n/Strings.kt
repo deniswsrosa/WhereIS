@@ -83,6 +83,15 @@ object Strings {
     fun label(prefix: String, value: String): String =
         if (lang == "en") value else active["$prefix.$value"] ?: value
 
+    /** UI-chrome convenience: the English text stays at the call site and doubles as the fallback,
+     *  so wrapping a literal never changes the English build. Translation is keyed by "ui:<english>".
+     *  [args] fill `{0}`,`{1}`,… placeholders (kept out of the key). */
+    fun ui(en: String, vararg args: Any?): String {
+        var s = if (lang == "en") en else active["ui:$en"] ?: en
+        args.forEachIndexed { i, a -> s = s.replace("{$i}", a?.toString() ?: "") }
+        return s
+    }
+
     /** [get] with `{0}`, `{1}`, … placeholder substitution (order-independent across languages). */
     fun fmt(id: String, vararg args: Any?): String {
         var s = get(id)
