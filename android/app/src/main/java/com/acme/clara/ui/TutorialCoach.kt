@@ -82,7 +82,10 @@ fun Tour(v: Virtual, vm: ClaraViewModel, suppressed: Boolean = false) {
     // ---- the tip card, hugging the free side of the target with a caret that points at it ----
     val targetCx = t.x + t.w / 2f
     val below = (t.y + t.h / 2f) <= 100f
-    val cardW = 200f
+    // The travel-list tip quotes the witness's clue verbatim, which can run long — give it a wider
+    // card (fewer wrapped lines) so its footer (Skip tour) never overflows the allotted height below
+    // the destination list. Every other lesson's text is short enough for the narrower default.
+    val cardW = if (t === TRAVEL_LIST) 280f else 200f
     val cardCx = targetCx.coerceIn(cardW / 2f + 4f, 316f - cardW / 2f)
     val cardX = cardCx - cardW / 2f
     val caretLocalX = (targetCx - cardX - CARET_W / 2f).coerceIn(6f, cardW - 6f - CARET_W)
@@ -118,10 +121,10 @@ private fun lessonFor(s: GameState): Shown? {
         return Shown("interview", TOOL_INVESTIGATE, Strings.ui("QUESTION THE WITNESSES"),
             Strings.ui("Open a place and talk to a witness — try all three here ({0}/3). Each offers something different: where the suspect fled, what they look like, or just gossip.", s.visited.size), false)
 
-    if (un("time") && s.phase == Phase.CITY && "interview" in seen)
-        return Shown("time", CLOCK, Strings.ui("MIND THE CLOCK"),
-            Strings.ui("Three interviews — and look how far the clock jumped. You're on a deadline, so from here on you needn't question everyone: once you have a lead and a description, move on."), true)
-
+    // Checked before "time": the moment all three venues are tried, "interview" is marked seen and
+    // (in the normal on-track flow) a trait clue was already heard at venue 2 — so without this
+    // ordering the unlocked clock tip would show first and let the player wander off (e.g. tap
+    // DEPART) before ever being funneled into the crime computer.
     if (un("computer") && s.sawTraitClue && s.warrantFor == null) when (s.phase) {
         Phase.CITY -> return Shown("computer", TOOL_CRIME, Strings.ui("RECORD THE THIEF"),
             Strings.ui("A witness described the crook. Open the crime computer to log what you heard — one detail per city."), false)
@@ -139,6 +142,12 @@ private fun lessonFor(s: GameState): Shown? {
         else -> {}
     }
 
+    // Falls through to here whenever "computer" didn't fire (off-track city, or the warrant's
+    // already issued) — the clock tip still gets its turn in those cases.
+    if (un("time") && s.phase == Phase.CITY && "interview" in seen)
+        return Shown("time", CLOCK, Strings.ui("MIND THE CLOCK"),
+            Strings.ui("Three interviews — and look how far the clock jumped. You're on a deadline, so from here on you needn't question everyone: once you have a lead and a description, move on."), true)
+
     if (un("trail") && s.sawTrailClue) when (s.phase) {
         Phase.CITY, Phase.CRIME -> return Shown("trail", TOOL_DEPART, Strings.ui("CHASE THE SUSPECT"),
             Strings.ui("Your witnesses hinted where the suspect fled next. Not sure of a place? Open Acme ▸ World Database to read up on each destination. Then tap the plane to fly there."), false)
@@ -146,7 +155,7 @@ private fun lessonFor(s: GameState): Shown? {
             // On the map, remind the player of the witness's hint and spotlight the destination list.
             val clue = s.journal.lastOrNull { it.city == s.currentCity && it.kind == ClueKind.DESTINATION }?.text
             return Shown("trail", TRAVEL_LIST, Strings.ui("WHERE NEXT?"),
-                if (clue != null) Strings.ui("Remember what the witness said: “{0}”  Pick the destination that fits.", clue)
+                if (clue != null) Strings.ui("“{0}” — pick the matching destination.", clue)
                 else Strings.ui("Pick the destination your witnesses pointed to."), false)
         }
         else -> {}
