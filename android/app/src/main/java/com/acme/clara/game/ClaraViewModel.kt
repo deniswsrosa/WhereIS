@@ -590,12 +590,29 @@ class ClaraViewModel : ViewModel() {
         // A directional region phrase ("toward Europe") — per-language so pt can bake in the
         // preposition/contraction ("rumo à Europa") without an English word-order template.
         val rg = i18n.opt("region.dir.${info.region}") ?: "toward ${info.region}"
+        // Portuguese landmark strings often start with a bare definite article ("os templos..."),
+        // and pt contracts a preceding preposition with it ("por" + "os" = "pelos"). Other languages
+        // bake their preposition into the template text and just take the plain landmark.
+        val isPt = i18n.language == "pt"
+        val lmFor0 = if (isPt) ptContract("por", lm) else lm
+        val lmFor1 = if (isPt) ptContract("de", lm) else lm
         return listOf(
             listOf(
-                (i18n.opt("clue.tmpl.general.0") ?: "planned to visit a place known for {0}").replace("{0}", lm),
-                (i18n.opt("clue.tmpl.general.1") ?: "was headed {1}, near {0}").replace("{1}", rg).replace("{0}", lm),
+                (i18n.opt("clue.tmpl.general.0") ?: "planned to visit a place known for {0}").replace("{0}", lmFor0),
+                (i18n.opt("clue.tmpl.general.1") ?: "was headed {1}, near {0}").replace("{1}", rg).replace("{0}", lmFor1),
             ).random()
         )
+    }
+
+    private fun ptContract(prep: String, noun: String): String {
+        val m = Regex("^(os|as|o|a) (.+)$").find(noun) ?: return "$prep $noun"
+        val (art, rest) = m.destructured
+        val contraction = when (prep) {
+            "por" -> when (art) { "o" -> "pelo"; "a" -> "pela"; "os" -> "pelos"; "as" -> "pelas"; else -> prep }
+            "de" -> when (art) { "o" -> "do"; "a" -> "da"; "os" -> "dos"; "as" -> "das"; else -> prep }
+            else -> prep
+        }
+        return "$contraction $rest"
     }
 
     /** Venue-3 payoff odds by rank: 100% for the whole free career, then linear down to 50% at the
