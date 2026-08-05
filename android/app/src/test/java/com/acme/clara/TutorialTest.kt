@@ -36,8 +36,9 @@ class TutorialTest {
         for (i in 0..2) if (i !in vm.s.visited) { vm.openVenue(i); vm.closeClue() }
         assertTrue("interview" in vm.s.tutorialSeen)
 
-        // tapping the plane teaches "trail"
+        // committing to a flight teaches "trail"
         vm.gotoTravel()
+        vm.travelTo(vm.s.departOptions.first())
         assertTrue("trail" in vm.s.tutorialSeen)
 
         // running the computer with the trait a witness actually gave teaches "computer"

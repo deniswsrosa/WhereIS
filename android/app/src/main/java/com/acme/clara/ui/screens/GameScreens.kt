@@ -623,10 +623,12 @@ fun GameToolbar(v: Virtual, vm: ClaraViewModel, seeLabel: String? = null,
         Box(Modifier.fillMaxSize()) {
             PixelImage("toolbar_bar", Modifier.fillMaxSize())
             Row(Modifier.fillMaxSize()) {
-                ToolZone(Modifier.weight(1f), selected == 0, v) { onSee?.invoke() }
-                ToolZone(Modifier.weight(1f), selected == 1, v) { vm.gotoTravel() }
-                ToolZone(Modifier.weight(1f), selected == 2, v) { onInvestigate?.invoke() }
-                ToolZone(Modifier.weight(1f), selected == 3, v) { vm.gotoCrime() }
+                // During a guided step the tour disables the tools it isn't pointing at.
+                fun ok(i: Int) = com.acme.clara.ui.tourAllowsTool(vm.s, i)
+                ToolZone(Modifier.weight(1f), selected == 0, ok(0), v) { onSee?.invoke() }
+                ToolZone(Modifier.weight(1f), selected == 1, ok(1), v) { vm.gotoTravel() }
+                ToolZone(Modifier.weight(1f), selected == 2, ok(2), v) { onInvestigate?.invoke() }
+                ToolZone(Modifier.weight(1f), selected == 3, ok(3), v) { vm.gotoCrime() }
             }
             // "HIDE" caption over the SEE icon while its dropdown is open (DOS behaviour)
             if (seeLabel != null) {
@@ -641,12 +643,15 @@ fun GameToolbar(v: Virtual, vm: ClaraViewModel, seeLabel: String? = null,
 }
 
 @Composable
-private fun ToolZone(modifier: Modifier, selected: Boolean, v: Virtual, onClick: () -> Unit) {
+private fun ToolZone(modifier: Modifier, selected: Boolean, enabled: Boolean, v: Virtual, onClick: () -> Unit) {
     Box(
         modifier.fillMaxHeight()
             .then(if (selected) Modifier.border(BorderStroke(v.w(2), Vga.Green)) else Modifier)
-            .clickable(onClick = onClick)
-    )
+            .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier)
+    ) {
+        // A disabled tool (locked by the tour) is dimmed so it reads as unavailable.
+        if (!enabled) Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.5f)))
+    }
 }
 
 @Composable
@@ -1043,6 +1048,8 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
         }
     }
     OverlayHost(v, vm)
+    // Tour: on the map, spotlight the destination list and repeat the witness's hint.
+    com.acme.clara.ui.Tour(v, vm, suppressed = flying != null)
 }
 
 /** A city name printed on the map next to its dot (offset left or right to stay on-screen). */
