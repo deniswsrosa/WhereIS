@@ -1389,6 +1389,10 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     val quiz = remember { GameData.promotionQuiz.random() }
     val focus = remember { FocusRequester() }
     val done = stage == 4
+    // S1: the captured mugshot slams in and is "filed" in the gallery before the report starts
+    // printing — it used to play at the same time as the printer, so its own tap-to-continue and
+    // the printer's competed for the same tap and neither was clearly the thing being responded to.
+    var slamActive by remember { mutableStateOf(s.won && !s.careerOver && !reduce && s.culprit?.name != null) }
     // The paper only shows its last ~12 lines, so a long report used to just scroll continuously
     // past the reader. Pause once a page's worth has printed and wait for a tap before continuing.
     var waitingForTap by remember { mutableStateOf(false) }
@@ -1415,6 +1419,7 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
         }
     }
     LaunchedEffect(Unit) {
+        while (slamActive) delay(30)   // let the mugshot reveal finish (and be dismissed) first
         typeAll(s.resultLines)
         when {
             // Carmen jailed on the final case: no next case — the detective is retired
@@ -1443,6 +1448,7 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
                 // the game doesn't change.
                 val newRank = vm.s.rankIndex
                 typeAll(listOfNotNull(
+                    "Correct! Well done, ${s.detectiveName}.",
                     "Your new rank is: ${GameData.ranks[newRank]}.",
                     promotionPerkLine(newRank),
                     vm.casesToNextPromotion().takeIf { it > 0 }
@@ -1480,7 +1486,11 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
         Box(Modifier.fillMaxSize()) {
             PixelImage("crime_printer", Modifier.fillMaxSize())
             val lineH = 7.4f
-            val shown = printed.takeLast(12) + (if (typing.isNotEmpty()) listOf(typing) else emptyList())
+            // 10, not 12: matching the pagination gate's page size (below) so a full page always
+            // fits within the sheet's height cap instead of the top line or two overflowing it —
+            // at 12+typing lines the ideal height (~99px) exceeded the 96px cap the sheet is
+            // clamped to, which is what was cutting lines off.
+            val shown = printed.takeLast(10) + (if (typing.isNotEmpty()) listOf(typing) else emptyList())
             val sheetH = (10f + shown.size * lineH).coerceAtLeast(29f).coerceAtMost(96f)
             v.At(14, 102f - sheetH, 113, sheetH) {
                 Box(Modifier.fillMaxSize().background(Vga.White).border(BorderStroke(v.w(0.7f), Vga.Black))) {
@@ -1517,6 +1527,18 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
                     }
                 }
             }
+            // Paper's full for now — pause and let the reader catch up before typing pushes more
+            // lines by. Same wording and treatment as every other "hold here" moment in the game
+            // (the sign-on printer's segment breaks), and shown right on the printer itself so it's
+            // clear it's the printer waiting on you, not some unrelated prompt.
+            if (waitingForTap) {
+                v.At(4, 132, 138, 20, Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Press any key or", style = v.text(7.5f, color = Vga.White, bold = true))
+                        Text("button to continue.", style = v.text(7.5f, color = Vga.White, bold = true))
+                    }
+                }
+            }
         }
     }
     // right: the JAIL (win) or black panel (loss)
@@ -1533,15 +1555,8 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
             }
         }
     }
-    // Paper's full for now — pause and let the reader catch up before typing pushes more lines by.
-    if (waitingForTap) {
-        v.At(150, 152, 168, 16, Alignment.Center) {
-            Box(Modifier.background(Vga.Black.copy(alpha = 0.75f)).padding(horizontal = v.w(6), vertical = v.w(3))) {
-                Text("▾ tap to continue ▾", style = v.text(8, color = Vga.Yellow, bold = true))
-            }
-        }
-        Box(Modifier.fillMaxSize().clickable { waitingForTap = false })
-    }
+    // Tap anywhere to advance past the pagination gate (the hint itself is drawn on the printer).
+    if (waitingForTap) Box(Modifier.fillMaxSize().clickable { waitingForTap = false })
     // Spoiler-free share of the result: shown as soon as the case is won, well before the
     // "next case?" prompt exists — it used to appear at the same moment, right above the Yes/No
     // pair, and read as one grouped question ("share? yes/no") when they're unrelated. Sitting on
@@ -1563,24 +1578,29 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
         v.At(150, 174, 168, 9) {
             YellowButton(v, "SHARE RESULT") { com.acme.clara.ui.shareResult(shareCtx, vm) }
         }
-        v.At(150, 186, 168, 10, Alignment.Center) {
-            Text("Tap to continue.", style = v.text(8.5f, color = Vga.White, bold = true))
+        v.At(150, 184, 168, 16, Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Press any key or", style = v.text(7.5f, color = Vga.White, bold = true))
+                Text("button to continue.", style = v.text(7.5f, color = Vga.White, bold = true))
+            }
         }
         Box(Modifier.fillMaxSize().clickable { vm.menuQuitToTitle() })
     }
-    // S1: the captured mugshot slams in and is "filed" in the gallery — a one-shot win beat.
-    if (s.won && !s.careerOver && !reduce) ArrestSlam(v, s.culprit?.name)
+    // S1: the captured mugshot slams in and is "filed" in the gallery — plays before the report
+    // starts printing (see `slamActive` above).
+    if (slamActive) ArrestSlam(v, s.culprit?.name!!) { slamActive = false }
     OverlayHost(v, vm)
 }
 
-/** S1 multisensory reward: on a win the suspect's mugshot slams in over the report, then is
- *  filed into the Most-Wanted gallery. Plays once, dismissed by a tap (skipped on reduced motion) —
- *  it used to auto-dismiss after 1.35s, which was often gone before the player had really seen it. */
+/** S1 multisensory reward: on a win the suspect's mugshot slams in, before the report starts
+ *  printing. Plays once, dismissed by a tap (skipped on reduced motion) — it used to auto-dismiss
+ *  after 1.35s, which was often gone before the player had really seen it, AND used to run at the
+ *  same time as the printer, so this tap and the printer's own competed for attention. A full-screen
+ *  scrim now sits behind the card too: without one, "FILED IN MOST WANTED" landed directly over
+ *  whatever was already on screen (white paper in one spot, black panel in another) and read fine
+ *  in some places and unreadably in others. */
 @Composable
-internal fun ArrestSlam(v: Virtual, name: String?) {
-    if (name == null) return
-    var gone by remember { mutableStateOf(false) }
-    if (gone) return
+internal fun ArrestSlam(v: Virtual, name: String, onDone: () -> Unit) {
     var play by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(if (play) 1f else 2.6f,
         animationSpec = tween(360, easing = FastOutSlowInEasing), label = "slam")
@@ -1588,11 +1608,11 @@ internal fun ArrestSlam(v: Virtual, name: String?) {
     LaunchedEffect(Unit) { play = true }
     val slug = "suspect_" + snake(name)
     Box(
-        Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha }
-            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { gone = true },
+        Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.8f * alpha))
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDone),
         contentAlignment = Alignment.Center,
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.graphicsLayer { this.alpha = alpha }) {
             Box(Modifier.size(v.w(56)).graphicsLayer { scaleX = scale; scaleY = scale }
                 .border(BorderStroke(v.w(1), Vga.Yellow)).background(Vga.DarkGray),
                 contentAlignment = Alignment.Center) {
@@ -1601,8 +1621,9 @@ internal fun ArrestSlam(v: Virtual, name: String?) {
             }
             Spacer(Modifier.height(v.w(4)))
             Text("FILED IN MOST WANTED", style = v.text(9, color = Vga.Yellow, bold = true))
-            Spacer(Modifier.height(v.w(3)))
-            Text("(tap to continue)", style = v.text(6, color = Vga.LightGray))
+            Spacer(Modifier.height(v.w(6)))
+            Text("Press any key or", style = v.text(7.5f, color = Vga.White, bold = true))
+            Text("button to continue.", style = v.text(7.5f, color = Vga.White, bold = true))
         }
     }
 }

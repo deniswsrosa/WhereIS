@@ -53,8 +53,8 @@ class LeverUiTest {
 
     // ---------- S1 arrest slam ----------
     @Test fun s1_arrestSlamFilesTheMugshot() {
-        rule.mainClock.autoAdvance = false                     // freeze before the beat auto-clears
-        host { v -> ArrestSlam(v, "Nick Brunch") }
+        rule.mainClock.autoAdvance = false                     // freeze before the slam animates in
+        host { v -> ArrestSlam(v, "Nick Brunch") {} }
         rule.onNodeWithText("FILED IN MOST WANTED").assertExists()
     }
 
