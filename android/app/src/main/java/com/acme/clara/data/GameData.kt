@@ -312,29 +312,32 @@ object GameData {
         ),
     )
 
-    // Case-flow templates (byte-exact from CARMEN.EXE)
-    const val FLASH = "*** FLASH ***"
-    const val TREASURE_STOLEN = "A national treasure has been stolen in %s."
-    const val TREASURE_ID = "Reports identify the stolen item as %s."
-    const val ASSIGNMENT = "Follow the thief's trail from %s to %s hideout and bring %s in!"
-    const val DEADLINE = "The thief must be in custody by Sunday at 5 p.m."
-    const val WARRANT_ISSUED = "A warrant has been issued for the arrest of %s."
-    const val NO_WARRANT = "There is no arrest warrant on file."
-    const val ELIMINATES_ALL = "The details you entered rule out every suspect on file."
-    const val CAUGHT_UP = "You have finally cornered %s."
-    const val NO_WARRANT_ESCAPE = "But with no warrant in hand, no lawful arrest can be made!"
-    const val GOT_AWAY = "Once again, Clara's gang has slipped away with the loot!"
-    const val TRAILED_CORRECTLY = "Your pursuit of %s was right on the mark."
-    const val FALSE_WARRANT = "Sadly, the warrant you hold names %s."
-    const val FALSE_ARREST = "Watch out - a wrongful arrest could land us all in court!"
-    const val APPREHENDED = "With your help, police in %s have taken %s into custody."
-    const val LOOT = "%s was carrying the stolen %s, now on its way home to the thankful people of %s."
-    const val THANKS = "Everyone at Interpol appreciates your fine work on this case."
-    const val PROMOTION = "Well done, %s - a promotion is yours."
-    const val NEW_RANK = "You now hold the rank of %s."
-    const val TOO_LONG = "Word just came in: %s escaped because the investigation ran out of time!"
-    const val CLARA_JAILED = "You've captured the ring-leader herself - Clara San Diego is behind bars for good!"
-    const val HALL_OF_FAME = "Congratulations - you've earned a place in the Interpol Hall of Fame!"
+    // Case-flow templates — the English text doubles as the i18n fallback (Strings.ui), so the
+    // English build is byte-identical while these become translatable. %s slots are preserved and
+    // still filled by the existing call-site .replace("%s", …).
+    private fun t(en: String) = com.acme.clara.i18n.Strings.ui(en)
+    val FLASH get() = t("*** FLASH ***")
+    val TREASURE_STOLEN get() = t("A national treasure has been stolen in %s.")
+    val TREASURE_ID get() = t("Reports identify the stolen item as %s.")
+    val ASSIGNMENT get() = t("Follow the thief's trail from %s to %s hideout and bring %s in!")
+    val DEADLINE get() = t("The thief must be in custody by Sunday at 5 p.m.")
+    val WARRANT_ISSUED get() = t("A warrant has been issued for the arrest of %s.")
+    val NO_WARRANT get() = t("There is no arrest warrant on file.")
+    val ELIMINATES_ALL get() = t("The details you entered rule out every suspect on file.")
+    val CAUGHT_UP get() = t("You have finally cornered %s.")
+    val NO_WARRANT_ESCAPE get() = t("But with no warrant in hand, no lawful arrest can be made!")
+    val GOT_AWAY get() = t("Once again, Clara's gang has slipped away with the loot!")
+    val TRAILED_CORRECTLY get() = t("Your pursuit of %s was right on the mark.")
+    val FALSE_WARRANT get() = t("Sadly, the warrant you hold names %s.")
+    val FALSE_ARREST get() = t("Watch out - a wrongful arrest could land us all in court!")
+    val APPREHENDED get() = t("With your help, police in %s have taken %s into custody.")
+    val LOOT get() = t("%s was carrying the stolen %s, now on its way home to the thankful people of %s.")
+    val THANKS get() = t("Everyone at Interpol appreciates your fine work on this case.")
+    val PROMOTION get() = t("Well done, %s - a promotion is yours.")
+    val NEW_RANK get() = t("You now hold the rank of %s.")
+    val TOO_LONG get() = t("Word just came in: %s escaped because the investigation ran out of time!")
+    val CLARA_JAILED get() = t("You've captured the ring-leader herself - Clara San Diego is behind bars for good!")
+    val HALL_OF_FAME get() = t("Congratulations - you've earned a place in the Interpol Hall of Fame!")
 
     // Promotion quiz: almanac fill-in-the-blank (matched case-insensitively).
     val promotionQuiz = listOf(
