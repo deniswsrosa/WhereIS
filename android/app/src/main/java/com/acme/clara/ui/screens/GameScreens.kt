@@ -1285,22 +1285,36 @@ fun ChaseScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     var stage by remember { mutableStateOf(0) }
     var x by remember { mutableStateOf(-50f) }     // sprite x within the panel (virtual px)
     var frame by remember { mutableStateOf(0) }
+    // A tap fast-forwards only the CURRENT beat, not the whole sequence — one stray tap used to
+    // call chaseDone() outright and skip straight past every remaining stage, which read as the
+    // animation glitching/cutting out rather than a deliberate skip.
+    var skip by remember { mutableStateOf(false) }
+
+    suspend fun runTo(target: Float, step: Float, stepDelay: Long) {
+        while ((if (step > 0) x < target else x > target) && !skip) { delay(stepDelay); x += step; frame++ }
+        x = target
+    }
+    suspend fun pause(ms: Long) {
+        var left = ms
+        while (left > 0 && !skip) { delay(30); left -= 30 }
+    }
 
     LaunchedEffect(Unit) {
         // 1) the suspect sprints across, left -> right
         x = -50f
-        while (x < 170f) { delay(55); x += 4.5f; frame++ }
+        runTo(170f, 4.5f, 55)
         // 2) "There goes the suspect!"
-        stage = 1
-        delay(1500)
+        skip = false; stage = 1
+        pause(1500)
         if (s.won) {
             // 3) the cops storm after them
-            stage = 2; x = -55f
-            while (x < 170f) { delay(55); x += 5f; frame++ }
-            delay(700)
+            skip = false; stage = 2; x = -55f
+            runTo(170f, 5f, 55)
+            skip = false
+            pause(700)
             // 4) hands up: the suspect is walked back at gunpoint, right -> left
-            stage = 3; x = 165f
-            while (x > -55f) { delay(60); x -= 3.5f; frame++ }
+            skip = false; stage = 3; x = 165f
+            runTo(-55f, -3.5f, 60)
         }
         vm.chaseDone()
     }
@@ -1345,8 +1359,8 @@ fun ChaseScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     }
     // DOS removes the toolbar completely during the chase — the area below the right panel
     // stays plain black (dos_chase_suspect_no_toolbar.png)
-    // tap to skip
-    Box(Modifier.fillMaxSize().clickable { vm.chaseDone() })
+    // tap to fast-forward the current beat (see `skip` above)
+    Box(Modifier.fillMaxSize().clickable { skip = true })
 }
 
 /* ----------------------------- RESULT -----------------------------
@@ -1375,6 +1389,14 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     val quiz = remember { GameData.promotionQuiz.random() }
     val focus = remember { FocusRequester() }
     val done = stage == 4
+    // The paper only shows its last ~12 lines, so a long report used to just scroll continuously
+    // past the reader. Pause once a page's worth has printed and wait for a tap before continuing.
+    var waitingForTap by remember { mutableStateOf(false) }
+    suspend fun gate() {
+        if (reduce) return
+        waitingForTap = true
+        while (waitingForTap) delay(30)
+    }
 
     suspend fun typeAll(lines: List<String>, width: Int = 20) {
         for (line in lines) {
@@ -1387,6 +1409,7 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
                     printed.add(piece); typing = ""
                     delay(90)
                 }
+                if (printed.size % 10 == 0) gate()
             }
             printed.add("")
         }
@@ -1437,9 +1460,9 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
         if (stage == 2) {
             // clear any taps that leaked in while earlier stages auto-advanced (§20)
             input = ""
-            // wait for the answer field to (re-)enter composition before focusing it
-            delay(120)
-            runCatching { focus.requestFocus() }
+            // Don't auto-focus: the question may take a moment to read, and summoning the
+            // keyboard the instant it finished typing cut that short. Tapping the answer field
+            // (right there on the paper) brings the keyboard up whenever the player is ready.
         }
     }
     val scroll = rememberScrollState()
@@ -1510,28 +1533,40 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
             }
         }
     }
+    // Paper's full for now — pause and let the reader catch up before typing pushes more lines by.
+    if (waitingForTap) {
+        v.At(150, 152, 168, 16, Alignment.Center) {
+            Box(Modifier.background(Vga.Black.copy(alpha = 0.75f)).padding(horizontal = v.w(6), vertical = v.w(3))) {
+                Text("▾ tap to continue ▾", style = v.text(8, color = Vga.Yellow, bold = true))
+            }
+        }
+        Box(Modifier.fillMaxSize().clickable { waitingForTap = false })
+    }
+    // Spoiler-free share of the result: shown as soon as the case is won, well before the
+    // "next case?" prompt exists — it used to appear at the same moment, right above the Yes/No
+    // pair, and read as one grouped question ("share? yes/no") when they're unrelated. Sitting on
+    // screen the whole time (and clear of the jail photo, which it used to overlap) makes it read
+    // as its own standing action instead.
+    if (s.won && !s.careerOver) {
+        v.At(150, 174, 168, 9) {
+            YellowButton(v, "SHARE RESULT") { com.acme.clara.ui.shareResult(shareCtx, vm) }
+        }
+    }
     // "Ready for your next case?" -> the original's yellow Yes/No buttons
     if (done) {
-        v.At(152, 176, 76, 12) { YellowButton(v, "Yes") { vm.toBriefingForNext() } }
-        v.At(234, 176, 76, 12) { YellowButton(v, "No") { vm.menuQuitToTitle() } }
+        v.At(152, 186, 76, 12) { YellowButton(v, "Yes") { vm.toBriefingForNext() } }
+        v.At(234, 186, 76, 12) { YellowButton(v, "No") { vm.menuQuitToTitle() } }
     }
     // Carmen jailed: career complete — any key returns to the title (off the roster).
     // White text: unlike the briefing screen, the result screen's background is black.
     if (stage == 5) {
-        v.At(150, 172, 166, 22, Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Press any key or", style = v.text(9.5f, color = Vga.White, bold = true))
-                Text("button to continue.", style = v.text(9.5f, color = Vga.White, bold = true))
-            }
-        }
-        Box(Modifier.fillMaxSize().clickable { vm.menuQuitToTitle() })
-    }
-    // Spoiler-free share of the result, once the report has finished printing. Rendered last
-    // so it sits above the full-screen "any key" catcher on the career-finale screen.
-    if (s.won && (done || stage == 5)) {
-        v.At(150, 160, 168, 12) {
+        v.At(150, 174, 168, 9) {
             YellowButton(v, "SHARE RESULT") { com.acme.clara.ui.shareResult(shareCtx, vm) }
         }
+        v.At(150, 186, 168, 10, Alignment.Center) {
+            Text("Tap to continue.", style = v.text(8.5f, color = Vga.White, bold = true))
+        }
+        Box(Modifier.fillMaxSize().clickable { vm.menuQuitToTitle() })
     }
     // S1: the captured mugshot slams in and is "filed" in the gallery — a one-shot win beat.
     if (s.won && !s.careerOver && !reduce) ArrestSlam(v, s.culprit?.name)
@@ -1539,7 +1574,8 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
 }
 
 /** S1 multisensory reward: on a win the suspect's mugshot slams in over the report, then is
- *  filed into the Most-Wanted gallery. Plays once, then clears itself (skipped on reduced motion). */
+ *  filed into the Most-Wanted gallery. Plays once, dismissed by a tap (skipped on reduced motion) —
+ *  it used to auto-dismiss after 1.35s, which was often gone before the player had really seen it. */
 @Composable
 internal fun ArrestSlam(v: Virtual, name: String?) {
     if (name == null) return
@@ -1549,9 +1585,13 @@ internal fun ArrestSlam(v: Virtual, name: String?) {
     val scale by animateFloatAsState(if (play) 1f else 2.6f,
         animationSpec = tween(360, easing = FastOutSlowInEasing), label = "slam")
     val alpha by animateFloatAsState(if (play) 1f else 0f, tween(160), label = "fade")
-    LaunchedEffect(Unit) { play = true; delay(1350); gone = true }
+    LaunchedEffect(Unit) { play = true }
     val slug = "suspect_" + snake(name)
-    Box(Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha }, contentAlignment = Alignment.Center) {
+    Box(
+        Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha }
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { gone = true },
+        contentAlignment = Alignment.Center,
+    ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(Modifier.size(v.w(56)).graphicsLayer { scaleX = scale; scaleY = scale }
                 .border(BorderStroke(v.w(1), Vga.Yellow)).background(Vga.DarkGray),
@@ -1561,6 +1601,8 @@ internal fun ArrestSlam(v: Virtual, name: String?) {
             }
             Spacer(Modifier.height(v.w(4)))
             Text("FILED IN MOST WANTED", style = v.text(9, color = Vga.Yellow, bold = true))
+            Spacer(Modifier.height(v.w(3)))
+            Text("(tap to continue)", style = v.text(6, color = Vga.LightGray))
         }
     }
 }
