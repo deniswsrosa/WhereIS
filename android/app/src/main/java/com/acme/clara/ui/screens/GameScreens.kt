@@ -214,7 +214,11 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
             }
         }
     }
-    LaunchedEffect(printed.size, typing, input, stage) { scroll.animateScrollTo(scroll.maxValue) }
+    // Snap (not animate) to the bottom: a new LaunchedEffect fires on every keystroke of the
+    // typewriter effect (every ~16ms), far faster than an animated scroll can settle — so the
+    // animated version always lagged behind, leaving the line actually being typed below the
+    // visible paper until it finished and the scroll caught up.
+    LaunchedEffect(printed.size, typing, input, stage) { scroll.scrollTo(scroll.maxValue) }
     // Auto-focus the name field and raise the soft keyboard so the player can just start
     // typing (requestFocus alone doesn't reliably show the IME; the small delay lets the
     // field finish composing first).
@@ -1439,7 +1443,11 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
         }
     }
     val scroll = rememberScrollState()
-    LaunchedEffect(printed.size, typing, input, stage) { scroll.animateScrollTo(scroll.maxValue) }
+    // Snap (not animate) to the bottom: a new LaunchedEffect fires on every keystroke of the
+    // typewriter effect (every ~16ms), far faster than an animated scroll can settle — so the
+    // animated version always lagged behind, leaving the line actually being typed below the
+    // visible paper until it finished and the scroll caught up.
+    LaunchedEffect(printed.size, typing, input, stage) { scroll.scrollTo(scroll.maxValue) }
 
     v.At(0, 0, 320, 11) { GameMenuBar(v, vm) }
     // city name box
