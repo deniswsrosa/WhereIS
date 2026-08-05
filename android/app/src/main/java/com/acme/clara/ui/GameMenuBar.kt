@@ -139,17 +139,19 @@ fun OverlayHost(v: Virtual, vm: ClaraViewModel) {
     if (o is Overlay.Almanac) { AlmanacWindow(v, vm); return }
     if (o is Overlay.Passport) { PassportWindow(v, vm); return }
     val (title, lines) = when (o) {
-        Overlay.About -> "ABOUT" to listOf(
+        Overlay.About -> Strings.ui("ABOUT") to listOf(
             "Where in the World is", "Clara San Diego?  (Enhanced)", "MS-DOS Version 2.1",
             "Copyright 2026 Denis Inc",
         )
-        Overlay.Roster -> "ACME DETECTIVE ROSTER" to listOf(
-            "Detective: ${vm.s.detectiveName}", "Rank: ${GameData.ranks[vm.s.rankIndex]}",
-            "Cases solved: ${vm.s.casesSolved}",
+        Overlay.Roster -> Strings.ui("ACME DETECTIVE ROSTER") to listOf(
+            Strings.ui("Detective: {0}", vm.s.detectiveName),
+            Strings.ui("Rank: {0}", Strings.label("rank", GameData.ranks[vm.s.rankIndex])),
+            Strings.ui("Cases solved: {0}", vm.s.casesSolved),
         )
-        Overlay.HallOfFame -> "HALL OF FAME" to if (vm.s.casesSolved == 0)
-            listOf("The Hall of Fame is empty.")
-        else listOf("${vm.s.detectiveName}", "${GameData.ranks[vm.s.rankIndex]} — ${vm.s.casesSolved} case(s)")
+        Overlay.HallOfFame -> Strings.ui("HALL OF FAME") to if (vm.s.casesSolved == 0)
+            listOf(Strings.ui("The Hall of Fame is empty."))
+        else listOf("${vm.s.detectiveName}",
+            Strings.ui("{0} — {1} case(s)", Strings.label("rank", GameData.ranks[vm.s.rankIndex]), vm.s.casesSolved))
         is Overlay.Dossier -> "" to emptyList()   // handled by DossierWindow above
         Overlay.ConfirmQuit -> "" to emptyList()  // handled by ConfirmQuitDialog above
         Overlay.Language -> "" to emptyList()     // handled by LanguageWindow above
