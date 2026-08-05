@@ -6497,7 +6497,7 @@
   "s": "on_trail",
   "t": "free",
   "o": "Bartender",
-  "en": "Dia minta saya mendeskripsikan tiap minuman keras-keras, tak memilih satu pun, lalu berterima kasih atas pertunjukannya."
+  "en": "Dia minta saya mendeskripsikan tiap minuman dengan suara lantang, tak memilih satu pun, lalu berterima kasih atas pertunjukannya."
  },
  {
   "s": "on_trail",
@@ -9905,7 +9905,7 @@
   "s": "on_trail",
   "t": "free",
   "o": "Stage manager",
-  "en": "Dia minta kursi terbaik, lalu menghabiskan seluruh pertunjukan mengagumi boxnya sendiri ketimbang para aktor."
+  "en": "Dia minta kursi terbaik, lalu menghabiskan seluruh pertunjukan mengagumi bilik VIP-nya sendiri ketimbang para aktor."
  },
  {
   "s": "on_trail",
