@@ -657,27 +657,32 @@ class ClaraViewModel : ViewModel() {
 
     private fun traitClue(tr: Pair<String, String>): String {
         val (cat, v) = tr
+        fun t(key: String, en: String) = com.acme.clara.i18n.Strings.opt(key) ?: en
         // §19: sex is never its own clue in the original — it rides inside every trait
         // sentence's pronouns. For a bare sex trait, fall back to a jewelry-neutral remark.
         val frags = GameData.traitClueFragments["$cat:$v"]
-        val frag = if (frags != null) pronouns(frags.random())
-            else pronouns(when (cat) {
-                "sex" -> "{S} looked like the person you're after"
-                "hair" -> "{S} had $v hair"
-                else -> "{S} matched your description"
-            })
+        val frag = if (frags != null) {
+            val i = frags.indices.random()
+            pronouns(t("trait.$cat:$v.$i", frags[i]))
+        } else pronouns(when (cat) {
+            "sex" -> t("trait.fallback.sex", "{S} looked like the person you're after")
+            "hair" -> "{S} had $v hair"
+            else -> t("trait.fallback.other", "{S} matched your description")
+        })
         // ~⅓ of DOS trait lines are the bare sentence; the rest carry a lead-in
-        val lead = GameData.clueLeadIns.random()
+        val lead = GameData.clueLeadIns.indices.random()
+            .let { t("clue.leadin.$it", GameData.clueLeadIns[it]) }
         return if (Random.nextInt(3) == 0) "$frag." else "$lead ${frag.replaceFirstChar { it.lowercase() }}."
     }
 
     private fun flavourFood(c: Suspect): String {
+        fun t(key: String, en: String) = com.acme.clara.i18n.Strings.opt(key) ?: en
         val f = (c.feature2 + " " + c.feature1).lowercase()
         val frag = when {
-            "taco" in f || "mexican" in f -> "{S} mentioned {s} liked Mexican food"
-            "seafood" in f || "shellfish" in f || "lobster" in f -> "{S} mentioned {s} liked seafood"
-            "spicy" in f -> "{S} mentioned {s} liked spicy food"
-            else -> "{S} said {s} didn't like seafood"
+            "taco" in f || "mexican" in f -> t("food.mexican", "{S} mentioned {s} liked Mexican food")
+            "seafood" in f || "shellfish" in f || "lobster" in f -> t("food.seafood", "{S} mentioned {s} liked seafood")
+            "spicy" in f -> t("food.spicy", "{S} mentioned {s} liked spicy food")
+            else -> t("food.none", "{S} said {s} didn't like seafood")
         }
         return pronouns(frag)
     }
