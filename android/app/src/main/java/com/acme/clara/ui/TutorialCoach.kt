@@ -261,7 +261,7 @@ private fun TipPanel(v: Virtual, vm: ClaraViewModel, shown: Shown) {
             if (shown.info) Pill(v, Strings.ui("GOT IT"), primary = true) { vm.dismissTip(shown.id) }
             else Text("▸ " + Strings.ui("try it"), style = v.text(6.5f, Vga.LightGreen, bold = true))
             Spacer(Modifier.weight(1f))
-            Pill(v, "Skip tour", primary = false) { vm.skipTutorial() }
+            Pill(v, Strings.ui("Skip tour"), primary = false) { vm.skipTutorial() }
         }
     }
 }
