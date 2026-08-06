@@ -69,6 +69,12 @@ object Treasures {
         "a jewel-encrusted scepter", "a set of Fabergé eggs", "a stolen Rembrandt",
         "the sacred temple ruby", "a 2,000-year-old mummy", "the national flag",
     )
+
+    /** The saved/state value stays the English string; localize only at render time. */
+    fun localized(treasure: String): String {
+        val i = list.indexOf(treasure)
+        return if (i < 0) treasure else com.acme.clara.i18n.Strings.opt("treasure.$i") ?: treasure
+    }
 }
 
 data class GameState(
@@ -227,21 +233,21 @@ class ClaraViewModel : ViewModel() {
         val recap = CaseJournal.recap(st)
         val caseUnderway = st.phase == Phase.CITY && st.route.isNotEmpty() && st.progress > 0
         st = if (recap != null && caseUnderway) {
-            val trail = st.route.take(st.progress + 1).joinToString(" ▸ ")
-            val traits = st.revealedTraits.joinToString(", ") { it.second }
+            val i18n = com.acme.clara.i18n.Strings
+            val trail = st.route.take(st.progress + 1).joinToString(" ▸ ") { i18n.place(it) }
+            val traits = st.revealedTraits.joinToString(", ") { i18n.label("tval", it.second) }
             val lines = buildList {
                 add(recap)
                 add("")
-                add("Trail: $trail")
-                if (traits.isNotBlank()) add("Suspect so far: $traits")
-                if (backAfterGap) { add(""); add("A fresh lead surfaced — here's a free hint to spend.") }
+                add(i18n.ui("Trail: {0}", trail))
+                if (traits.isNotBlank()) add(i18n.ui("Suspect so far: {0}", traits))
+                if (backAfterGap) { add(""); add(i18n.ui("A fresh lead surfaced — here's a free hint to spend.")) }
             }
-            st.copy(overlay = Overlay.Info("PREVIOUSLY ON THIS CASE", lines))
+            st.copy(overlay = Overlay.Info(com.acme.clara.i18n.Strings.ui("PREVIOUSLY ON THIS CASE"), lines))
         } else if (backAfterGap) {
-            st.copy(overlay = Overlay.Info("WELCOME BACK", listOf(
-                "Been a while, ${st.detectiveName}.",
-                "A fresh lead has surfaced —",
-                "here's a free hint to spend.",
+            st.copy(overlay = Overlay.Info(com.acme.clara.i18n.Strings.ui("WELCOME BACK"), listOf(
+                com.acme.clara.i18n.Strings.ui("Been a while, {0}.", st.detectiveName),
+                com.acme.clara.i18n.Strings.ui("A fresh lead has surfaced — here's a free hint to spend."),
             )))
         } else st
         s = st
@@ -290,9 +296,10 @@ class ClaraViewModel : ViewModel() {
         val hint = hintText()
         val free = s.freeHints > 0
         s = if (free) s.copy(freeHints = s.freeHints - 1) else s.copy(hintsUsed = s.hintsUsed + 1)
-        val note = if (free) "(free hint — your hint-free record is safe)"
-                   else "(this case is no longer a hint-free solve)"
-        s = s.copy(overlay = Overlay.Info("HINT", listOf(hint, "", note)))
+        val i18n = com.acme.clara.i18n.Strings
+        val note = if (free) i18n.ui("(free hint — your hint-free record is safe)")
+                   else i18n.ui("(this case is no longer a hint-free solve)")
+        s = s.copy(overlay = Overlay.Info(i18n.ui("HINT"), listOf(hint, "", note)))
         autosave()
     }
 
@@ -300,19 +307,21 @@ class ClaraViewModel : ViewModel() {
      *  never the next city outright, so it helps without solving the case. */
     private fun hintText(): String {
         val next = s.route.getOrNull(s.progress + 1)
+        val i18n = com.acme.clara.i18n.Strings
         return when {
             s.atHideout && s.warrantFor?.name == s.culprit?.name ->
-                "You've cornered the thief — search the venues here to make the arrest."
+                i18n.ui("You've cornered the thief — search the venues here to make the arrest.")
             s.atHideout ->
-                "This is the hideout. Make sure your warrant names the right suspect before closing in."
+                i18n.ui("This is the hideout. Make sure your warrant names the right suspect before closing in.")
             s.warrantFor == null && matches().size == 1 && anyFilterSet() ->
-                "You have enough of the description — run the crime computer to issue the warrant."
+                i18n.ui("You have enough of the description — run the crime computer to issue the warrant.")
             s.warrantFor == null ->
-                "Question more witnesses; the crime computer still lists several suspects."
+                i18n.ui("Question more witnesses; the crime computer still lists several suspects.")
             next != null ->
-                "The trail leads toward ${CityMeta.of(next).region}. Find a lead pointing that way."
+                i18n.ui("The trail leads toward {0}. Find a lead pointing that way.",
+                    CityMeta.of(next).region.let { i18n.label("region.name", it) })
             else ->
-                "Follow your last lead to the thief's hideout."
+                i18n.ui("Follow your last lead to the thief's hideout.")
         }
     }
 
@@ -479,9 +488,11 @@ class ClaraViewModel : ViewModel() {
 
         if (!onTrack) {
             places.forEachIndexed { i, p ->
-                // wrong city: each venue answers with its own DOS no-information line
-                val line = GameData.noInformationByVenue[p] ?: Expansion.noInformationByVenue[p]
-                    ?: GameData.noInformation.random()
+                // wrong city: each venue answers with its own DOS no-information line,
+                // localized by venue key (the random fallback has no venue to key on)
+                val en = GameData.noInformationByVenue[p] ?: Expansion.noInformationByVenue[p]
+                val line = if (en != null) com.acme.clara.i18n.Strings.opt("noinfo.$p") ?: en
+                           else GameData.noInformation.random()
                 list.add(Venue(p, occs[i], ClueKind.NONE, line))
             }
         } else if (st.currentCity == st.hideout) {
@@ -490,7 +501,7 @@ class ClaraViewModel : ViewModel() {
             // 50/50 on the second, certain on the third, per the 1990 release's rules)
             places.forEachIndexed { i, p ->
                 list.add(Venue(p, occs[i], ClueKind.DANGER,
-                    "Word on the street says the gang is hiding somewhere in town."))
+                    com.acme.clara.i18n.Strings.ui("Word on the street says the gang is hiding somewhere in town.")))
             }
         } else {
             // On-track city (the 3-venue spec):
@@ -709,11 +720,15 @@ class ClaraViewModel : ViewModel() {
     private fun shouldTeaseNemesis(st: GameState): Boolean =
         st.culprit?.name != "Clara San Diego" && st.casesSolved >= 1 && Random.nextInt(8) == 0
 
-    private fun nemesisTease(): String = listOf(
-        "The witness drops their voice: word is a woman named Clara San Diego runs the whole operation.",
-        "\"These capers all trace back to one boss,\" the witness whispers — \"a Clara San Diego.\"",
-        "Someone mutters that the real mastermind, a Clara San Diego, is still out there and untouchable.",
-    ).random()
+    private fun nemesisTease(): String {
+        val teases = listOf(
+            "The witness drops their voice: word is a woman named Clara San Diego runs the whole operation.",
+            "\"These capers all trace back to one boss,\" the witness whispers — \"a Clara San Diego.\"",
+            "Someone mutters that the real mastermind, a Clara San Diego, is still out there and untouchable.",
+        )
+        val i = teases.indices.random()
+        return com.acme.clara.i18n.Strings.opt("nemesis.$i") ?: teases[i]
+    }
 
     // ---------- player actions in a city ----------
     fun openVenue(index: Int) {
@@ -971,21 +986,22 @@ class ClaraViewModel : ViewModel() {
     private fun confront() {
         val c = s.culprit!!
         val w = s.warrantFor
+        val i18n = com.acme.clara.i18n.Strings
         when {
             w == null -> {
                 s = s.copy(won = false, resultLines = listOf(
-                    "This is Interpol.",
-                    "You have finally cornered ${c.name}.",
-                    GameData.NO_WARRANT.let { "But with no warrant in hand, no lawful arrest can be made!" },
-                    "The gang has pulled off another caper and vanished!",
+                    i18n.ui("This is Interpol."),
+                    GameData.CAUGHT_UP.replace("%s", c.name),
+                    GameData.NO_WARRANT_ESCAPE,
+                    i18n.ui("The gang has pulled off another caper and vanished!"),
                 ))
             }
             w.name != c.name -> {
                 s = s.copy(won = false, resultLines = listOf(
-                    "Your trail has led you to ${s.currentCity}.",
-                    "Sadly, the warrant you hold names ${w.name}.",
-                    "Watch out - a wrongful arrest could land us all in court!",
-                    "Better luck on your next assignment.",
+                    i18n.ui("Your trail has led you to {0}.", i18n.place(s.currentCity)),
+                    GameData.FALSE_WARRANT.replace("%s", w.name),
+                    GameData.FALSE_ARREST,
+                    i18n.ui("Better luck on your next assignment."),
                 ))
             }
             else -> win(c)
@@ -1005,20 +1021,23 @@ class ClaraViewModel : ViewModel() {
 
     private fun win(c: Suspect) {
         val crimeCity = s.route.firstOrNull() ?: s.currentCity
+        val i18n = com.acme.clara.i18n.Strings
+        val crimeCityL = i18n.place(crimeCity)
         val lines = mutableListOf<String>()
         if (c.name == "Clara San Diego") {
-            lines += "You've captured the ring-leader herself - Clara San Diego is behind bars for good!"
-            lines += "Congratulations - Interpol's most-wanted list is one name shorter tonight!"
+            lines += GameData.CLARA_JAILED
+            lines += i18n.ui("Congratulations - Interpol's most-wanted list is one name shorter tonight!")
         } else {
             // faithful phrasing: the CRIME city's police make the arrest and get the loot back
-            lines += "With your help, police in $crimeCity have taken ${c.name} into custody."
-            lines += "${c.name} was carrying the stolen ${s.treasure}, now on its way home to the thankful people of $crimeCity."
+            lines += GameData.APPREHENDED.replaceFirst("%s", crimeCityL).replaceFirst("%s", c.name)
+            lines += GameData.LOOT.replaceFirst("%s", c.name)
+                .replaceFirst("%s", Treasures.localized(s.treasure)).replaceFirst("%s", crimeCityL)
         }
         // R1 peak-end: sign off warm and personal, not on a cold Interpol form line.
         lines += if (c.name == "Clara San Diego")
-            "Take a bow, ${s.detectiveName}. You began as a rookie — and you brought in the one who slipped past everyone else."
+            i18n.ui("Take a bow, {0}. You began as a rookie — and you brought in the one who slipped past everyone else.", s.detectiveName)
         else
-            "Get some rest, ${s.detectiveName}. Thanks to you, $crimeCity sleeps easier tonight."
+            i18n.ui("Get some rest, {0}. Thanks to you, {1} sleeps easier tonight.", s.detectiveName, crimeCityL)
         // H4 streak: fold today's solve into the case-a-day streak (a weekly freeze absorbs
         // one missed day). clock() is 0 in tests, which harmlessly keeps the streak at 1.
         val today = (clock() / 86_400_000L).toInt()
@@ -1032,7 +1051,7 @@ class ClaraViewModel : ViewModel() {
             else -> streak = 1                                              // streak broke
         }
         if (streak > 0 && streak % 7 == 0 && freezes < 1) freezes = 1        // earn a weekly freeze
-        if (streak >= 2) lines += "🔥 $streak-day case streak!"
+        if (streak >= 2) lines += i18n.ui("🔥 {0}-day case streak!", streak)
         val newCases = s.casesSolved + 1
         val paid = s.expansionUnlocked
         // Jailing Clara ends the free career (retire to the Hall of Fame). If the paid International
@@ -1045,8 +1064,8 @@ class ClaraViewModel : ViewModel() {
             (newCases - GameState.CAREER_CASES) % 8 == 0
         val promote = !careerOver && s.rankIndex < GameData.ranks.lastIndex && (freeThreshold || intlThreshold)
         if (promote) {
-            lines += "Well done, ${s.detectiveName} - a promotion is yours."
-            lines += "One last puzzle stands between you and the promotion."
+            lines += GameData.PROMOTION.replace("%s", s.detectiveName)
+            lines += i18n.ui("One last puzzle stands between you and the promotion.")
         }
         // update the career record: capture the villain, tally clean / hint-free solves,
         // then unlock any newly-earned commendations from the resulting record
@@ -1135,17 +1154,18 @@ class ClaraViewModel : ViewModel() {
         // near-miss; that loss is handled in confront() and stays instructive.
         val nearMiss = reason == "time" && s.onTrack &&
             (s.atHideout || s.progress >= s.route.size - 1)
+        val i18n = com.acme.clara.i18n.Strings
         val lines = when {
             nearMiss -> listOf(
-                "So close.",
-                "You reached ${s.hideout} just as ${c.name} slipped out the back —",
-                "minutes too late. The trail was right; the clock beat you.",
+                i18n.ui("So close."),
+                i18n.ui("You reached {0} just as {1} slipped out the back — minutes too late. The trail was right; the clock beat you.",
+                    i18n.place(s.hideout), c.name),
             )
             reason == "time" -> listOf(
-                "Incoming from Interpol:", "Unwelcome news...",
-                "Word just came in: ${c.name} escaped because the investigation ran out of time!",
+                i18n.ui("Incoming from Interpol:"), i18n.ui("Unwelcome news..."),
+                GameData.TOO_LONG.replace("%s", c.name),
             )
-            else -> listOf("The suspect has escaped!")
+            else -> listOf(i18n.ui("The suspect has escaped!"))
         }
         s = s.copy(phase = Phase.RESULT, won = false, resultLines = lines)
         cue(SoundCue.OUT_OF_TIME)
@@ -1160,18 +1180,21 @@ class ClaraViewModel : ViewModel() {
         val day = (total / 24).coerceIn(0, 6)
         val hour = total % 24
         val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+        val i18n = com.acme.clara.i18n.Strings
         val (h, ampm) = when {
-            hour == 0 -> 12 to "a.m."
-            hour < 12 -> hour to "a.m."
-            hour == 12 -> 12 to "p.m."
-            else -> hour - 12 to "p.m."
+            hour == 0 -> 12 to i18n.ui("a.m.")
+            hour < 12 -> hour to i18n.ui("a.m.")
+            hour == 12 -> 12 to i18n.ui("p.m.")
+            else -> hour - 12 to i18n.ui("p.m.")
         }
-        return "${days[day]}, $h $ampm"
+        return "${i18n.opt("day.$day") ?: days[day]}, $h $ampm"
     }
 
     /** Compact time-until-deadline hint, e.g. "3d 4h left" or "18h left" when close. */
     fun deadlineLabel(offsetHours: Int = 0): String {
         val left = (s.caseDeadlineHours - s.clock - offsetHours).coerceAtLeast(0)
-        return if (left >= 24) "${left / 24}d ${left % 24}h left" else "${left}h left"
+        val i18n = com.acme.clara.i18n.Strings
+        return if (left >= 24) i18n.ui("{0}d {1}h left", left / 24, left % 24)
+               else i18n.ui("{0}h left", left)
     }
 }

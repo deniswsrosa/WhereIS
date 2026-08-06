@@ -80,11 +80,11 @@ fun IntroScreen(vm: ClaraViewModel) = VirtualScreen { v ->
         3 -> {
             PixelImage("intro_world_detective_bureau", Modifier.fillMaxSize())
             v.At(0, 11, 320, 11, Alignment.Center) {
-                Text("Clara's gang has struck again!",
+                Text(Strings.ui("Clara's gang has struck again!"),
                     style = v.text(7, color = Vga.LightRed, bold = true))
             }
             v.At(0, 184, 320, 12, Alignment.Center) {
-                Text("and cracking the case is up to you...",
+                Text(Strings.ui("and cracking the case is up to you..."),
                     style = v.text(7, color = Vga.White))
             }
         }
@@ -108,7 +108,7 @@ fun TitleScreen(vm: ClaraViewModel) = VirtualScreen { v ->
         PixelImage("title_screen", Modifier.fillMaxSize())
     }
     v.At(0, 176, 320, 24, Alignment.Center) {
-        Text("PRESS  ANY  KEY  TO  BEGIN", style = v.text(9, color = Vga.Yellow, bold = true))
+        Text(Strings.ui("PRESS  ANY  KEY  TO  BEGIN"), style = v.text(9, color = Vga.Yellow, bold = true))
     }
 }
 
@@ -129,7 +129,7 @@ private const val PAPER_Y = 98f
 private const val PAPER_W = 97f
 private const val PAPER_H = 49f
 
-private val SIGN_ON_PROMPT = listOf("Detective on duty,", "please enter your name:")
+private val SIGN_ON_PROMPT get() = listOf(Strings.ui("Detective on duty, please enter your name:"))
 
 @Composable
 fun SignOnScreen(vm: ClaraViewModel) = HqPrinterScreen(vm, promptForName = true) { vm.beginInvestigation() }
@@ -188,29 +188,28 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
         when (stage) {
             ST_PROMPT -> { typeLines(SIGN_ON_PROMPT); stage = ST_NAME }
             ST_NEW_Q -> {
-                typeLines(listOf("", "Interpol has no file", "under that name.",
-                    "", "First day on the", "job? (Y/N)"))
+                typeLines(listOf("", Strings.ui("Interpol has no file under that name."),
+                    "", Strings.ui("First day on the job? (Y/N)")))
                 stage = ST_YESNO
             }
             ST_IDENT -> {
-                typeLines(listOf("", "Identity confirmed,", "${vm.s.detectiveName}.",
-                    "", "You currently hold the", "rank of ${GameData.ranks[vm.s.rankIndex]}."))
+                typeLines(listOf("", Strings.ui("Identity confirmed, {0}.", vm.s.detectiveName),
+                    "", Strings.ui("You currently hold the rank of {0}.",
+                        Strings.label("rank", GameData.ranks[vm.s.rankIndex]))))
                 stage = ST_GATE1
             }
             ST_FLASH -> {
                 val s = vm.s
                 typeLines(listOf(GameData.FLASH, "",
-                    GameData.TREASURE_STOLEN.replace("%s", s.currentCity), "",
-                    GameData.TREASURE_ID.replace("%s", s.treasure)))
+                    GameData.TREASURE_STOLEN.replace("%s", Strings.place(s.currentCity)), "",
+                    GameData.TREASURE_ID.replace("%s", com.acme.clara.game.Treasures.localized(s.treasure))))
                 stage = ST_GATE2
             }
             ST_ASSIGN -> {
                 val s = vm.s
-                val her = if (s.culprit?.sex == "Female") "her" else "his"
-                val herObj = if (s.culprit?.sex == "Female") "her" else "him"
-                typeLines(listOf("", "Your assignment:",
-                    GameData.ASSIGNMENT.replaceFirst("%s", s.currentCity)
-                        .replaceFirst("%s", her).replaceFirst("%s", herObj),
+                val assignment = (if (s.culprit?.sex == "Female") GameData.ASSIGNMENT_F else GameData.ASSIGNMENT_M)
+                    .replaceFirst("%s", Strings.place(s.currentCity))
+                typeLines(listOf("", Strings.ui("Your assignment:"), assignment,
                     "", GameData.DEADLINE))
                 stage = ST_BEGIN
             }
@@ -306,11 +305,12 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
     // Yes At(152,176,76,11), No At(234,176,76,11) (dos_signon_yesno ref, ÷2)
     if (stage == ST_YESNO) {
         v.At(152, 176, 76, 12) {
-            YellowButton(v, "Yes") { printed.add("Y"); stage = ST_IDENT }
+            // the paper echoes the pressed answer's initial, like the DOS "Y"/"N" keypress
+            YellowButton(v, Strings.ui("Yes")) { printed.add(Strings.ui("Yes").take(1).uppercase()); stage = ST_IDENT }
         }
         v.At(234, 176, 76, 12) {
             // "No" re-asks for the name, like the original
-            YellowButton(v, "No") { printed.add("N"); printed.add(""); stage = ST_PROMPT }
+            YellowButton(v, Strings.ui("No")) { printed.add(Strings.ui("No").take(1).uppercase()); printed.add(""); stage = ST_PROMPT }
         }
     }
     // Menu bar, drawn last so it stays tappable above the gate stages' fullscreen
@@ -413,7 +413,7 @@ private fun VgaCityCard(city: String, region: String, v: Virtual, modifier: Modi
         // name plate
         Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Vga.Black.copy(alpha = 0.72f))
             .padding(vertical = v.w(2)), contentAlignment = Alignment.Center) {
-            Text(city, style = v.text(9, color = Vga.White, bold = true), textAlign = TextAlign.Center)
+            Text(Strings.place(city), style = v.text(9, color = Vga.White, bold = true), textAlign = TextAlign.Center)
         }
     }
 }
@@ -439,11 +439,11 @@ fun CityClockBox(v: Virtual, vm: ClaraViewModel, tickHours: Int = 0) {
             .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(2)), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(if (sleeping) "SLEEPING…" else s.currentCity,
+                    Text(if (sleeping) Strings.ui("SLEEPING…") else Strings.place(s.currentCity),
                         style = v.text(9, color = Vga.White, bold = true))
                     if (inCase) {
                         Spacer(Modifier.width(v.w(3)))
-                        Text("CITY $cityNo/$total", style = v.text(6f, color = Vga.Yellow, bold = true))
+                        Text(Strings.ui("CITY {0}/{1}", cityNo, total), style = v.text(6f, color = Vga.Yellow, bold = true))
                     }
                 }
                 Text(vm.clockLabel(tickHours), style = v.text(8, color = Vga.White))
@@ -527,14 +527,14 @@ fun CityScreen(vm: ClaraViewModel) = VirtualScreen { v ->
             Box(Modifier.fillMaxSize().background(Vga.Black)
                 .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(4))) {
                 if (s.onTrack) CountryText(v, info, vm.s.expansionUnlocked)
-                else Text("You look around. Nothing here seems out of the ordinary...",
+                else Text(Strings.ui("You look around. Nothing here seems out of the ordinary..."),
                     style = v.text(8.5f, color = Vga.White))
             }
         }
     }
     // Tapping a tool while a witness is on screen dismisses that witness first, so the player can
     // go straight from a testimony to the venue list (or SEE) without an extra tap to close it.
-    GameToolbar(v, vm, seeLabel = if (seeOpen) "HIDE" else null,
+    GameToolbar(v, vm, seeLabel = if (seeOpen) Strings.ui("HIDE") else null,
         onSee = { vm.selectTool(0); vm.closeClue(); seeOpen = !seeOpen },
         onInvestigate = { vm.selectTool(2); vm.closeClue(); showVenues = true })
 
@@ -743,7 +743,7 @@ private fun WitnessPanel(v: Virtual, clue: Venue, onDone: () -> Unit) {
                         drawBust(size.width, size.height, look, (bob - 0.5f) * size.height * 0.02f)
                     }
                 }
-                Text(clue.occupation.uppercase(), style = v.text(7, color = Vga.White, bold = true),
+                Text(Strings.label("occ", clue.occupation).uppercase(), style = v.text(7, color = Vga.White, bold = true),
                     modifier = Modifier.padding(top = v.w(2)))
             }
             // speech bubble to the sprite's right, vertically centred, tail pointing left
@@ -877,7 +877,7 @@ private fun InvestigatePicker(v: Virtual, venues: List<Venue>, visited: Set<Int>
                     .then(if (isSel) Modifier.background(Vga.White) else Modifier)
                     .clickable { selected = i; onPick(i) }.padding(vertical = v.w(0.5f)),
                     contentAlignment = Alignment.Center) {
-                    Text(venue.place,
+                    Text(Strings.label("venue", venue.place),
                         style = v.text(8.5f, color = if (isSel) Vga.Black else if (done) Vga.LightGray else Vga.White, bold = true),
                         textAlign = TextAlign.Center)
                 }
@@ -1030,7 +1030,7 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                 WorldMap.of(city)?.let { p ->
                     val leftSide = p.x > 0.78f
                     val color = if (city == s.currentCity) Vga.White else Vga.Yellow
-                    MapLabel(v, city.uppercase(), p, leftSide, color)
+                    MapLabel(v, Strings.place(city).uppercase(), p, leftSide, color)
                 }
             }
         }
@@ -1050,7 +1050,7 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                 .border(BorderStroke(v.w(1), Vga.White)).clickable(
                     interactionSource = remember { MutableInteractionSource() }, indication = null) {}) {
                 Box(Modifier.fillMaxWidth().height(v.w(14)), contentAlignment = Alignment.Center) {
-                    Text(s.currentCity, style = v.text(9, color = Vga.White, bold = true))
+                    Text(Strings.place(s.currentCity), style = v.text(9, color = Vga.White, bold = true))
                 }
                 if (grow >= 1f) Box(Modifier.fillMaxWidth().weight(1f).padding(horizontal = v.w(3))
                     .border(BorderStroke(v.w(2), Vga.White)).padding(v.w(1))) {
@@ -1061,7 +1061,7 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                                 .then(if (isSel) Modifier.background(Vga.White) else Modifier)
                                 .clickable { if (selected == i) vm.travelTo(city) else selected = i },
                                 contentAlignment = Alignment.Center) {
-                                Text(city, style = v.text(8.5f,
+                                Text(Strings.place(city), style = v.text(8.5f,
                                     color = if (isSel) Vga.Black else Vga.White, bold = true))
                                 // flight time shown up front so the player weighs the cost
                                 Text("~${vm.flightHoursTo(city)}h",
@@ -1073,7 +1073,7 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                 }
                 // hint appears once a city is highlighted
                 if (grow >= 1f) Box(Modifier.fillMaxWidth().height(v.w(8)), contentAlignment = Alignment.Center) {
-                    if (selected >= 0) Text("tap again to fly",
+                    if (selected >= 0) Text(Strings.ui("tap again to fly"),
                         style = v.text(6f, color = Vga.Yellow, bold = true))
                 }
             }
@@ -1106,6 +1106,7 @@ private fun BoxScope.MapLabel(v: Virtual, name: String, p: Offset, leftSide: Boo
  * suspects on the printer, and a single match auto-issues the arrest warrant.
  * Art: crime_printer.png / crime_computer.png cropped from an original capture.
  */
+// canonical row labels; localized at render via Strings.ui (kept short — the CRT row is ~10 chars)
 private val CRIME_ROWS = listOf("SEX", "HOBBY", "HAIR", "FEATURE", "VEHICLE")
 
 /** Wrap text to the printer paper width (~17 chars). */
@@ -1129,7 +1130,7 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     // (white cursor bar), the next cycles its value. (With row 0 pre-selected, a first
     // tap on SEX cycled immediately — inconsistent with the other rows.)
     var selRow by remember { mutableStateOf(-1) }
-    val paper = remember { mutableStateListOf("READY.") }
+    val paper = remember { mutableStateListOf(Strings.ui("READY.")) }
     var typing by remember { mutableStateOf("") }
     var printing by remember { mutableStateOf(false) }
     // S2: a visual "WARRANT ISSUED" stamp fires when the description narrows to one suspect
@@ -1165,17 +1166,17 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
         if (printing) return
         printing = true
         scope.launch {
-            printLine("Wait...")
+            printLine(Strings.ui("Wait..."))
             delay(900)
             vm.compute()
             val results = vm.matches()
             paper.add("")
             when {
-                !vm.anyFilterSet() -> paperWrap("Please enter the suspect's description first.").forEach { printLine(it) }
+                !vm.anyFilterSet() -> paperWrap(Strings.ui("Please enter the suspect's description first.")).forEach { printLine(it) }
                 results.isEmpty() -> paperWrap(GameData.ELIMINATES_ALL).forEach { printLine(it) }
                 else -> {
                     // the original prints "Suspect:" when the description narrows to one
-                    printLine(if (results.size == 1) "Suspect:" else "Suspects:")
+                    printLine(if (results.size == 1) Strings.ui("Suspect:") else Strings.ui("Suspects:"))
                     results.forEach { printLine(it.name) }
                     if (results.size == 1) {
                         paper.add("")
@@ -1246,10 +1247,10 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                     Box(Modifier.fillMaxSize()
                         .then(if (sel) Modifier.background(Vga.White) else Modifier)
                         .clickable { if (selRow == i) cycle(i) else selRow = i }) {
-                        Text("$label:", style = v.text(8, color = if (sel) Vga.Blue else Vga.Yellow, bold = true),
+                        Text(Strings.ui(label) + ":", style = v.text(8, color = if (sel) Vga.Blue else Vga.Yellow, bold = true),
                             modifier = Modifier.align(Alignment.CenterStart).padding(start = v.w(11)))
                         valueOf(i)?.let {
-                            Text(it, style = v.text(8, color = if (sel) Vga.Blue else Vga.Yellow),
+                            Text(Strings.label("tval", it), style = v.text(8, color = if (sel) Vga.Blue else Vga.Yellow),
                                 modifier = Modifier.align(Alignment.CenterStart).padding(start = v.w(65)))
                         }
                     }
@@ -1260,7 +1261,7 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                 Box(Modifier.fillMaxSize()
                     .then(if (selRow == 5) Modifier.background(Vga.White) else Modifier)
                     .clickable { selRow = 5; runCompute() }) {
-                    Text("COMPUTE", style = v.text(8, color = if (selRow == 5) Vga.Blue else Vga.Yellow, bold = true),
+                    Text(Strings.ui("COMPUTE"), style = v.text(8, color = if (selRow == 5) Vga.Blue else Vga.Yellow, bold = true),
                         modifier = Modifier.align(Alignment.CenterStart).padding(start = v.w(11)))
                 }
             }
@@ -1290,8 +1291,8 @@ internal fun WarrantStamp(v: Virtual, reduce: Boolean, onDone: () -> Unit) {
             .padding(horizontal = v.w(10), vertical = v.w(5)),
             contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("WARRANT ISSUED", style = v.text(13, color = Vga.Red, bold = true))
-                Text("●  APPROVED  ●", style = v.text(9, color = Vga.Red, bold = true))
+                Text(Strings.ui("WARRANT ISSUED"), style = v.text(13, color = Vga.Red, bold = true))
+                Text("●  " + Strings.ui("APPROVED") + "  ●", style = v.text(9, color = Vga.Red, bold = true))
             }
         }
     }
@@ -1369,7 +1370,7 @@ fun ChaseScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                             .offset(v.w(x), 0.dp)
                             .size(v.w(48), v.w(48)), ContentScale.Fit)
                 }
-                1 -> Text("There goes\nthe suspect!",
+                1 -> Text(Strings.ui("There goes\nthe suspect!"),
                     style = v.text(9, color = Vga.White, bold = true),
                     modifier = Modifier.align(Alignment.CenterStart).padding(start = v.w(18)))
                 2 -> PixelImage("anim_cops_${frame % 3}",
@@ -1401,7 +1402,8 @@ fun ChaseScreen(vm: ClaraViewModel) = VirtualScreen { v ->
  *  region unlock or a tighter clock the game doesn't apply. */
 internal fun promotionPerkLine(rankIndex: Int): String {
     val cities = (5 + rankIndex).coerceAtMost(9)
-    return "As ${GameData.ranks[rankIndex]}, the trail now runs $cities cities — a longer chase, more clues to read."
+    return Strings.ui("As {0}, the trail now runs {1} cities — a longer chase, more clues to read.",
+        Strings.label("rank", GameData.ranks[rankIndex]), cities)
 }
 
 /** Lowercased with combining diacritics stripped, for accent-insensitive text comparison
@@ -1467,13 +1469,13 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
             s.careerOver -> stage = 5
             s.pendingPromotion -> {
                 typeAll(listOf(
-                    "Use the World Almanac and Book of Facts to help you find the missing word in the following sentence:",
+                    Strings.ui("Use the World Almanac and Book of Facts to help you find the missing word in the following sentence:"),
                     Strings.quizQuestion(quiz),
                 ))
                 stage = 2
             }
             else -> {
-                typeAll(listOf("Ready for your next case, ${s.detectiveName}?"))
+                typeAll(listOf(Strings.ui("Ready for your next case, {0}?", s.detectiveName)))
                 stage = 4
             }
         }
@@ -1490,18 +1492,18 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
                 // the game doesn't change.
                 val newRank = vm.s.rankIndex
                 typeAll(listOfNotNull(
-                    "Correct! Well done, ${s.detectiveName}.",
-                    "Your new rank is: ${GameData.ranks[newRank]}.",
+                    Strings.ui("Correct! Well done, {0}.", s.detectiveName),
+                    Strings.ui("Your new rank is: {0}.", Strings.label("rank", GameData.ranks[newRank])),
                     promotionPerkLine(newRank),
                     vm.casesToNextPromotion().takeIf { it > 0 }
-                        ?.let { "$it more cases until your next promotion." },
+                        ?.let { Strings.ui("{0} more cases until your next promotion.", it) },
                 ))
-                typeAll(listOf("Ready for your next case, ${s.detectiveName}?"))
+                typeAll(listOf(Strings.ui("Ready for your next case, {0}?", s.detectiveName)))
                 stage = 4
             } else {
                 // DOS re-asks the same question until it's answered correctly
                 // (dos_quiz_incorrect_try_again.png) — the promotion stays attainable
-                typeAll(listOf("That is incorrect.", "Please try again.", Strings.quizQuestion(quiz)))
+                typeAll(listOf(Strings.ui("That is incorrect."), Strings.ui("Please try again."), Strings.quizQuestion(quiz)))
                 stage = 2
             }
         }
@@ -1604,7 +1606,7 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     // independent, always-available action instead.
     if (s.won && !s.careerOver) {
         v.At(266, 14, 50, 10) {
-            YellowButton(v, "SHARE") { com.acme.clara.ui.shareResult(shareCtx, vm) }
+            YellowButton(v, Strings.ui("SHARE")) { com.acme.clara.ui.shareResult(shareCtx, vm) }
         }
     }
     // A single gray status strip for every "the game is waiting on you" moment on this screen —
@@ -1624,8 +1626,8 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
                         Text(Strings.ui("button to continue."), style = v.text(7.5f, color = Vga.Black, bold = true))
                     }
                 done -> Row(horizontalArrangement = Arrangement.spacedBy(v.w(8))) {
-                    Box(Modifier.size(v.w(76), v.w(12))) { YellowButton(v, "Yes") { vm.toBriefingForNext() } }
-                    Box(Modifier.size(v.w(76), v.w(12))) { YellowButton(v, "No") { vm.menuQuitToTitle() } }
+                    Box(Modifier.size(v.w(76), v.w(12))) { YellowButton(v, Strings.ui("Yes")) { vm.toBriefingForNext() } }
+                    Box(Modifier.size(v.w(76), v.w(12))) { YellowButton(v, Strings.ui("No")) { vm.menuQuitToTitle() } }
                 }
             }
         }
@@ -1668,7 +1670,7 @@ internal fun ArrestSlam(v: Virtual, name: String, onDone: () -> Unit) {
                 else Text("◆", style = v.text(20, color = Vga.LightGray, bold = true))
             }
             Spacer(Modifier.height(v.w(4)))
-            Text("FILED IN MOST WANTED", style = v.text(9, color = Vga.Yellow, bold = true))
+            Text(Strings.ui("FILED IN MOST WANTED"), style = v.text(9, color = Vga.Yellow, bold = true))
             Spacer(Modifier.height(v.w(6)))
             Text(Strings.ui("Press any key or"), style = v.text(7.5f, color = Vga.White, bold = true))
             Text(Strings.ui("button to continue."), style = v.text(7.5f, color = Vga.White, bold = true))

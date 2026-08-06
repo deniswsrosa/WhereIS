@@ -191,7 +191,7 @@ fun OverlayHost(v: Virtual, vm: ClaraViewModel) {
                 }
             }
             Spacer(Modifier.height(v.w(4)))
-            DosButton("CLOSE", fill = Vga.Green, textColor = Vga.White,
+            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
                 style = v.text(9, bold = true)) { vm.dismissOverlay() }
         }
     }
@@ -207,11 +207,11 @@ private fun ConfirmQuitDialog(v: Virtual, vm: ClaraViewModel) {
             Column(Modifier.fillMaxSize().background(Vga.White)
                 .border(BorderStroke(v.w(1), Vga.Black)).padding(v.w(4)),
                 horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Do you really want to quit?", style = v.text(8, color = Vga.Black, bold = true))
+                Text(Strings.ui("Do you really want to quit?"), style = v.text(8, color = Vga.Black, bold = true))
                 Spacer(Modifier.weight(1f))
                 Row(horizontalArrangement = Arrangement.spacedBy(v.w(10))) {
-                    QuitButton(v, "Yes") { vm.menuQuitToTitle() }
-                    QuitButton(v, "No") { vm.dismissOverlay() }
+                    QuitButton(v, Strings.ui("Yes")) { vm.menuQuitToTitle() }
+                    QuitButton(v, Strings.ui("No")) { vm.dismissOverlay() }
                 }
             }
         }
@@ -252,7 +252,7 @@ private fun LanguageWindow(v: Virtual, vm: ClaraViewModel) {
                 }
             }
             Spacer(Modifier.height(v.w(3)))
-            DosButton("CLOSE", fill = Vga.Green, textColor = Vga.White,
+            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
                 style = v.text(9, bold = true)) { vm.dismissOverlay() }
         }
     }
@@ -264,11 +264,15 @@ private fun LanguageWindow(v: Virtual, vm: ClaraViewModel) {
  * from DOSBox captures: window (25,49)-(306,189), portrait interior 61x80 at (32,59). */
 @Composable
 private fun DossierWindow(v: Virtual, su: Suspect, onClose: () -> Unit) {
+    // Dossier facts are Kotlin data (EXE-faithful English); localized via a per-suspect overlay
+    // keyed by roster index — names stay untranslated.
+    val idx = GameData.suspects.indexOf(su)
+    fun d(field: String, en: String) = Strings.opt("suspect.$idx.$field") ?: en
     // typed-on effect: number of characters shown across all fields
     val fields = listOf(
-        "Name:" to su.name, "Sex:" to su.sex, "Occupation:" to su.occupation,
-        "Hobby:" to su.hobby, "Hair Color:" to su.hair, "Auto:" to su.auto,
-        "Feature:" to su.feature1, "Other:" to su.feature2,
+        "Name:" to su.name, "Sex:" to d("sex", su.sex), "Occupation:" to d("occupation", su.occupation),
+        "Hobby:" to d("hobby", su.hobby), "Hair Color:" to d("hair", su.hair), "Auto:" to d("auto", su.auto),
+        "Feature:" to d("feature1", su.feature1), "Other:" to d("feature2", su.feature2),
     )
     val total = fields.sumOf { it.second.length }
     val reduce = reducedMotion()
@@ -306,32 +310,32 @@ private fun DossierWindow(v: Virtual, su: Suspect, onClose: () -> Unit) {
                     }
                     Spacer(Modifier.width(v.w(5)))
                     Column(Modifier.weight(1f)) {
-                        Row { Text("Name: ", style = label); Text(taken(0), style = value) }
+                        Row { Text(Strings.ui("Name:") + " ", style = label); Text(taken(0), style = value) }
                         Spacer(Modifier.height(v.w(2)))
-                        Row { Text("Sex: ", style = label); Text(taken(1), style = value) }
+                        Row { Text(Strings.ui("Sex:") + " ", style = label); Text(taken(1), style = value) }
                         Spacer(Modifier.height(v.w(2)))
                         Text(buildAnnotatedString {
-                            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("Occupation: ") }
+                            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(Strings.ui("Occupation:") + " ") }
                             append(taken(2))
                         }, style = value)
                         Spacer(Modifier.height(v.w(4)))
-                        Row { Text("Hobby: ", style = label); Text(taken(3), style = value) }
+                        Row { Text(Strings.ui("Hobby:") + " ", style = label); Text(taken(3), style = value) }
                         Spacer(Modifier.height(v.w(2)))
-                        Row { Text("Hair Color: ", style = label); Text(taken(4), style = value) }
+                        Row { Text(Strings.ui("Hair Color:") + " ", style = label); Text(taken(4), style = value) }
                         Spacer(Modifier.height(v.w(2)))
-                        Row { Text("Auto: ", style = label); Text(taken(5), style = value) }
+                        Row { Text(Strings.ui("Auto:") + " ", style = label); Text(taken(5), style = value) }
                     }
                 }
                 // Feature / Other span the full window width beneath the portrait
                 Column(Modifier.align(Alignment.BottomStart).fillMaxWidth()
                     .padding(start = v.w(4), end = v.w(4), bottom = v.w(4))) {
                     Text(buildAnnotatedString {
-                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("Feature: ") }
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(Strings.ui("Feature:") + " ") }
                         append(taken(6))
                     }, style = value)
                     Spacer(Modifier.height(v.w(4)))
                     Text(buildAnnotatedString {
-                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("Other: ") }
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(Strings.ui("Other:") + " ") }
                         append(taken(7))
                     }, style = value)
                 }
@@ -357,8 +361,8 @@ private fun MostWantedWindow(v: Virtual, vm: ClaraViewModel) {
         contentAlignment = Alignment.Center) {
         Column(Modifier.fillMaxWidth(0.92f).fillMaxHeight(0.9f).background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(5)),
             horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("MOST WANTED", style = v.text(10, color = Vga.Yellow, bold = true))
-            Text("$caught / ${gallery.size} captured", style = v.text(7, color = Vga.LightCyan))
+            Text(Strings.ui("MOST WANTED"), style = v.text(10, color = Vga.Yellow, bold = true))
+            Text(Strings.ui("{0} / {1} captured", caught, gallery.size), style = v.text(7, color = Vga.LightCyan))
             Spacer(Modifier.height(v.w(3)))
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
                 gallery.chunked(4).forEach { row ->
@@ -370,7 +374,7 @@ private fun MostWantedWindow(v: Virtual, vm: ClaraViewModel) {
                 }
             }
             Spacer(Modifier.height(v.w(3)))
-            DosButton("CLOSE", fill = Vga.Green, textColor = Vga.White,
+            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
                 style = v.text(9, bold = true)) { vm.dismissOverlay() }
         }
     }
@@ -386,7 +390,7 @@ private fun WantedTile(v: Virtual, entry: WantedEntry, modifier: Modifier) {
             else Text(if (entry.captured) "◆" else "?",
                 style = v.text(15, color = Vga.LightGray, bold = true))
         }
-        Text(if (entry.captured) entry.name.replace("\"", "") else "AT LARGE",
+        Text(if (entry.captured) entry.name.replace("\"", "") else Strings.ui("AT LARGE"),
             style = v.text(5.5f, color = if (entry.captured) Vga.White else Vga.LightGray),
             maxLines = 1, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
     }
@@ -403,38 +407,39 @@ private fun CommendationsWindow(v: Virtual, vm: ClaraViewModel) {
         contentAlignment = Alignment.Center) {
         Column(Modifier.fillMaxWidth(0.9f).fillMaxHeight(0.9f).background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(5)),
             horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("COMMENDATIONS", style = v.text(10, color = Vga.Yellow, bold = true))
-            Text("$earned / ${Achievements.catalog.size} earned", style = v.text(7, color = Vga.LightCyan))
+            Text(Strings.ui("COMMENDATIONS"), style = v.text(10, color = Vga.Yellow, bold = true))
+            Text(Strings.ui("{0} / {1} earned", earned, Achievements.catalog.size), style = v.text(7, color = Vga.LightCyan))
             Spacer(Modifier.height(v.w(3)))
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
-                StatRow(v, "Detective", s.detectiveName.ifBlank { "—" })
-                StatRow(v, "Rank", GameData.ranks.getOrElse(s.rankIndex) { "Rookie" })
-                StatRow(v, "Cases solved", "${s.casesSolved}")
-                StatRow(v, "Villains caught", "${MostWanted.capturedCount(s.capturedVillains)} / ${MostWanted.total()}")
-                StatRow(v, "Hint-free solves", "${s.hintFreeSolves}")
+                StatRow(v, Strings.ui("Detective"), s.detectiveName.ifBlank { "—" })
+                StatRow(v, Strings.ui("Rank"), Strings.label("rank", GameData.ranks.getOrElse(s.rankIndex) { "Rookie" }))
+                StatRow(v, Strings.ui("Cases solved"), "${s.casesSolved}")
+                StatRow(v, Strings.ui("Villains caught"), "${MostWanted.capturedCount(s.capturedVillains)} / ${MostWanted.total()}")
+                StatRow(v, Strings.ui("Hint-free solves"), "${s.hintFreeSolves}")
                 // H4: the case-a-day streak (with any banked weekly freeze)
-                StatRow(v, "Daily streak", buildString {
-                    append(if (s.streakDays > 0) "🔥 ${s.streakDays} day(s)" else "—")
-                    if (s.streakFreezes > 0) append("  ❄ freeze ready")
+                StatRow(v, Strings.ui("Daily streak"), buildString {
+                    append(if (s.streakDays > 0) Strings.ui("🔥 {0} day(s)", s.streakDays) else "—")
+                    if (s.streakFreezes > 0) append("  " + Strings.ui("❄ freeze ready"))
                 })
                 Spacer(Modifier.height(v.w(3)))
                 // P2 endowed progress: a bar toward the next rank that opens with a head start
                 RankProgress(v, s)
                 Spacer(Modifier.height(v.w(3)))
-                Text("— COMMENDATIONS —", style = v.text(6.5f, color = Vga.Yellow, bold = true),
+                Text("— " + Strings.ui("COMMENDATIONS") + " —", style = v.text(6.5f, color = Vga.Yellow, bold = true),
                     modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
                 Spacer(Modifier.height(v.w(1)))
                 Achievements.catalog.forEach { a ->
                     val got = a.id in s.unlockedAchievements
                     Column(Modifier.fillMaxWidth().padding(vertical = v.w(1))) {
-                        Text((if (got) "★ " else "☆ ") + a.title,
+                        Text((if (got) "★ " else "☆ ") + (Strings.opt("achv.${a.id}.title") ?: a.title),
                             style = v.text(7.5f, color = if (got) Vga.Yellow else Vga.LightGray, bold = true))
-                        Text(a.desc, style = v.text(6.2f, color = if (got) Vga.White else Vga.LightGray))
+                        Text(Strings.opt("achv.${a.id}.desc") ?: a.desc,
+                            style = v.text(6.2f, color = if (got) Vga.White else Vga.LightGray))
                     }
                 }
             }
             Spacer(Modifier.height(v.w(3)))
-            DosButton("CLOSE", fill = Vga.Green, textColor = Vga.White,
+            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
                 style = v.text(9, bold = true)) { vm.dismissOverlay() }
         }
     }
@@ -460,7 +465,7 @@ internal fun RankProgress(v: Virtual, s: com.acme.clara.game.GameState) {
     val label: String
     val frac: Float
     if (next == null) {
-        label = "${GameData.ranks.last()} — top rank"
+        label = Strings.ui("{0} — top rank", Strings.label("rank", GameData.ranks.last()))
         frac = 1f
     } else {
         val prev = thresholds.lastOrNull { it <= solved } ?: 0
@@ -469,7 +474,7 @@ internal fun RankProgress(v: Virtual, s: com.acme.clara.game.GameState) {
         val head = 1                                   // the credited head start
         frac = ((inBand + head).toFloat() / (band + head)).coerceIn(0f, 1f)
         val nextRank = GameData.ranks.getOrElse(s.rankIndex + 1) { GameData.ranks.last() }
-        label = "Toward $nextRank — ${inBand + head} of ${band + head}"
+        label = Strings.ui("Toward {0} — {1} of {2}", Strings.label("rank", nextRank), inBand + head, band + head)
     }
     Column(Modifier.fillMaxWidth()) {
         Text(label, style = v.text(6.5f, color = Vga.LightCyan))
@@ -579,10 +584,10 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                             due -> Vga.Yellow
                             else -> Vga.White
                         }
-                        Text(name, style = v.text(7, color = color, bold = unlocked),
+                        Text(Strings.place(name), style = v.text(7, color = color, bold = unlocked),
                             modifier = Modifier
                                 .clickable(enabled = unlocked) { selected = name }
-                                .labelled(if (unlocked) name else Strings.ui("{0}, locked", name))
+                                .labelled(if (unlocked) Strings.place(name) else Strings.ui("{0}, locked", Strings.place(name)))
                                 .padding(vertical = v.w(1.2f), horizontal = v.w(1)))
                     }
                 }
@@ -620,9 +625,9 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                             }
                         }
                         Spacer(Modifier.height(v.w(2)))
-                        Text(entry.name.uppercase(), style = v.text(8.5f, color = Vga.LightGreen, bold = true),
+                        Text(Strings.place(entry.name).uppercase(), style = v.text(8.5f, color = Vga.LightGreen, bold = true),
                             textAlign = TextAlign.Center)
-                        Text(entry.region, style = v.text(6.5f, color = Vga.LightCyan),
+                        Text(Strings.label("region.name", entry.region), style = v.text(6.5f, color = Vga.LightCyan),
                             textAlign = TextAlign.Center)
                     }
                     Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
@@ -665,8 +670,8 @@ private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
         contentAlignment = Alignment.Center) {
         Column(Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.92f).background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(5)),
             horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("PASSPORT", style = v.text(10, color = Vga.Yellow, bold = true))
-            Text("${visitedCountries.size} of ${universe.size} countries",
+            Text(Strings.ui("PASSPORT"), style = v.text(10, color = Vga.Yellow, bold = true))
+            Text(Strings.ui("{0} of {1} countries", visitedCountries.size, universe.size),
                 style = v.text(7, color = Vga.LightCyan))
             Spacer(Modifier.height(v.w(3)))
 
@@ -710,11 +715,11 @@ private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
             // the stamps: visited countries by name (the collection, also for accessibility)
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
                 if (visitedCountries.isEmpty()) {
-                    Text("No stamps yet — solve a case to start filling your passport.",
+                    Text(Strings.ui("No stamps yet — solve a case to start filling your passport."),
                         style = v.text(7, color = Vga.LightGray))
                 } else {
                     visitedCountries
-                        .map { CountryShapes.countryName[it] ?: it }
+                        .map { Strings.opt("country.$it") ?: CountryShapes.countryName[it] ?: it }
                         .sorted()
                         .forEach { name ->
                             Text("✓ ${name.uppercase()}",
@@ -724,7 +729,7 @@ private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
                 }
             }
             Spacer(Modifier.height(v.w(3)))
-            DosButton("CLOSE", fill = Vga.Green, textColor = Vga.White,
+            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
                 style = v.text(9, bold = true)) { vm.dismissOverlay() }
         }
     }
@@ -738,7 +743,7 @@ private fun PassportSealed(v: Virtual, vm: ClaraViewModel) {
         contentAlignment = Alignment.Center) {
         Column(Modifier.fillMaxWidth(0.86f).background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(7)),
             horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("PASSPORT", style = v.text(10, color = Vga.Yellow, bold = true))
+            Text(Strings.ui("PASSPORT"), style = v.text(10, color = Vga.Yellow, bold = true))
             Spacer(Modifier.height(v.w(4)))
             Box(Modifier.size(v.w(44), v.w(30)).background(Vga.DarkGray)
                 .border(BorderStroke(v.w(1.5f), Vga.LightGray)), contentAlignment = Alignment.Center) {
@@ -746,18 +751,16 @@ private fun PassportSealed(v: Virtual, vm: ClaraViewModel) {
             }
             Spacer(Modifier.height(v.w(4)))
             listOf(
-                "Your passport is sealed.",
-                "Every place you visit is",
-                "quietly being recorded.",
+                Strings.ui("Your passport is sealed."),
+                Strings.ui("Every place you visit is quietly being recorded."),
                 "",
-                "Unlock the Expansion to reveal",
-                "your painted map of the world.",
+                Strings.ui("Unlock the Expansion to reveal your painted map of the world."),
             ).forEach {
                 Text(it, style = v.text(7.5f, color = Vga.White), textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth())
             }
             Spacer(Modifier.height(v.w(5)))
-            DosButton("CLOSE", fill = Vga.Green, textColor = Vga.White,
+            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
                 style = v.text(9, bold = true)) { vm.dismissOverlay() }
         }
     }

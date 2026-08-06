@@ -17,14 +17,15 @@ data class ShareResult(
  */
 object ShareCard {
     fun render(r: ShareResult): String {
+        val i18n = com.acme.clara.i18n.Strings
         val planes = "✈".repeat(r.hops.coerceIn(0, 12))
-        val outcome = if (r.solved) "solved" else "escaped"
-        val hints = if (r.hintFree) "🔎 no hints" else "🔎 used a hint"
+        val outcome = if (r.solved) i18n.ui("solved") else i18n.ui("escaped")
+        val hints = if (r.hintFree) i18n.ui("🔎 no hints") else i18n.ui("🔎 used a hint")
         return buildString {
             appendLine("WhereIS · ${r.dateLabel}")
             appendLine("🎖 ${r.rankName} — $outcome")
-            appendLine("$planes ${r.hops} hops · ${r.wrongFlights} wrong")
-            append("⏱ ${r.hoursToSpare}h to spare · $hints")
+            appendLine("$planes " + i18n.ui("{0} hops · {1} wrong", r.hops, r.wrongFlights))
+            append(i18n.ui("⏱ {0}h to spare", r.hoursToSpare) + " · $hints")
         }
     }
 }

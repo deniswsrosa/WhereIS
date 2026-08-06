@@ -17,10 +17,12 @@ object CaseJournal {
     fun recap(state: GameState): String? {
         val from = state.route.firstOrNull() ?: return null
         if (state.currentCity.isBlank()) return null
+        val i18n = com.acme.clara.i18n.Strings
         return if (from == state.currentCity) {
-            "Your case opens in $from."
+            i18n.ui("Your case opens in {0}.", i18n.place(from))
         } else {
-            "Previously… you trailed the thief from $from to ${state.currentCity}."
+            i18n.ui("Previously… you trailed the thief from {0} to {1}.",
+                i18n.place(from), i18n.place(state.currentCity))
         }
     }
 }

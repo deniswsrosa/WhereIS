@@ -51,16 +51,16 @@ fun Modifier.tappable(label: String): Modifier =
 
 /** A short caption for an audio cue, shown when Options ▸ Captions is on. Null = no caption. */
 fun captionFor(cue: SoundCue): String? = when (cue) {
-    SoundCue.CLUE -> "New clue"
-    SoundCue.DANGER -> "Danger — a warning"
-    SoundCue.WARRANT -> "Warrant issued"
-    SoundCue.FLASH -> "Crime computer"
-    SoundCue.TRAVEL -> "Departing"
-    SoundCue.ARRIVE -> "Arrived"
-    SoundCue.CHASE -> "The chase is on"
-    SoundCue.WIN -> "Case solved"
-    SoundCue.WRONG_ARREST -> "The thief got away"
-    SoundCue.OUT_OF_TIME -> "Out of time"
+    SoundCue.CLUE -> com.acme.clara.i18n.Strings.ui("New clue")
+    SoundCue.DANGER -> com.acme.clara.i18n.Strings.ui("Danger — a warning")
+    SoundCue.WARRANT -> com.acme.clara.i18n.Strings.ui("Warrant issued")
+    SoundCue.FLASH -> com.acme.clara.i18n.Strings.ui("Crime computer")
+    SoundCue.TRAVEL -> com.acme.clara.i18n.Strings.ui("Departing")
+    SoundCue.ARRIVE -> com.acme.clara.i18n.Strings.ui("Arrived")
+    SoundCue.CHASE -> com.acme.clara.i18n.Strings.ui("The chase is on")
+    SoundCue.WIN -> com.acme.clara.i18n.Strings.ui("Case solved")
+    SoundCue.WRONG_ARREST -> com.acme.clara.i18n.Strings.ui("The thief got away")
+    SoundCue.OUT_OF_TIME -> com.acme.clara.i18n.Strings.ui("Out of time")
     SoundCue.BRIEFING -> null
 }
 

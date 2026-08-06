@@ -37,11 +37,15 @@ class WelcomeBackWorker(context: Context, params: WorkerParameters) : Worker(con
             ) {
                 return false   // no permission — nothing to do
             }
+            // The worker can fire without the Activity ever running this process — load the
+            // player's chosen language before rendering the notification text.
+            com.acme.clara.i18n.Strings.ensureInit(ctx)
 
             val manager = NotificationManagerCompat.from(ctx)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 manager.createNotificationChannel(
-                    NotificationChannel(CHANNEL, "Cold cases", NotificationManager.IMPORTANCE_DEFAULT)
+                    NotificationChannel(CHANNEL, com.acme.clara.i18n.Strings.ui("Cold cases"),
+                        NotificationManager.IMPORTANCE_DEFAULT)
                 )
             }
 
@@ -53,8 +57,8 @@ class WelcomeBackWorker(context: Context, params: WorkerParameters) : Worker(con
 
             val notification = NotificationCompat.Builder(ctx, CHANNEL)
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle(TITLE)
-                .setContentText(TEXT)
+                .setContentTitle(com.acme.clara.i18n.Strings.ui(TITLE))
+                .setContentText(com.acme.clara.i18n.Strings.ui(TEXT))
                 .setAutoCancel(true)
                 .setContentIntent(pending)
                 .build()

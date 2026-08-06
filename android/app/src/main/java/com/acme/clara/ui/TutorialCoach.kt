@@ -133,9 +133,9 @@ private fun lessonFor(s: GameState): Shown? {
             // hint — and only prompt COMPUTE once it's actually in, so you can't compute prematurely.
             val need = s.revealedTraits.firstOrNull { (c, v) -> compVal(s, c) != v }
             return if (need != null) {
-                val label = rowLabelOf(need.first)
+                val label = Strings.ui(rowLabelOf(need.first))
                 Shown("computer", crtRow(rowIndexOf(need.first)), Strings.ui("ENTER THE CLUE"),
-                    Strings.ui("A witness said the thief's {0} is “{1}”. Tap the {2} row, then tap it again until it reads {1}.", label.lowercase(), need.second, label), false)
+                    Strings.ui("A witness said the thief's {0} is “{1}”. Tap the {2} row, then tap it again until it reads {1}.", label.lowercase(), Strings.label("tval", need.second), label), false)
             } else Shown("computer", CRT_COMPUTE, Strings.ui("RUN THE COMPUTER"),
                 Strings.ui("That clue's logged. Tap COMPUTE — if several suspects still match, gather more as you travel until one is left."), false)
         }

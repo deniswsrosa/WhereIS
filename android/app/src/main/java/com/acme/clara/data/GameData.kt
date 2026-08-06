@@ -319,7 +319,10 @@ object GameData {
     val FLASH get() = t("*** FLASH ***")
     val TREASURE_STOLEN get() = t("A national treasure has been stolen in %s.")
     val TREASURE_ID get() = t("Reports identify the stolen item as %s.")
-    val ASSIGNMENT get() = t("Follow the thief's trail from %s to %s hideout and bring %s in!")
+    // Whole-sentence per-sex variants: translators can't build gender from swapped-in pronoun
+    // words ("%s hideout"), so each sex gets its own complete template.
+    val ASSIGNMENT_F get() = t("Follow the thief's trail from %s to her hideout and bring her in!")
+    val ASSIGNMENT_M get() = t("Follow the thief's trail from %s to his hideout and bring him in!")
     val DEADLINE get() = t("The thief must be in custody by Sunday at 5 p.m.")
     val WARRANT_ISSUED get() = t("A warrant has been issued for the arrest of %s.")
     val NO_WARRANT get() = t("There is no arrest warrant on file.")

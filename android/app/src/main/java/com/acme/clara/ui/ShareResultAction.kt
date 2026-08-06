@@ -15,8 +15,9 @@ fun shareResult(context: Context, vm: ClaraViewModel) {
     val s = vm.s
     val card = ShareCard.render(
         ShareResult(
-            dateLabel = "Case #${s.casesSolved}",
-            rankName = GameData.ranks.getOrElse(s.rankIndex) { "Rookie" },
+            dateLabel = com.acme.clara.i18n.Strings.ui("Case #{0}", s.casesSolved),
+            rankName = com.acme.clara.i18n.Strings.label("rank",
+                GameData.ranks.getOrElse(s.rankIndex) { "Rookie" }),
             solved = s.won,
             hops = (s.route.size - 1).coerceAtLeast(0),
             wrongFlights = s.wrongFlights,
@@ -29,7 +30,7 @@ fun shareResult(context: Context, vm: ClaraViewModel) {
         putExtra(Intent.EXTRA_TEXT, card)
     }
     context.startActivity(
-        Intent.createChooser(send, "Share your result").apply {
+        Intent.createChooser(send, com.acme.clara.i18n.Strings.ui("Share your result")).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
     )

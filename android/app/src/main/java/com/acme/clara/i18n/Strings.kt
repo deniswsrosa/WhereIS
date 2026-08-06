@@ -96,6 +96,14 @@ object Strings {
     fun label(prefix: String, value: String): String =
         if (lang == "en") value else active["$prefix.$value"] ?: value
 
+    /** Localized display name for a place (map labels, clock box, lists, sentences). The canonical
+     *  English name stays the logic/save key everywhere; key is `city.<name>.name` alongside the
+     *  place's other catalog entries. Falls back to the English name. */
+    fun place(name: String): String = if (lang == "en") name else active["city.$name.name"] ?: name
+
+    /** Load the catalog when called outside the Activity lifecycle (workers, notifications). */
+    fun ensureInit(context: Context) { if (appCtx == null) init(context) }
+
     /** UI-chrome convenience: the English text stays at the call site and doubles as the fallback,
      *  so wrapping a literal never changes the English build. Translation is keyed by "ui:<english>".
      *  [args] fill `{0}`,`{1}`,… placeholders (kept out of the key). */

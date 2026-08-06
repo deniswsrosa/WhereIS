@@ -30,6 +30,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import com.acme.clara.data.GameData
 import com.acme.clara.game.ClaraViewModel
+import com.acme.clara.i18n.Strings
 import com.acme.clara.save.SaveMeta
 import com.acme.clara.ui.At
 import com.acme.clara.ui.PixelImage
@@ -62,8 +63,8 @@ fun ChooseGameScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                 contentAlignment = Alignment.Center,
             ) {
                 Column(Modifier.padding(vertical = v.w(3)), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("SELECT YOUR DETECTIVE", style = v.text(10, Vga.Yellow, bold = true))
-                    Text("Tap a file to resume  ·  ✕ to retire", style = v.text(6.5f, Vga.LightCyan),
+                    Text(Strings.ui("SELECT YOUR DETECTIVE"), style = v.text(10, Vga.Yellow, bold = true))
+                    Text(Strings.ui("Tap a file to resume  ·  ✕ to retire"), style = v.text(6.5f, Vga.LightCyan),
                         modifier = Modifier.padding(top = v.w(1)))
                 }
             }
@@ -84,7 +85,7 @@ fun ChooseGameScreen(vm: ClaraViewModel) = VirtualScreen { v ->
             Spacer(Modifier.height(v.w(6)))
             Box(Modifier.fillMaxWidth().height(v.w(22)), contentAlignment = Alignment.Center) {
                 Box(Modifier.width(v.w(170)).height(v.w(22))) {
-                    DosButton(v, "+  NEW DETECTIVE") { vm.newGameFlow() }
+                    DosButton(v, "+  " + Strings.ui("NEW DETECTIVE")) { vm.newGameFlow() }
                 }
             }
         }
@@ -94,11 +95,11 @@ fun ChooseGameScreen(vm: ClaraViewModel) = VirtualScreen { v ->
 /** One saved career as an agency case file: ID photo (the detective sprite), name, rank, progress. */
 @Composable
 private fun DossierCard(v: Virtual, m: SaveMeta, onResume: () -> Unit, onDelete: () -> Unit) {
-    val rank = GameData.ranks.getOrElse(m.rankIndex) { "Rookie" }
+    val rank = Strings.label("rank", GameData.ranks.getOrElse(m.rankIndex) { "Rookie" })
     Box(
         Modifier.fillMaxWidth().height(v.w(48)).background(Vga.Black)
             .border(BorderStroke(v.w(1), Vga.White))
-            .clickable(onClick = onResume).labelled("Continue ${m.name}").padding(v.w(5)),
+            .clickable(onClick = onResume).labelled(Strings.ui("Continue {0}", m.name)).padding(v.w(5)),
     ) {
         Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
             // agency ID photo: the detective sprite on a badge field
@@ -120,7 +121,7 @@ private fun DossierCard(v: Virtual, m: SaveMeta, onResume: () -> Unit, onDelete:
             Spacer(Modifier.width(v.w(5)))
             Box(
                 Modifier.size(v.w(20)).border(BorderStroke(v.w(1), Vga.Red))
-                    .clickable(onClick = onDelete).tappable("Retire ${m.name}"),
+                    .clickable(onClick = onDelete).tappable(Strings.ui("Retire {0}", m.name)),
                 contentAlignment = Alignment.Center,
             ) { Text("✕", style = v.text(10, Vga.Red, bold = true)) }
         }
@@ -133,7 +134,7 @@ private fun CaseMeter(v: Virtual, cases: Int) {
     val career = 14
     val filled = cases.coerceIn(0, career)
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text("$cases solved", style = v.text(6.5f, Vga.LightCyan))
+        Text(Strings.ui("{0} solved", cases), style = v.text(6.5f, Vga.LightCyan))
         Spacer(Modifier.width(v.w(4)))
         Row(horizontalArrangement = Arrangement.spacedBy(v.w(0.8f))) {
             repeat(career) { i ->
