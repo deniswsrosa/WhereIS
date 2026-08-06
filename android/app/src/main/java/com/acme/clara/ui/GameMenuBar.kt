@@ -40,6 +40,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import com.acme.clara.data.GameData
 import com.acme.clara.game.Achievements
 import com.acme.clara.game.ClaraViewModel
+import com.acme.clara.game.Humor
 import com.acme.clara.game.MostWanted
 import com.acme.clara.game.Overlay
 import com.acme.clara.game.WantedEntry
@@ -641,6 +642,24 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                             Spacer(Modifier.height(v.w(3)))
                         }
                         Text(entry.description, style = v.text(7.5f, color = Vga.White))
+                        // A bite-sized trivia aside, tone-matched to the almanac's browsing feel —
+                        // re-rolled per entry (stable while this card stays open) rather than
+                        // per-recomposition, so it doesn't flicker as the player reads.
+                        val didYouKnow = remember(entry.name) { Humor.didYouKnowLine() }
+                        didYouKnow?.let { line ->
+                            Spacer(Modifier.height(v.w(4)))
+                            Box(
+                                Modifier.fillMaxWidth().background(Vga.DarkGray)
+                                    .border(BorderStroke(v.w(0.7f), Vga.LightGray))
+                                    .padding(v.w(3)),
+                            ) {
+                                Column {
+                                    Text(Strings.ui("DID YOU KNOW?"), style = v.text(6, color = Vga.Yellow, bold = true))
+                                    Spacer(Modifier.height(v.w(1)))
+                                    Text(line, style = v.text(6.5f, color = Vga.White))
+                                }
+                            }
+                        }
                     }
                 }
             }

@@ -15623,5 +15623,255 @@
   "s": "arrival",
   "t": "paid",
   "en": "Le voleur est dehors à faire le malin. Vous êtes ici à être infatigable. L'infatigable a un meilleur palmarès."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "La pieuvre a trois cœurs, et le principal cesse de battre quand elle nage. Elle préfère donc marcher."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Le miel ne se périme jamais. Des pots vieux de plusieurs millénaires sont encore parfaitement bons. De la patience, apparemment."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Le wombat produit des crottes cubiques. Avec des angles et tout. La nature a ses raisons."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les requins sont plus vieux que les arbres. Ils nageaient déjà bien avant qu'un tronc n'existe."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "La crevette garde son cœur dans la tête. Elle est restée très discrète à ce sujet."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Le papillon goûte avec ses pattes. Chaque atterrissage est aussi une petite décision culinaire."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les chats ne perçoivent pas du tout le goût sucré. Ils n'en voient tout simplement pas l'intérêt."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les éléphants ne peuvent pas sauter. Les quatre pattes restent au sol, et ils semblent tout à fait en paix avec ça."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les hiboux peuvent tourner la tête sur environ trois quarts de tour, si bien qu'ils ne se donnent jamais la peine de tourner le corps."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Le colibri est le seul oiseau capable de voler en arrière. Il quitte une pièce quand bon lui semble."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Une girafe a exactement sept vertèbres dans le cou, comme vous. Les siennes sont simplement plus longues."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les chameaux stockent de la graisse dans leurs bosses, pas de l'eau. Une confusion qu'ils n'ont jamais pris la peine de corriger."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les ours polaires ont la peau noire sous toute cette fourrure blanche. Un secret plutôt bien gardé."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les yeux du renne passent de l'or en été au bleu en hiver. Même ses yeux remarquent le froid."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les chèvres ont des pupilles rectangulaires et voient presque à trois cent soixante degrés. Peu de choses prennent une chèvre par surprise."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les koalas dorment jusqu'à vingt heures par jour. Les quatre heures restantes sont elles aussi plutôt reposantes."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les paresseux peuvent retenir leur souffle plus longtemps que les dauphins en ralentissant leur cœur. Sans se presser, comme toujours."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les étoiles de mer n'ont ni cerveau ni sang, et s'en sortent très bien quand même."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Un escargot porte des milliers de petites dents. Il n'est pas pressé de s'en servir."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Certaines grenouilles gèlent presque entièrement l'hiver, puis dégèlent au printemps et repartent, comme neuves."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "L'axolotl peut faire repousser un membre perdu, et même des parties du cœur. Très soigné de sa part."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les abeilles peuvent apprendre à reconnaître les visages humains. Vous avez peut-être déjà été remarqué."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les abeilles domestiques indiquent une direction en dansant. Un petit déhanché signifie que le déjeuner est par là."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Certains manchots font leur demande avec un galet soigneusement choisi. Du romantisme, en somme."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les dauphins inventent un sifflement personnel qui leur sert de nom. Chacun le sien, qu'il le veuille ou non."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les flamants roses naissent gris et rosissent grâce aux crevettes qu'ils mangent. La couleur, en somme, est un choix de régime."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "La langue d'une baleine bleue peut à elle seule peser autant qu'un éléphant. Le reste de la baleine est également imposant."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les autruches ont des yeux plus gros que leur cerveau. Elles y voient merveilleusement bien, au moins."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "La langue d'un caméléon peut être plus longue que le reste de son corps. La portée n'est pas le problème."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les kangourous ne peuvent pas vraiment marcher à reculons. Ils se sont engagés vers l'avant il y a longtemps."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Une puce peut sauter plusieurs fois sa propre taille. Petite, et parfaitement consciente de l'être."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Certaines tortues vivent bien au-delà de cent ans, sans se presser particulièrement de s'arrêter."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Botaniquement, la banane est une baie. La fraise, techniquement, n'en est pas une. Personne ne nous a rien demandé."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les cacahuètes ne sont pas des noix, mais poussent sous terre comme des haricots. Une discrète crise d'identité."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les noix de cajou poussent suspendues sous un fruit tendre ressemblant à une pomme, comme un détail ajouté après coup."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Un seul ananas peut mettre près de deux ans à pousser. Ça vaut l'attente, insiste-t-il."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Le chocolat commence sous forme de graines à l'intérieur d'un fruit qui pousse sur un arbre. Une bonne nouvelle, on peut le dire."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "La pastèque, c'est environ neuf dixièmes d'eau. Rafraîchissant, et honnête à ce sujet."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les champignons sont plus proches des animaux que des plantes. Une petite surprise de famille."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Le bambou peut grandir de près d'un mètre en une seule journée. Impatient, pour une plante."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les jeunes tournesols pivotent tout au long de la journée pour suivre le soleil. Les plus âgés abandonnent et restent tournés vers l'est."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Le Soleil concentre presque toute la masse du système solaire. Le reste d'entre nous n'est qu'une erreur d'arrondi."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Une journée sur Vénus dure plus longtemps qu'une année entière là-bas. Le temps s'y comporte étrangement."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Les empreintes laissées sur la Lune peuvent rester en place pendant des millions d'années. Pas de vent pour les balayer."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Un simple nuage peut peser des centaines de tonnes, et flotte pourtant sans le moindre souci."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Cette odeur fraîche après la pluie vient de minuscules bactéries dans le sol. Le mérite leur revient."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Une cuillerée d'étoile effondrée pèserait des milliards de tonnes. Mieux vaut la laisser où elle est."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Il y a plus d'étoiles dans l'univers que de grains de sable sur toutes les plages de la Terre. Une quantité généreuse."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Une fourmi peut porter plusieurs fois son propre poids sans se plaindre. Ou en se plaignant très discrètement."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Botaniquement, la tomate est un fruit. Elle garde ça pour elle à table."
  }
 ]

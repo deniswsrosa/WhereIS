@@ -15623,5 +15623,255 @@
   "s": "arrival",
   "t": "paid",
   "en": "Gdzieś tam złodziej stawia na spryt. Ty tutaj stawiasz na wytrwałość. Wytrwałość ma lepsze statystyki."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Ośmiornice mają trzy serca, a to główne przestaje bić, gdy pływają. Wolą więc chodzić."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Miód nigdy się nie psuje. Słoiki sprzed tysięcy lat wciąż nadają się do jedzenia. Najwyraźniej liczy się cierpliwość."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Wombaty produkują odchody w kształcie sześcianu. Z rogami i wszystkim. Natura miała swoje powody."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Rekiny są starsze od drzew. Pływały sobie na długo, zanim cokolwiek zapuściło pień."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Krewetka nosi serce w głowie. Nigdy się tym specjalnie nie chwaliła."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Motyle smakują stopami. Każde lądowanie to zarazem drobna decyzja o przekąsce."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Koty w ogóle nie czują smaku słodkiego. Po prostu nie rozumieją, o co tyle szumu."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Słonie nie potrafią skakać. Wszystkie cztery nogi zostają na ziemi, i najwyraźniej im to nie przeszkadza."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Sowy potrafią obrócić głowę niemal o trzy czwarte pełnego obrotu, więc nigdy nie zawracają sobie głowy obracaniem całego ciała."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Kolibry to jedyne ptaki potrafiące latać do tyłu. Wychodzą z pokoju, kiedy tylko mają na to ochotę."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Żyrafa ma dokładnie siedem kości w szyi, tyle samo co ty. U niej są po prostu dłuższe."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Wielbłądy magazynują w garbach tłuszcz, nie wodę. Nigdy nie zadały sobie trudu, by to sprostować."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Niedźwiedzie polarne mają pod całym tym białym futrem czarną skórę. Całkiem dobrze strzeżona tajemnica."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Oczy reniferów zmieniają kolor ze złotego latem na niebieski zimą. Nawet ich oczy zauważają chłód."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Kozy mają prostokątne źrenice i widzą niemal dookoła siebie. Niewiele jest w stanie podejść je niezauważenie."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Koale śpią nawet dwadzieścia godzin na dobę. Pozostałe cztery też upływają dość spokojnie."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Leniwce potrafią wstrzymać oddech dłużej niż delfiny, spowalniając serce niemal do zera. Jak zawsze, bez pośpiechu."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Rozgwiazdy nie mają ani mózgu, ani krwi, a i tak radzą sobie znakomicie."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Ślimak nosi w sobie tysiące maleńkich zębów. Wcale się nie spieszy, żeby ich użyć."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Niektóre żaby zamarzają zimą niemal na kamień, a wiosną odtajają i odskakują, jakby nigdy nic."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Aksolotle potrafią odtworzyć utraconą kończynę, a nawet fragmenty serca. Bardzo schludnie z ich strony."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Pszczoły potrafią nauczyć się rozpoznawać ludzkie twarze. Możliwe, że już cię zauważyły."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Pszczoły miodne wskazują kierunek tańcem. Delikatne kołysanie oznacza, że obiad jest w tamtą stronę."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Niektóre gatunki pingwinów oświadczają się jednym starannie wybranym kamyczkiem. Romantyzm w czystej postaci."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Delfiny wymyślają sobie osobisty gwizd i używają go jako imienia. Każdy je dostaje, gotów czy nie."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Flamingi rodzą się szare i różowieją od jedzonych krewetek. Ten kolor to właściwie kwestia diety."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Sam język płetwala błękitnego może ważyć tyle co słoń. Reszta wieloryba też jest spora."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Strusie mają oczy większe od mózgu. Widzą przynajmniej znakomicie."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Język kameleona bywa dłuższy niż reszta jego ciała. Z zasięgiem na pewno nie ma problemu."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Kangury nie potrafią z łatwością cofać się. Dawno temu postawiły wszystko na ruch do przodu."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Pchła potrafi skoczyć na wysokość wielokrotnie przewyższającą jej wzrost. Mała, i w pełni tego świadoma."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Niektóre żółwie żyją dobrze ponad sto lat, wcale się nie śpiesząc, by przestać."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Banany, botanicznie rzecz biorąc, są jagodami. Truskawki technicznie nie są. Nikt nas o zdanie nie pytał."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Orzeszki ziemne wcale nie są orzechami, tylko rosną pod ziemią jak fasola. Cicha sprawa tożsamości."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Orzechy nerkowca zwisają u spodu miękkiego, jabłkopodobnego owocu, jakby były dorzucone na koniec."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Wyrośnięcie pojedynczego ananasa może zająć prawie dwa lata. Podobno warto czekać."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Czekolada zaczyna życie jako nasiona wewnątrz owocu rosnącego na drzewie. Chyba dobra wiadomość."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Arbuz to w dziewięciu dziesiątych woda. Orzeźwiający i szczery w tej kwestii."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Grzyby są bliżej spokrewnione ze zwierzętami niż z roślinami. Cicha rodzinna niespodzianka."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Bambus potrafi urosnąć nawet o metr w ciągu jednego dnia. Niecierpliwy, jak na roślinę."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Młode słoneczniki obracają się w ciągu dnia, podążając za słońcem. Starsze rezygnują i po prostu zwracają się na wschód."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Słońce zawiera niemal całą masę całego Układu Słonecznego. Reszta z nas to błąd zaokrąglenia."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Dzień na Wenus trwa dłużej niż tamtejszy rok. Czas zachowuje się tam dość dziwnie."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Ślady stóp pozostawione na Księżycu mogą przetrwać miliony lat. Nie ma wiatru, który by je posprzątał."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Pojedyncza chmura może ważyć setki ton, a i tak unosi się sobie bez najmniejszego trudu."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Ten świeży zapach po deszczu pochodzi od maleńkich bakterii w glebie. To im należą się brawa."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Łyżeczka materii z zapadniętej gwiazdy ważyłaby miliardy ton. Najlepiej zostawić ją w spokoju."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "We wszechświecie jest więcej gwiazd niż ziaren piasku na wszystkich plażach Ziemi razem wziętych. Ilość iście hojna."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Mrówka potrafi unieść wielokrotność własnej wagi bez słowa skargi. Albo ze skargą bardzo cichą."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Pomidory, botanicznie rzecz biorąc, są owocem. Przy kolacji wolą się tym nie chwalić."
  }
 ]
