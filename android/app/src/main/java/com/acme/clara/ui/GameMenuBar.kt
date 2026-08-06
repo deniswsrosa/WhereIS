@@ -47,6 +47,10 @@ import com.acme.clara.i18n.Strings
 import com.acme.clara.ui.screens.CityPhoto
 import com.acme.clara.ui.theme.Vga
 
+// Shared with GameScreens.kt's identical helper — kept file-local rather than exported to
+// avoid widening either file's API surface for a one-line slugify.
+private val SUSPECT_SLUG_REGEX = Regex("[^a-z0-9]+")
+
 private data class MenuItemDef(val label: String, val enabled: Boolean = true, val action: () -> Unit)
 
 @Composable
@@ -276,7 +280,7 @@ private fun DossierWindow(v: Virtual, su: Suspect, onClose: () -> Unit) {
     )
     val total = fields.sumOf { it.second.length }
     val reduce = reducedMotion()
-    var shown by remember(su.name) { mutableStateOf(0) }
+    var shown by remember(su.name) { mutableIntStateOf(0) }
     LaunchedEffect(su.name) {
         if (reduce) shown = total                   // reduced-motion: show the dossier at once
         else { shown = 0; while (shown < total) { kotlinx.coroutines.delay(8); shown += 2 } }
@@ -299,7 +303,7 @@ private fun DossierWindow(v: Virtual, su: Suspect, onClose: () -> Unit) {
                     Column {
                         Box(Modifier.border(BorderStroke(v.w(1), Vga.Black)).padding(v.w(2))) {
                             Box(Modifier.border(BorderStroke(v.w(1), Vga.Black))) {
-                                val slug = "suspect_" + su.name.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')
+                                val slug = "suspect_" + su.name.lowercase().replace(SUSPECT_SLUG_REGEX, "_").trim('_')
                                 // 61x75: the capture's bottom 5 rows were baked page-rule bars,
                                 // cropped out of the assets
                                 if (spriteExists(slug))
@@ -383,7 +387,7 @@ private fun MostWantedWindow(v: Virtual, vm: ClaraViewModel) {
 @Composable
 private fun WantedTile(v: Virtual, entry: WantedEntry, modifier: Modifier) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        val slug = "suspect_" + entry.name.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')
+        val slug = "suspect_" + entry.name.lowercase().replace(SUSPECT_SLUG_REGEX, "_").trim('_')
         Box(Modifier.fillMaxWidth().aspectRatio(0.82f).border(BorderStroke(v.w(0.7f), Vga.Black))
             .background(Vga.DarkGray), contentAlignment = Alignment.Center) {
             if (entry.captured && spriteExists(slug)) PixelImage(slug, Modifier.fillMaxSize())
@@ -662,9 +666,13 @@ private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
     // paid unlock, which then paints in every country already visited (see PassportSealed).
     if (!paid) { PassportSealed(v, vm); return }
     val placeCountry = CountryShapes.placeCountry
-    val universe = placeCountry.values.toSet()
-    val visitedPlaces = s.visitedPlaces.filter { it in placeCountry }
-    val visitedCountries = visitedPlaces.mapNotNull { placeCountry[it] }.toSet()
+    // Filtering/re-deriving these sets is pure work off s.visitedPlaces — pin them so an
+    // unrelated GameState change (this screen reads the whole vm.s) doesn't redo it every
+    // recomposition while the passport is open.
+    val (universe, visitedPlaces, visitedCountries) = remember(s.visitedPlaces) {
+        val vp = s.visitedPlaces.filter { it in placeCountry }
+        Triple(placeCountry.values.toSet(), vp, vp.mapNotNull { placeCountry[it] }.toSet())
+    }
 
     Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
         contentAlignment = Alignment.Center) {

@@ -56,9 +56,9 @@ import com.acme.clara.ui.theme.Vga
  */
 @Composable
 fun IntroScreen(vm: ClaraViewModel) = VirtualScreen { v ->
-    var stage by remember { mutableStateOf(0) }   // 0 crowns · 1 detective · 2 cops · 3 WDB
-    var walkX by remember { mutableStateOf(-60f) }
-    var frame by remember { mutableStateOf(0) }
+    var stage by remember { mutableIntStateOf(0) }   // 0 crowns · 1 detective · 2 cops · 3 WDB
+    var walkX by remember { mutableFloatStateOf(-60f) }
+    var frame by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
         delay(3500)                                    // crowns card, nothing else on screen
         stage = 1; walkX = -40f
@@ -160,7 +160,7 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
     VirtualScreen(keepVirtualYAboveIme = PAPER_Y + PAPER_H) { v ->
     val printed = remember { mutableStateListOf<String>() }
     var typing by remember { mutableStateOf("") }
-    var stage by remember { mutableStateOf(if (promptForName) ST_PROMPT else ST_FLASH) }
+    var stage by remember { mutableIntStateOf(if (promptForName) ST_PROMPT else ST_FLASH) }
     var input by remember { mutableStateOf("") }
     val scroll = rememberScrollState()
     val focus = remember { FocusRequester() }
@@ -252,7 +252,7 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
     // Ratcheted: the sheet grows from a small starting size (paper feeding out of the printer)
     // and freezes for good once it reaches the cap — same growth beat as the Result screen's
     // printer. Real scrolling (below) handles anything past that; this height is purely visual.
-    var peakRows by remember { mutableStateOf(0) }
+    var peakRows by remember { mutableIntStateOf(0) }
     val liveRows = printed.size + (if (typing.isNotEmpty()) 1 else 0) + (if (stage == ST_NAME) 1 else 0)
     peakRows = maxOf(peakRows, liveRows).coerceAtMost(5)
     val paperGrownH = (6f + peakRows * 8.05f).coerceAtLeast(16f).coerceAtMost(PAPER_H)
@@ -489,8 +489,8 @@ fun CityScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     // SEE dropdown open: the city box is replaced by the connections list, SEE reads HIDE
     var seeOpen by remember(s.currentCity) { mutableStateOf(false) }
     // walking-to-venue animation: index of the venue being walked to, -1 = none
-    var walkingTo by remember(s.currentCity) { mutableStateOf(-1) }
-    var walkStep by remember { mutableStateOf(0) }
+    var walkingTo by remember(s.currentCity) { mutableIntStateOf(-1) }
+    var walkStep by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(walkingTo) {
         if (walkingTo >= 0) {
@@ -582,9 +582,9 @@ private fun SeeDropdown(v: Virtual, city: String, connections: List<String>, onC
 @Composable
 private fun SightingPanel(v: Virtual, level: Int, onDone: () -> Unit) {
     // generic animation parameter 0..1 driven per level
-    var t by remember(level) { mutableStateOf(0f) }
-    var phase by remember(level) { mutableStateOf(0) }   // level 3: 0 peek · 1 run
-    var frame by remember(level) { mutableStateOf(0) }
+    var t by remember(level) { mutableFloatStateOf(0f) }
+    var phase by remember(level) { mutableIntStateOf(0) }   // level 3: 0 peek · 1 run
+    var frame by remember(level) { mutableIntStateOf(0) }
     LaunchedEffect(level) {
         when (level) {
             1 -> {  // face rises slowly, pauses, sinks back
@@ -701,7 +701,8 @@ private fun DialogPanel(v: Virtual, border: androidx.compose.ui.graphics.Color =
 
 /* ------------------- INVESTIGATION: witness portrait + speech bubble ------------------- */
 /** "Sport Club" -> "sport_club" : maps a venue/occupation name to its drawable resource suffix. */
-private fun snake(s: String) = s.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')
+private val SLUG_REGEX = Regex("[^a-z0-9]+")
+private fun snake(s: String) = s.lowercase().replace(SLUG_REGEX, "_").trim('_')
 
 private data class Look(val hair: Color, val skin: Color, val shirt: Color, val style: Int)
 private fun witnessLook(occupation: String): Look {
@@ -719,7 +720,7 @@ private fun witnessLook(occupation: String): Look {
 @Composable
 private fun WitnessPanel(v: Virtual, clue: Venue, onDone: () -> Unit) {
     val look = witnessLook(clue.occupation)
-    var shown by remember(clue.text) { mutableStateOf(0) }
+    var shown by remember(clue.text) { mutableIntStateOf(0) }
     LaunchedEffect(clue.text) { shown = 0; while (shown < clue.text.length) { delay(20); shown++ } }
     val bob by rememberInfiniteTransition(label = "wb").animateFloat(
         0f, 1f, infiniteRepeatable(tween(900, easing = LinearEasing), RepeatMode.Reverse), label = "wb")
@@ -824,7 +825,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawBust(w: Float, 
 private fun InvestigatePicker(v: Virtual, venues: List<Venue>, visited: Set<Int>,
                               walkingTo: Int, walkStep: Int,
                               onPick: (Int) -> Unit, onCancel: () -> Unit) {
-    var selected by remember { mutableStateOf(-1) }
+    var selected by remember { mutableIntStateOf(-1) }
     // full-screen scrim: tap outside cancels (the original cancels with Esc)
     Box(Modifier.fillMaxSize().clickable { onCancel() })
     v.At(70, 71, 180, 105) {
@@ -966,9 +967,9 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     val options = s.departOptions
     val flying = s.flying
     // flight animation: fraction of the current leg drawn (0..1)
-    var legT by remember { mutableStateOf(0f) }
+    var legT by remember { mutableFloatStateOf(0f) }
     // DOS animates the destination list growing out of the city box when DEPART opens
-    var grow by remember { mutableStateOf(0f) }
+    var grow by remember { mutableFloatStateOf(0f) }
     LaunchedEffect(flying) {
         if (flying != null) {
             legT = 0f
@@ -1043,7 +1044,7 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
         // Nothing pre-selected: the first tap on a city only highlights it (and shows the
         // flight time); a second tap on the same city commits the flight — so a mis-tap
         // never burns hours by accident.
-        var selected by remember(s.currentCity) { mutableStateOf(-1) }
+        var selected by remember(s.currentCity) { mutableIntStateOf(-1) }
         val fullH = 18f + options.size * 10f + 6f + 9f
         v.At(4, 13, 141, 24f + (fullH - 24f) * grow) {
             Column(Modifier.fillMaxSize().background(Vga.Black)
@@ -1129,7 +1130,7 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     // Start with no row selected so every row behaves the same: the first tap selects
     // (white cursor bar), the next cycles its value. (With row 0 pre-selected, a first
     // tap on SEX cycled immediately — inconsistent with the other rows.)
-    var selRow by remember { mutableStateOf(-1) }
+    var selRow by remember { mutableIntStateOf(-1) }
     val paper = remember { mutableStateListOf(Strings.ui("READY.")) }
     var typing by remember { mutableStateOf("") }
     var printing by remember { mutableStateOf(false) }
@@ -1311,9 +1312,9 @@ fun ChaseScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     val s = vm.s
     // stage: 0 suspect runs right · 1 "There goes the suspect!" · 2 cops chase right ·
     // 3 escort marches back left (win only) · then done
-    var stage by remember { mutableStateOf(0) }
-    var x by remember { mutableStateOf(-50f) }     // sprite x within the panel (virtual px)
-    var frame by remember { mutableStateOf(0) }
+    var stage by remember { mutableIntStateOf(0) }
+    var x by remember { mutableFloatStateOf(-50f) }     // sprite x within the panel (virtual px)
+    var frame by remember { mutableIntStateOf(0) }
     // A tap fast-forwards only the CURRENT beat, not the whole sequence — one stray tap used to
     // call chaseDone() outright and skip straight past every remaining stage, which read as the
     // animation glitching/cutting out rather than a deliberate skip.
@@ -1408,9 +1409,10 @@ internal fun promotionPerkLine(rankIndex: Int): String {
 
 /** Lowercased with combining diacritics stripped, for accent-insensitive text comparison
  *  (a translated quiz answer like "Nilo" or "Bagdá" shouldn't fail to match over one accent). */
+private val DIACRITIC_REGEX = Regex("\\p{Mn}+")
 private fun foldDiacritics(s: String): String =
     java.text.Normalizer.normalize(s.lowercase(), java.text.Normalizer.Form.NFD)
-        .replace(Regex("\\p{Mn}+"), "")
+        .replace(DIACRITIC_REGEX, "")
 
 @Composable
 fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f) { v ->
@@ -1420,7 +1422,7 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     val printed = remember { mutableStateListOf<String>() }
     var typing by remember { mutableStateOf("") }
     // 0 typing report · 1 typing quiz · 2 quiz input · 3 typing verdict/ready · 4 Yes/No
-    var stage by remember { mutableStateOf(0) }
+    var stage by remember { mutableIntStateOf(0) }
     var input by remember { mutableStateOf("") }
     val quiz = remember { GameData.promotionQuiz.random() }
     val focus = remember { FocusRequester() }
@@ -1541,7 +1543,7 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
             // right at the cap, which read as a flicker. Actual overflow is now handled by real
             // scrolling (below) instead of an estimated line-height budget, so this height is
             // purely the visual "how tall is the paper right now" — it doesn't need to be exact.
-            var peakRows by remember { mutableStateOf(0) }
+            var peakRows by remember { mutableIntStateOf(0) }
             val liveRows = printed.size + (if (typing.isNotEmpty()) 1 else 0) + (if (showInput) 1 else 0)
             peakRows = maxOf(peakRows, liveRows).coerceAtMost(10)
             val sheetH = (10f + peakRows * lineH).coerceAtLeast(29f).coerceAtMost(96f)
