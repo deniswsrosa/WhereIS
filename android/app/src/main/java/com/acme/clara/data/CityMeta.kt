@@ -100,8 +100,11 @@ object CityMeta {
 
     /** Overlay the active-language translations onto a city's DISPLAY text (keys `city.<name>.<field>`).
      *  English is a no-op — untranslated keys fall back to the Kotlin value, so the build never breaks
-     *  and partial translations degrade gracefully. Name/region/currency stay canonical (region is a
-     *  logic switch-key; currency names are language-neutral and templated by the clue). */
+     *  and partial translations degrade gracefully. Name/region stay canonical (region is a logic
+     *  switch-key; place name has its own [Strings.place] overlay for render sites). Currency is
+     *  keyed by the currency itself (`currency.<name-without-"the ">`), not by city, since ~140
+     *  distinct currencies are shared across 231 places — both call sites already strip a leading
+     *  "the " themselves, so a translated (article-less) value passes through that as a no-op. */
     private fun localize(c: CityInfo): CityInfo {
         if (com.acme.clara.i18n.Strings.language == "en") return c
         val s = com.acme.clara.i18n.Strings
@@ -111,6 +114,7 @@ object CityMeta {
             landmark = s.opt("city.$n.landmark") ?: c.landmark,
             greeting = c.greeting?.let { s.opt("city.$n.greeting") ?: it },
             flag = c.flag?.let { s.opt("city.$n.flag") ?: it },
+            currency = c.currency?.let { cur -> s.opt("currency.${cur.removePrefix("the ")}") ?: cur },
             clues = if (c.clues.isEmpty()) c.clues
                     else c.clues.mapIndexed { i, cl -> s.opt("city.$n.clue.$i") ?: cl },
         )
