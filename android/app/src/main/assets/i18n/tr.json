@@ -1534,7 +1534,7 @@
  "ui:WHERE NEXT?": "SIRADA NERESİ?",
  "ui:WORLD DATABASE": "DÜNYA VERİTABANI",
  "ui:WRONG TURN": "YANLIŞ YÖN",
- "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open WDB ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Tanıkların, şüphelinin sonra nereye kaçtığına dair ipucu verdi. Bir yerden emin değil misin? Her hedef hakkında bilgi almak için WDB ▸ Dünya Veritabanı'nı aç. Sonra oraya uçmak için uçağa dokun.",
+ "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open Bureau ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Tanıkların, şüphelinin sonra nereye kaçtığına dair ipucu verdi. Bir yerden emin değil misin? Her hedef hakkında bilgi almak için Bureau ▸ Dünya Veritabanı'nı aç. Sonra oraya uçmak için uçağa dokun.",
  "ui:review due": "tekrar vakti",
  "ui:seen recently": "yakınlarda görüldü",
  "ui:try it": "dene",

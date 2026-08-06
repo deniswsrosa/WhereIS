@@ -75,7 +75,7 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
             MenuItemDef(" " + Strings.ui("Joystick")) { vm.showJoystick() },
             MenuItemDef(" " + Strings.ui("Language...")) { vm.openOverlay(Overlay.Language) },
         ))
-        MenuTitle(v, Strings.ui("WDB"), listOf(
+        MenuTitle(v, Strings.ui("Bureau"), listOf(
             MenuItemDef(Strings.ui("Hint")) { vm.requestHint() },
             MenuItemDef(Strings.ui("Detective Roster")) { vm.openOverlay(Overlay.Roster) },
             MenuItemDef(Strings.ui("World Database")) { vm.openOverlay(Overlay.Almanac) },

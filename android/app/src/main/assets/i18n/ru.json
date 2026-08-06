@@ -1534,7 +1534,7 @@
  "ui:WHERE NEXT?": "КУДА ДАЛЬШЕ?",
  "ui:WORLD DATABASE": "ВСЕМИРНАЯ БАЗА ДАННЫХ",
  "ui:WRONG TURN": "НЕ ТУДА",
- "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open WDB ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Свидетели подсказали, куда направился подозреваемый. Не знаете город? Откройте WDB ▸ Всемирная база данных и почитайте о каждом месте. Затем нажмите на самолёт, чтобы туда полететь.",
+ "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open Bureau ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Свидетели подсказали, куда направился подозреваемый. Не знаете город? Откройте Bureau ▸ Всемирная база данных и почитайте о каждом месте. Затем нажмите на самолёт, чтобы туда полететь.",
  "ui:review due": "пора повторить",
  "ui:seen recently": "недавно просмотрено",
  "ui:try it": "попробовать",
