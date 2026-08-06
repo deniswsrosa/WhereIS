@@ -1,8 +1,8 @@
-# Privacy Policy — Where Is Clara San Diego?
+# Privacy Policy — Where is Clara San Diego?
 
 _Last updated: August 6, 2026_
 
-**Where Is Clara San Diego?** ("the app") is an offline, single-player game.
+**Where is Clara San Diego?** ("the app") is an offline, single-player game.
 
 ## Data we collect
 
