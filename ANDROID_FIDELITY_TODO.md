@@ -377,6 +377,13 @@ run but n=1 per case.)
 - DOS Rookie case: 5 cities total (4 hops). Android generated 6 cities. If newCase() draws
   route length independent of rank, align Rookie to 4 hops (check DOS behavior across more
   cases before hard-coding; 5 total was n=1).
+- **CONFIRMED (2026-08-06 audit):** played 3 fresh Rookie-rank cases to full resolution in
+  DOSBox-X (new detective each time, so rank stayed Rookie): Bangkok→Moroni→Moscow→Peking→
+  Paris; Moscow→Peking→Paris→Lima→Budapest; Baghdad→Oslo→Buenos Aires→Colombo→Istanbul.
+  All three were exactly 5 cities / 4 hops — the "there goes the suspect!" hideout event
+  fired on the 5th city every time. n=4 total (incl. the original n=1) all agree. Android's
+  `Progression.HOPS[0] = 5` (android/app/src/main/java/com/acme/clara/data/Progression.kt)
+  already matches — no code change needed, this section is fully closed.
 
 ---
 
