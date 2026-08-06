@@ -1,6 +1,8 @@
 package com.acme.clara.game
 
 import android.content.Context
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import kotlin.random.Random
 
@@ -33,16 +35,19 @@ object Humor {
         "\\bthey\\s+(are|were|have|has|do|don'?t|keep|want|seem|will|can|'re|'ve|'ll)\\b",
         RegexOption.IGNORE_CASE)
 
-    fun init(context: Context) = load(context)
+    suspend fun init(context: Context) = load(context)
 
     /** Reload for the current language (call when the language changes). */
-    fun reload(context: Context) = load(context)
+    suspend fun reload(context: Context) = load(context)
 
-    private fun load(context: Context) {
+    // File I/O + JSON parsing of a several-hundred-KB catalog — kept off the caller's thread
+    // (both call sites are Compose LaunchedEffect coroutines, so Dispatchers.Main by default)
+    // so a startup or language switch never blocks a frame.
+    private suspend fun load(context: Context) = withContext(Dispatchers.IO) {
         val lang = com.acme.clara.i18n.Strings.language
-        if (loadedLang == lang) return
-        synchronized(this) {
-            if (loadedLang == lang) return
+        if (loadedLang == lang) return@withContext
+        synchronized(this@Humor) {
+            if (loadedLang == lang) return@withContext
             val ctx = context.applicationContext
             // Per-language humor lives in humor_<lang>.json; fall back to the English humor.json.
             val text = runCatching {
@@ -50,7 +55,7 @@ object Humor {
                 ctx.assets.open(file).bufferedReader().use { it.readText() }
             }.getOrNull() ?: runCatching {
                 ctx.assets.open("humor.json").bufferedReader().use { it.readText() }
-            }.getOrNull() ?: return
+            }.getOrNull() ?: return@withContext
             runCatching {
                 val arr = JSONArray(text)
                 val sf = ArrayList<Line>(); val pf = ArrayList<Line>()
