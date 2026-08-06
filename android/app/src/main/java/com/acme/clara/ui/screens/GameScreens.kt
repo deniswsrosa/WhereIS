@@ -75,10 +75,10 @@ fun IntroScreen(vm: ClaraViewModel) = VirtualScreen { v ->
         0 -> {
             // studio logo card: DENIX INC on a clean white background
             Box(Modifier.fillMaxSize().background(Vga.White))
-            PixelImage("logo_denix", Modifier.fillMaxSize())
+            PixelImage("logo_denix", Modifier.fillMaxSize(), contentDescription = null)
         }
         3 -> {
-            PixelImage("intro_world_detective_bureau", Modifier.fillMaxSize())
+            PixelImage("intro_world_detective_bureau", Modifier.fillMaxSize(), contentDescription = null)
             v.At(0, 11, 320, 11, Alignment.Center) {
                 Text(Strings.ui("Clara's gang has struck again!"),
                     style = v.text(7, color = Vga.LightRed, bold = true))
@@ -93,7 +93,9 @@ fun IntroScreen(vm: ClaraViewModel) = VirtualScreen { v ->
             val sprite = if (stage == 2) "anim_cops_${frame % 3}" else "anim_detective_${frame % 2}"
             val w = if (stage == 2) 49f else 34f
             v.At(walkX, 151, w, 48, Alignment.BottomCenter) {
-                PixelImage(sprite, Modifier.fillMaxSize(), ContentScale.Fit)
+                // decorative attract-sequence flourish; the stage's own Text captions above
+                // carry the story beat, and the whole screen is tap-to-skip below
+                PixelImage(sprite, Modifier.fillMaxSize(), ContentScale.Fit, contentDescription = null)
             }
         }
     }
@@ -104,8 +106,8 @@ fun IntroScreen(vm: ClaraViewModel) = VirtualScreen { v ->
 @Composable
 fun TitleScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     // the whole screen advances, like the original's "any key or button"
-    Box(Modifier.fillMaxSize().clickable { vm.start() }) {
-        PixelImage("title_screen", Modifier.fillMaxSize())
+    Box(Modifier.fillMaxSize().clickable { vm.start() }.labelled(Strings.ui("PRESS  ANY  KEY  TO  BEGIN"))) {
+        PixelImage("title_screen", Modifier.fillMaxSize(), contentDescription = null)
     }
     v.At(0, 176, 320, 24, Alignment.Center) {
         Text(Strings.ui("PRESS  ANY  KEY  TO  BEGIN"), style = v.text(9, color = Vga.Yellow, bold = true))
@@ -230,7 +232,7 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
 
     val paperFont = v.text(7, color = Vga.Black)
 
-    PixelImage("hq_screen", Modifier.fillMaxSize())
+    PixelImage("hq_screen", Modifier.fillMaxSize(), contentDescription = null)
     // The header box's "HEADQUARTERS / Monday, 9 a.m." used to be baked into hq_screen.png;
     // now drawn at runtime (translatable, matching the same box style CityClockBox uses
     // elsewhere) — a fresh case's clock is always Monday 9 a.m., so clockLabel() just works.
@@ -361,8 +363,9 @@ fun CityPhoto(city: String, v: Virtual, modifier: Modifier) {
     // and only if none exist fall back to the procedural VGA card rather than a blank box.
     val slug = snake(city)
     val resolved = listOfNotNull(info.drawable, "city_$slug", "country_$slug").firstOrNull { spriteExists(it) }
-    if (resolved != null) PixelImage(resolved, modifier)
-    else VgaCityCard(city, info.region, v, modifier)
+    val desc = Strings.ui("Photo of {0}", Strings.place(city))
+    if (resolved != null) PixelImage(resolved, modifier, contentDescription = desc)
+    else VgaCityCard(city, info.region, v, modifier.labelled(desc))
 }
 
 /** Procedural 16-colour VGA "travel postcard" for cities without a captured photo.
@@ -610,34 +613,43 @@ private fun SightingPanel(v: Virtual, level: Int, onDone: () -> Unit) {
         }
         onDone()
     }
+    // Each level narrates a story beat for screen readers; the individual frame images below
+    // are marked decorative (null) so TalkBack reads this one description, not raw asset names.
+    val sightingDescription = when (level) {
+        1 -> Strings.ui("A masked face peers into the room")
+        2 -> Strings.ui("A thug in a striped shirt bursts in")
+        3 -> if (phase == 0) Strings.ui("A burglar peeks around the corner")
+             else Strings.ui("The burglar sprints across the room")
+        else -> Strings.ui("A dagger flies past")
+    }
     v.At(149, 13, 167, 145) {
         Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White))
-            .clipToBounds().clickable(onClick = onDone)) {
+            .clipToBounds().clickable(onClick = onDone).labelled(sightingDescription)) {
             when (level) {
                 1 -> PixelImage("sight_face",
                     Modifier.align(Alignment.BottomCenter).offset(0.dp, v.w(42 * (1f - t)))
-                        .size(v.w(52), v.w(42)), ContentScale.Fit)
+                        .size(v.w(52), v.w(42)), ContentScale.Fit, contentDescription = null)
                 // DOS refs (work/burglar_snapshots/practice_thug): the thug rises in the
                 // panel's bottom-LEFT corner, not centred
                 2 -> PixelImage("sight_thug",
                     Modifier.align(Alignment.BottomStart)
                         .offset(v.w(8 + if (t >= 1f) (if (frame % 2 == 0) -2f else 2f) else 0f), v.w(50 * (1f - t)))
-                        .size(v.w(54), v.w(50)), ContentScale.Fit)
+                        .size(v.w(54), v.w(50)), ContentScale.Fit, contentDescription = null)
                 3 -> {
                     if (phase == 0) PixelImage("sight_burglar_peek",
                         Modifier.align(Alignment.BottomEnd).offset(v.w(35 * (1f - t)), v.w(-4))
-                            .size(v.w(35), v.w(51)), ContentScale.Fit)
+                            .size(v.w(35), v.w(51)), ContentScale.Fit, contentDescription = null)
                     // the original's run is a 2-pose leg cycle (~120 ms per pose), verified
                     // frame-by-frame from DOS captures (work/burglar_snapshots/appearance_*)
                     else PixelImage(
                         if ((frame / 3) % 2 == 0) "sight_burglar_run" else "sight_burglar_run_b",
                         Modifier.align(Alignment.BottomStart)
                             .offset(v.w(165 - 230 * t), v.w(-4))
-                            .size(v.w(61), v.w(51)), ContentScale.Fit)
+                            .size(v.w(61), v.w(51)), ContentScale.Fit, contentDescription = null)
                 }
                 4 -> PixelImage("sight_dagger",
                     Modifier.align(Alignment.CenterStart).offset(v.w(150 * (1f - t) - 8f), 0.dp)
-                        .size(v.w(58), v.w(16)), ContentScale.Fit)
+                        .size(v.w(58), v.w(16)), ContentScale.Fit, contentDescription = null)
             }
         }
     }
@@ -653,14 +665,14 @@ fun GameToolbar(v: Virtual, vm: ClaraViewModel, seeLabel: String? = null,
     // same x-extent as the right panel above it — in the original both strips share one width
     v.At(149, 163, 167, 32) {
         Box(Modifier.fillMaxSize()) {
-            PixelImage("toolbar_bar", Modifier.fillMaxSize())
+            PixelImage("toolbar_bar", Modifier.fillMaxSize(), contentDescription = null)
             Row(Modifier.fillMaxSize()) {
                 // During a guided step the tour disables the tools it isn't pointing at.
                 fun ok(i: Int) = com.acme.clara.ui.tourAllowsTool(vm.s, i)
-                ToolZone(Modifier.weight(1f), selected == 0, ok(0), v) { onSee?.invoke() }
-                ToolZone(Modifier.weight(1f), selected == 1, ok(1), v) { vm.gotoTravel() }
-                ToolZone(Modifier.weight(1f), selected == 2, ok(2), v) { onInvestigate?.invoke() }
-                ToolZone(Modifier.weight(1f), selected == 3, ok(3), v) { vm.gotoCrime() }
+                ToolZone(Modifier.weight(1f), selected == 0, ok(0), v, seeLabel ?: Strings.ui("SEE")) { onSee?.invoke() }
+                ToolZone(Modifier.weight(1f), selected == 1, ok(1), v, Strings.ui("DEPART")) { vm.gotoTravel() }
+                ToolZone(Modifier.weight(1f), selected == 2, ok(2), v, Strings.ui("INVESTIGATE")) { onInvestigate?.invoke() }
+                ToolZone(Modifier.weight(1f), selected == 3, ok(3), v, Strings.ui("CRIME COMPUTER")) { vm.gotoCrime() }
             }
             // "HIDE" caption over the SEE icon while its dropdown is open (DOS behaviour)
             if (seeLabel != null) {
@@ -675,11 +687,14 @@ fun GameToolbar(v: Virtual, vm: ClaraViewModel, seeLabel: String? = null,
 }
 
 @Composable
-private fun ToolZone(modifier: Modifier, selected: Boolean, enabled: Boolean, v: Virtual, onClick: () -> Unit) {
+private fun ToolZone(modifier: Modifier, selected: Boolean, enabled: Boolean, v: Virtual, label: String, onClick: () -> Unit) {
     Box(
         modifier.fillMaxHeight()
             .then(if (selected) Modifier.border(BorderStroke(v.w(2), Vga.Green)) else Modifier)
             .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier)
+            // TalkBack label only (no size change): this sits on the fixed 320x200 canvas,
+            // where enlarging the tap target would break the authentic toolbar geometry.
+            .labelled(if (enabled) label else Strings.ui("{0}, locked", label))
     ) {
         // A disabled tool (locked by the tour) is dimmed so it reads as unavailable.
         if (!enabled) Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.5f)))
@@ -738,7 +753,8 @@ private fun WitnessPanel(v: Virtual, clue: Venue, onDone: () -> Unit) {
                 // (taller-than-wide) art doesn't render oversized and eat the panel.
                 if (spriteExists(portrait)) {
                     PixelImage(portrait, Modifier.size(v.w(40), v.w(48)), ContentScale.Fit,
-                        alignment = Alignment.BottomStart)
+                        alignment = Alignment.BottomStart,
+                        contentDescription = Strings.ui("Witness: {0}", Strings.label("occ", clue.occupation)))
                 } else {
                     Canvas(Modifier.size(v.w(32), v.w(48))) {
                         drawBust(size.width, size.height, look, (bob - 0.5f) * size.height * 0.02f)
@@ -839,13 +855,14 @@ private fun InvestigatePicker(v: Virtual, venues: List<Venue>, visited: Set<Int>
                     val asset = "venue_" + snake(venue.place)
                     val lift = if (i == 1) 8f else 0f
                     Box(Modifier.width(v.w(52)).fillMaxHeight().clickable { selected = i; onPick(i) }
+                        .labelled(Strings.label("venue", venue.place))
                         .padding(bottom = v.w(lift)),
                         contentAlignment = Alignment.BottomCenter) {
                         if (spriteExists(asset)) {
                             val aspect = drawableAspect(asset, 0.6f)
                             val bw = 48f
                             val bh = (bw * aspect).coerceAtMost(50f)
-                            PixelImage(asset, Modifier.size(v.w(bw), v.w(bh)), ContentScale.Fit)
+                            PixelImage(asset, Modifier.size(v.w(bw), v.w(bh)), ContentScale.Fit, contentDescription = null)
                         } else {
                             Canvas(Modifier.size(v.w(48), v.w(40))) { drawCivicBuilding(size.width, size.height, i, i in visited) }
                         }
@@ -876,7 +893,9 @@ private fun InvestigatePicker(v: Virtual, venues: List<Venue>, visited: Set<Int>
                 val isSel = i == selected || (selected < 0 && i == 0)
                 Box(Modifier.fillMaxWidth().padding(horizontal = v.w(24))
                     .then(if (isSel) Modifier.background(Vga.White) else Modifier)
-                    .clickable { selected = i; onPick(i) }.padding(vertical = v.w(0.5f)),
+                    .clickable { selected = i; onPick(i) }
+                    .labelled(Strings.label("venue", venue.place) + (if (done) " (" + Strings.ui("visited") + ")" else ""))
+                    .padding(vertical = v.w(0.5f)),
                     contentAlignment = Alignment.Center) {
                     Text(Strings.label("venue", venue.place),
                         style = v.text(8.5f, color = if (isSel) Vga.Black else if (done) Vga.LightGray else Vga.White, bold = true),
@@ -1004,7 +1023,9 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     }
     v.At(10, 85, WorldMap.WV, WorldMap.HV) {
         Box(Modifier.fillMaxSize()) {
-            PixelImage("world_map_clean", Modifier.fillMaxSize())
+            // decorative backdrop; the current/destination cities are called out by the
+            // MapLabel Text elements drawn on top, and picked from the list above, not from the map
+            PixelImage("world_map_clean", Modifier.fillMaxSize(), contentDescription = null)
             Canvas(Modifier.fillMaxSize()) {
                 fun px(city: String) = WorldMap.of(city)?.let { Offset(it.x * size.width, it.y * size.height) }
                 val dashes = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
@@ -1060,7 +1081,8 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                             val isSel = i == selected
                             Box(Modifier.fillMaxWidth().height(v.w(10))
                                 .then(if (isSel) Modifier.background(Vga.White) else Modifier)
-                                .clickable { if (selected == i) vm.travelTo(city) else selected = i },
+                                .clickable { if (selected == i) vm.travelTo(city) else selected = i }
+                                .labelled(Strings.ui("{0}, {1} hours", Strings.place(city), vm.flightHoursTo(city))),
                                 contentAlignment = Alignment.Center) {
                                 Text(Strings.place(city), style = v.text(8.5f,
                                     color = if (isSel) Vga.Black else Vga.White, bold = true))
@@ -1201,7 +1223,7 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     // LEFT: the printer panel — paper grows upward from the platen as results print
     v.At(2, 44, 146, 154) {
         Box(Modifier.fillMaxSize()) {
-            PixelImage("crime_printer", Modifier.fillMaxSize())
+            PixelImage("crime_printer", Modifier.fillMaxSize(), contentDescription = null)
             // paper sheet: bottom fixed at panel y=102, top grows with content (min = original sheet)
             val lineH = 7.4f
             val shown = paper.takeLast(12) + (if (typing.isNotEmpty()) listOf(typing) else emptyList())
@@ -1231,14 +1253,14 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     // RIGHT: the CRT computer with the attribute rows
     v.At(150, 16, 170, 156) {
         Box(Modifier.fillMaxSize()) {
-            PixelImage("crime_computer", Modifier.fillMaxSize())
+            PixelImage("crime_computer", Modifier.fillMaxSize(), contentDescription = null)
             // §17: the front-bezel LEDs light up and blink while the computer works
             // (dos_computer_wait_led.png vs dos_computer_initial.png; strip at (60,97))
             if (printing) {
                 var ledOn by remember { mutableStateOf(true) }
                 LaunchedEffect(Unit) { while (true) { delay(350); ledOn = !ledOn } }
                 if (ledOn) v.At(60, 97, 44, 6) {
-                    PixelImage("crime_computer_leds", Modifier.fillMaxSize())
+                    PixelImage("crime_computer_leds", Modifier.fillMaxSize(), contentDescription = null)
                 }
             }
             // rows live inside the CRT: interior x=13..152, first row y=9, pitch 10 (image-relative)
@@ -1247,7 +1269,8 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                 v.At(13, 9f + i * 10f, 139, 9) {
                     Box(Modifier.fillMaxSize()
                         .then(if (sel) Modifier.background(Vga.White) else Modifier)
-                        .clickable { if (selRow == i) cycle(i) else selRow = i }) {
+                        .clickable { if (selRow == i) cycle(i) else selRow = i }
+                        .labelled(Strings.ui(label) + ": " + (valueOf(i)?.let { Strings.label("tval", it) } ?: Strings.ui("any")))) {
                         Text(Strings.ui(label) + ":", style = v.text(8, color = if (sel) Vga.Blue else Vga.Yellow, bold = true),
                             modifier = Modifier.align(Alignment.CenterStart).padding(start = v.w(11)))
                         valueOf(i)?.let {
@@ -1261,7 +1284,8 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
             v.At(13, 69, 139, 9) {
                 Box(Modifier.fillMaxSize()
                     .then(if (selRow == 5) Modifier.background(Vga.White) else Modifier)
-                    .clickable { selRow = 5; runCompute() }) {
+                    .clickable { selRow = 5; runCompute() }
+                    .labelled(Strings.ui("COMPUTE"))) {
                     Text(Strings.ui("COMPUTE"), style = v.text(8, color = if (selRow == 5) Vga.Blue else Vga.Yellow, bold = true),
                         modifier = Modifier.align(Alignment.CenterStart).padding(start = v.w(11)))
                 }
@@ -1358,10 +1382,19 @@ fun ChaseScreen(vm: ClaraViewModel) = VirtualScreen { v ->
             CityPhoto(s.currentCity, v, Modifier.fillMaxSize())
         }
     }
-    // right panel: the chase plays out on black (clipped so sprites enter/exit at the edges)
+    // right panel: the chase plays out on black (clipped so sprites enter/exit at the edges).
+    // Stage 1 already has an on-screen Text caption; the other stages narrate via a semantics
+    // label on the panel itself (frame images are marked decorative to avoid duplicate reads).
+    val chaseDescription = when (stage) {
+        0 -> Strings.ui("The suspect runs")
+        2 -> Strings.ui("Police officers arrive")
+        3 -> Strings.ui("The suspect is led away in handcuffs")
+        else -> null
+    }
     v.At(149, 13, 167, 145) {
         Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White))
-            .clipToBounds()) {
+            .clipToBounds()
+            .then(if (chaseDescription != null) Modifier.labelled(chaseDescription) else Modifier)) {
             when (stage) {
                 0 -> {
                     val sprite = "anim_suspect_run_${frame % 3}"
@@ -1369,7 +1402,7 @@ fun ChaseScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                         Modifier.align(Alignment.BottomStart)
                             .padding(bottom = v.w(10))
                             .offset(v.w(x), 0.dp)
-                            .size(v.w(48), v.w(48)), ContentScale.Fit)
+                            .size(v.w(48), v.w(48)), ContentScale.Fit, contentDescription = null)
                 }
                 1 -> Text(Strings.ui("There goes\nthe suspect!"),
                     style = v.text(9, color = Vga.White, bold = true),
@@ -1378,12 +1411,12 @@ fun ChaseScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                     Modifier.align(Alignment.BottomStart)
                         .padding(bottom = v.w(10))
                         .offset(v.w(x), 0.dp)
-                        .size(v.w(50), v.w(48)), ContentScale.Fit)
+                        .size(v.w(50), v.w(48)), ContentScale.Fit, contentDescription = null)
                 3 -> PixelImage("anim_escort_${frame % 2}",
                     Modifier.align(Alignment.BottomStart)
                         .padding(bottom = v.w(10))
                         .offset(v.w(x), 0.dp)
-                        .size(v.w(48), v.w(48)), ContentScale.Fit)
+                        .size(v.w(48), v.w(48)), ContentScale.Fit, contentDescription = null)
             }
         }
     }
@@ -1533,7 +1566,7 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     // left: the printer with the Interpol report typing on
     v.At(2, 44, 146, 154) {
         Box(Modifier.fillMaxSize()) {
-            PixelImage("crime_printer", Modifier.fillMaxSize())
+            PixelImage("crime_printer", Modifier.fillMaxSize(), contentDescription = null)
             val lineH = 7.82f   // matches v.text(6.8f)'s actual lineHeight (6.8 * 1.15)
             val showInput = stage == 2 && answerRevealed
             // Ratcheted: the sheet's height only ever grows (paper feeding out of the printer),
@@ -1591,14 +1624,20 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     }
     // right: the JAIL (win) or black panel (loss)
     v.At(150, 26, 168, 146) {
-        Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White))) {
+        Box(
+            Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White))
+                .then(
+                    if (s.won) Modifier.labelled(Strings.ui("{0} behind bars", s.culprit?.name ?: Strings.ui("The suspect")))
+                    else Modifier
+                )
+        ) {
             if (s.won) {
-                PixelImage("jail_cell", Modifier.fillMaxSize())
+                PixelImage("jail_cell", Modifier.fillMaxSize(), contentDescription = null)
                 // the suspect's eyes blink behind the bars on a slow loop (dos_jail_eyes_a/b)
                 var blink by remember { mutableStateOf(false) }
                 if (!reduce) LaunchedEffect(Unit) { while (true) { delay(1000); blink = !blink } }
                 if (blink) v.At(63, 71, 41, 29) {
-                    PixelImage("jail_eyes_alt", Modifier.fillMaxSize())
+                    PixelImage("jail_eyes_alt", Modifier.fillMaxSize(), contentDescription = null)
                 }
             }
         }
@@ -1668,7 +1707,8 @@ internal fun ArrestSlam(v: Virtual, name: String, onDone: () -> Unit) {
             Box(Modifier.size(v.w(56)).graphicsLayer { scaleX = scale; scaleY = scale }
                 .border(BorderStroke(v.w(1), Vga.Yellow)).background(Vga.DarkGray),
                 contentAlignment = Alignment.Center) {
-                if (spriteExists(slug)) PixelImage(slug, Modifier.fillMaxSize())
+                if (spriteExists(slug)) PixelImage(slug, Modifier.fillMaxSize(),
+                    contentDescription = Strings.ui("Mugshot of {0}", name))
                 else Text("◆", style = v.text(20, color = Vga.LightGray, bold = true))
             }
             Spacer(Modifier.height(v.w(4)))

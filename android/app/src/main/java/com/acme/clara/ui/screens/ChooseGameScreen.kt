@@ -52,7 +52,7 @@ fun ChooseGameScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     val games = remember(refresh) { vm.savedGames() }
 
     // The bureau office, dimmed so the dossiers read over it (same scene the sign-on uses).
-    PixelImage("intro_world_detective_bureau", Modifier.fillMaxSize(), ContentScale.FillBounds)
+    PixelImage("intro_world_detective_bureau", Modifier.fillMaxSize(), ContentScale.FillBounds, contentDescription = null)
     Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.62f)))
 
     v.At(0, 0, 320, 200) {
@@ -106,7 +106,7 @@ private fun DossierCard(v: Virtual, m: SaveMeta, onResume: () -> Unit, onDelete:
             Box(
                 Modifier.size(v.w(30), v.w(38)).background(Vga.Blue).border(BorderStroke(v.w(1), Vga.Yellow)),
                 contentAlignment = Alignment.BottomCenter,
-            ) { PixelImage("anim_detective_0", Modifier.fillMaxSize().padding(v.w(2)), ContentScale.Fit) }
+            ) { PixelImage("anim_detective_0", Modifier.fillMaxSize().padding(v.w(2)), ContentScale.Fit, contentDescription = null) }
 
             Spacer(Modifier.width(v.w(7)))
 

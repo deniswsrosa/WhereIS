@@ -226,7 +226,7 @@ private fun ConfirmQuitDialog(v: Virtual, vm: ClaraViewModel) {
 @Composable
 private fun QuitButton(v: Virtual, label: String, onClick: () -> Unit) {
     Box(Modifier.background(Vga.Yellow).border(BorderStroke(v.w(1), Vga.Black))
-        .clickable(onClick = onClick).padding(horizontal = v.w(10), vertical = v.w(2)),
+        .clickable(onClick = onClick).labelled(label).padding(horizontal = v.w(10), vertical = v.w(2)),
         contentAlignment = Alignment.Center) {
         Text(label, style = v.text(8.5f, color = Vga.Red, bold = true))
     }
@@ -308,7 +308,8 @@ private fun DossierWindow(v: Virtual, su: Suspect, onClose: () -> Unit) {
                                 // 61x75: the capture's bottom 5 rows were baked page-rule bars,
                                 // cropped out of the assets
                                 if (spriteExists(slug))
-                                    PixelImage(slug, Modifier.size(v.w(61), v.w(75)))
+                                    PixelImage(slug, Modifier.size(v.w(61), v.w(75)),
+                                        contentDescription = Strings.ui("Portrait of {0}", su.name))
                                 else Box(Modifier.size(v.w(61), v.w(75)).background(Vga.DarkGray))
                             }
                         }
@@ -391,7 +392,9 @@ private fun WantedTile(v: Virtual, entry: WantedEntry, modifier: Modifier) {
         val slug = "suspect_" + entry.name.lowercase().replace(SUSPECT_SLUG_REGEX, "_").trim('_')
         Box(Modifier.fillMaxWidth().aspectRatio(0.82f).border(BorderStroke(v.w(0.7f), Vga.Black))
             .background(Vga.DarkGray), contentAlignment = Alignment.Center) {
-            if (entry.captured && spriteExists(slug)) PixelImage(slug, Modifier.fillMaxSize())
+            if (entry.captured && spriteExists(slug))
+                PixelImage(slug, Modifier.fillMaxSize(),
+                    contentDescription = Strings.ui("Mugshot of {0}", entry.name.replace("\"", "")))
             else Text(if (entry.captured) "◆" else "?",
                 style = v.text(15, color = Vga.LightGray, bold = true))
         }
@@ -705,7 +708,7 @@ private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
             // the painted map — the raster DEPART interior with visited countries filled in
             Box(Modifier.fillMaxWidth().aspectRatio(WorldMap.WV / WorldMap.HV)
                 .background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(1))) {
-                PixelImage("world_map_clean", Modifier.fillMaxSize())
+                PixelImage("world_map_clean", Modifier.fillMaxSize(), contentDescription = null)
                 Canvas(Modifier.fillMaxSize()) {
                     val w = size.width; val h = size.height
                     // filled silhouettes for visited countries that have a polygon
