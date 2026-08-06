@@ -177,7 +177,7 @@ fun OverlayHost(v: Virtual, vm: ClaraViewModel) {
         contentAlignment = Alignment.Center) {
         Column(
             Modifier.fillMaxWidth(0.86f).fillMaxHeight(0.86f)
-                .background(Vga.Blue)
+                .background(Vga.Black).border(BorderStroke(v.w(1), Vga.White))
                 .padding(v.w(6)),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -232,7 +232,7 @@ private fun LanguageWindow(v: Virtual, vm: ClaraViewModel) {
     Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
         contentAlignment = Alignment.Center) {
         Column(
-            Modifier.fillMaxWidth(0.72f).fillMaxHeight(0.9f).background(Vga.Blue).padding(v.w(6)),
+            Modifier.fillMaxWidth(0.72f).fillMaxHeight(0.9f).background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(6)),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(com.acme.clara.i18n.Strings.get("menu.language.title"),
@@ -246,7 +246,7 @@ private fun LanguageWindow(v: Virtual, vm: ClaraViewModel) {
                         .clickable { com.acme.clara.i18n.Strings.setLanguage(code); vm.dismissOverlay() }
                         .padding(vertical = v.w(2)),
                         contentAlignment = Alignment.Center) {
-                        Text(name, style = v.text(9, color = if (sel) Vga.Blue else Vga.White, bold = sel))
+                        Text(name, style = v.text(9, color = if (sel) Vga.Black else Vga.White, bold = sel))
                     }
                 }
             }
@@ -354,7 +354,7 @@ private fun MostWantedWindow(v: Virtual, vm: ClaraViewModel) {
     val caught = MostWanted.capturedCount(vm.s.capturedVillains)
     Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
         contentAlignment = Alignment.Center) {
-        Column(Modifier.fillMaxWidth(0.92f).fillMaxHeight(0.9f).background(Vga.Blue).padding(v.w(5)),
+        Column(Modifier.fillMaxWidth(0.92f).fillMaxHeight(0.9f).background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(5)),
             horizontalAlignment = Alignment.CenterHorizontally) {
             Text("MOST WANTED", style = v.text(10, color = Vga.Yellow, bold = true))
             Text("$caught / ${gallery.size} captured", style = v.text(7, color = Vga.LightCyan))
@@ -400,7 +400,7 @@ private fun CommendationsWindow(v: Virtual, vm: ClaraViewModel) {
     val earned = s.unlockedAchievements.count { it in ids }
     Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
         contentAlignment = Alignment.Center) {
-        Column(Modifier.fillMaxWidth(0.9f).fillMaxHeight(0.9f).background(Vga.Blue).padding(v.w(5)),
+        Column(Modifier.fillMaxWidth(0.9f).fillMaxHeight(0.9f).background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(5)),
             horizontalAlignment = Alignment.CenterHorizontally) {
             Text("COMMENDATIONS", style = v.text(10, color = Vga.Yellow, bold = true))
             Text("$earned / ${Achievements.catalog.size} earned", style = v.text(7, color = Vga.LightCyan))
@@ -506,7 +506,7 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
 
     Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
         contentAlignment = Alignment.Center) {
-        Column(Modifier.fillMaxWidth(0.9f).fillMaxHeight(0.9f).background(Vga.Blue).padding(v.w(5)),
+        Column(Modifier.fillMaxWidth(0.9f).fillMaxHeight(0.9f).background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(5)),
             horizontalAlignment = Alignment.CenterHorizontally) {
             Text(Strings.ui("WORLD DATABASE"), style = v.text(10, color = Vga.Yellow, bold = true))
 
@@ -545,7 +545,7 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                 }
                 Spacer(Modifier.height(v.w(3)))
                 DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
-                    style = v.text(9, bold = true)) { vm.dismissOverlay() }
+                    style = v.text(7.5f, bold = true), hPad = v.w(4), vPad = v.w(1.6f)) { vm.dismissOverlay() }
             } else {
                 Spacer(Modifier.height(v.w(3)))
                 // Two-pane entry, like a case-file card: the postcard pinned on the left with
@@ -579,9 +579,9 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                 Spacer(Modifier.height(v.w(3)))
                 Row(horizontalArrangement = Arrangement.spacedBy(v.w(6))) {
                     DosButton(Strings.ui("◀ BACK"), fill = Vga.LightGray, textColor = Vga.Black,
-                        style = v.text(9, bold = true)) { selected = null }
+                        style = v.text(7.5f, bold = true), hPad = v.w(4), vPad = v.w(1.6f)) { selected = null }
                     DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
-                        style = v.text(9, bold = true)) { vm.dismissOverlay() }
+                        style = v.text(7.5f, bold = true), hPad = v.w(4), vPad = v.w(1.6f)) { vm.dismissOverlay() }
                 }
             }
         }
@@ -608,7 +608,7 @@ private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
 
     Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
         contentAlignment = Alignment.Center) {
-        Column(Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.92f).background(Vga.Blue).padding(v.w(5)),
+        Column(Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.92f).background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(5)),
             horizontalAlignment = Alignment.CenterHorizontally) {
             Text("PASSPORT", style = v.text(10, color = Vga.Yellow, bold = true))
             Text("${visitedCountries.size} of ${universe.size} countries",
@@ -681,7 +681,7 @@ private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
 private fun PassportSealed(v: Virtual, vm: ClaraViewModel) {
     Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
         contentAlignment = Alignment.Center) {
-        Column(Modifier.fillMaxWidth(0.86f).background(Vga.Blue).padding(v.w(7)),
+        Column(Modifier.fillMaxWidth(0.86f).background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(7)),
             horizontalAlignment = Alignment.CenterHorizontally) {
             Text("PASSPORT", style = v.text(10, color = Vga.Yellow, bold = true))
             Spacer(Modifier.height(v.w(4)))

@@ -166,14 +166,15 @@ fun drawableAspect(name: String, fallback: Float = 1f): Float {
 @Composable
 fun DosButton(
     label: String, modifier: Modifier = Modifier, fill: Color = Vga.LightGray,
-    textColor: Color = Vga.Black, style: TextStyle? = null, enabled: Boolean = true, onClick: () -> Unit,
+    textColor: Color = Vga.Black, style: TextStyle? = null, enabled: Boolean = true,
+    hPad: Dp = 10.dp, vPad: Dp = 6.dp, onClick: () -> Unit,
 ) {
     Box(
         modifier
             .background(if (enabled) fill else Vga.DarkGray)
             .clickable(enabled = enabled) { onClick() }
             .tappable(label)
-            .padding(horizontal = 10.dp, vertical = 6.dp),
+            .padding(horizontal = hPad, vertical = vPad),
         contentAlignment = Alignment.Center
     ) {
         Text(label, style = (style ?: TextStyle(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold))
