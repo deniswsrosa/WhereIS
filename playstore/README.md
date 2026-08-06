@@ -33,12 +33,13 @@ Locales prepared: `en-US` (default), `pt-BR`, `es-ES`, `fr-FR`, `de-DE`, `it-IT`
 | Feature graphic  | `graphics/feature_graphic_1024x500.png`     | 1024×500 PNG      |
 | Phone screenshots| `graphics/screenshots/phone/01…08.png`      | 8 framed shots, 1920×1080 |
 
-Marketing-framed real gameplay (pixel caption + white-bordered game viewport on a dark
-scanline canvas): city view, witness interview, departure map, crime computer, World
-Database entry, Passport map, the arrest/jail result screen, and the places-to-visit
-picker. The debug menu is scrubbed from every shot. Unframed clean captures live in
-`graphics/screenshots/raw/` if you ever need them (e.g. localized variants). English
-shots are used for every locale (allowed).
+Store-style marketing slides over the key-art backdrop: slide 1 is the hook (brand,
+"BECOME A WORLD DETECTIVE", feature chips, Clara sticker, gameplay proof), then seven
+benefit slides with big pixel headlines, a feature chip each, and the real gameplay
+screen floating at a slight tilt with depth shadow. The debug menu is scrubbed from
+every capture. Upload in filename order. Clean unframed captures live in
+`graphics/screenshots/raw/` (e.g. for future localized variants). English slides are
+used for every locale (allowed).
 
 ## 3. App category & tags
 
