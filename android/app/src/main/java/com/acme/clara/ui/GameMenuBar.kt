@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import com.acme.clara.data.CountryShapes
+import com.acme.clara.data.AlmanacFlags
 import com.acme.clara.data.WorldMap
 import com.acme.clara.data.Suspect
 import com.acme.clara.game.SpacedRepetition
@@ -491,32 +492,74 @@ private fun AlmanacFact(v: Virtual, label: String, value: String) {
 
 /* World Database (the in-game almanac) — a browsable reference over every place the game
  * knows: the original 30 plus both expansion rosters. Free careers see the full list, but
- * only the original 30 open — expansion entries stay dimmed until the paid unlock. It
+ * only countries represented in the original 30 open — other countries stay dimmed until
+ * the paid unlock. It
  * names places, not the next city, so it's a reference the player still has to reason from. */
 @Composable
 private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
     var selected by remember { mutableStateOf<String?>(null) }
     val paid = vm.s.expansionUnlocked
     val freeNames = remember { com.acme.clara.data.CityMeta.all.keys }
+    // Almanac access follows countries, not individual postcard records. If the free roster
+    // already includes a country (Cairo -> Egypt), its other reference cards (Abu Simbel) stay
+    // readable too even though those destinations do not enter free case routes.
+    val freeCountryCodes = remember { freeNames.mapNotNull(AlmanacFlags::countryCode).toSet() }
     val names = remember {
         (com.acme.clara.data.CityMeta.all.keys +
             com.acme.clara.data.Expansion.byName.keys +
             com.acme.clara.data.Expansion2.byName.keys).toSortedSet().toList()
     }
+    // CityMeta.of resolves any known place (localized), so the detail view works for
+    // expansion entries too — reachable only when unlocked, since locked rows don't tap.
+    val entry = selected?.let { com.acme.clara.data.CityMeta.of(it) }
 
     Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
         contentAlignment = Alignment.Center) {
         Column(Modifier.fillMaxWidth(0.9f).fillMaxHeight(0.9f).background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(5)),
             horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(Strings.ui("WORLD DATABASE"), style = v.text(10, color = Vga.Yellow, bold = true))
+            // Persistent corner navigation: detail cards gain a compact DOS back key while the
+            // close affordance stays in the same upper-right position on both list and detail.
+            Box(Modifier.fillMaxWidth().height(v.w(22))) {
+                if (entry != null) {
+                    Box(
+                        Modifier.align(Alignment.CenterStart).height(v.w(22)).width(v.w(48))
+                            .clickable { selected = null }
+                            .labelled(Strings.ui("◀ BACK").removePrefix("◀").trim()),
+                        contentAlignment = Alignment.CenterStart,
+                    ) {
+                        Box(
+                            Modifier.background(Vga.LightGray)
+                                .border(BorderStroke(v.w(0.7f), Vga.White))
+                                .padding(horizontal = v.w(3), vertical = v.w(1.4f)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(Strings.ui("◀ BACK"), style = v.text(7, color = Vga.Black, bold = true))
+                        }
+                    }
+                }
+                Text(
+                    Strings.ui("WORLD DATABASE"),
+                    style = v.text(10, color = Vga.Yellow, bold = true),
+                    modifier = Modifier.align(Alignment.Center),
+                )
+                Box(
+                    Modifier.align(Alignment.CenterEnd).size(v.w(22))
+                        .clickable { vm.dismissOverlay() }
+                        .labelled("${Strings.ui("CLOSE")} ${Strings.ui("WORLD DATABASE")}"),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("×", style = v.text(13, color = Vga.White, bold = true))
+                }
+            }
 
-            // CityMeta.of resolves any known place (localized), so the detail view works for
-            // expansion entries too — reachable only when unlocked, since locked rows don't tap.
-            val entry = selected?.let { com.acme.clara.data.CityMeta.of(it) }
             if (entry == null) {
+                val unlockedCount = remember(paid) {
+                    if (paid) names.size
+                    else names.count { AlmanacFlags.countryCode(it) in freeCountryCodes }
+                }
                 Text(
                     if (paid) Strings.ui("{0} places on file", names.size)
-                    else Strings.ui("{0} of {1} places unlocked", freeNames.size, names.size),
+                    else Strings.ui("{0} of {1} places unlocked", unlockedCount, names.size),
                     style = v.text(7, color = Vga.LightCyan))
                 // L4 legend: a name's color marks where it sits on the spaced-repetition curve.
                 Row(horizontalArrangement = Arrangement.spacedBy(v.w(5))) {
@@ -527,7 +570,7 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                 LazyVerticalGrid(columns = GridCells.Fixed(2),
                     modifier = Modifier.weight(1f).fillMaxWidth()) {
                     items(names) { name ->
-                        val unlocked = paid || name in freeNames
+                        val unlocked = paid || AlmanacFlags.countryCode(name) in freeCountryCodes
                         val fresh = unlocked && SpacedRepetition.isFresh(name, vm.s.cityLastSeen, vm.s.casesSolved)
                         val due = unlocked && SpacedRepetition.isDue(name, vm.s.cityLastSeen, vm.s.casesSolved)
                         val color = when {
@@ -543,20 +586,39 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                                 .padding(vertical = v.w(1.2f), horizontal = v.w(1)))
                     }
                 }
-                Spacer(Modifier.height(v.w(3)))
-                DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
-                    style = v.text(7.5f, bold = true), hPad = v.w(4), vPad = v.w(1.6f)) { vm.dismissOverlay() }
             } else {
-                Spacer(Modifier.height(v.w(3)))
                 // Two-pane entry, like a case-file card: the postcard pinned on the left with
                 // the place's name as its caption, the facts + description reading on the right.
                 Row(Modifier.weight(1f).fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(v.w(7))) {
                     Column(Modifier.width(v.w(108)), horizontalAlignment = Alignment.CenterHorizontally) {
-                        // The postcard (or the procedural VGA card when no photo shipped).
-                        CityPhoto(entry.name, v,
+                        // Keep the postcard dominant; the country's real flag sits on it like a
+                        // small travel stamp. The facts pane retains the written flag description.
+                        Box(
                             Modifier.fillMaxWidth().aspectRatio(1.5f)
-                                .border(BorderStroke(v.w(0.8f), Vga.White)))
+                                .border(BorderStroke(v.w(0.8f), Vga.White)),
+                        ) {
+                            CityPhoto(entry.name, v, Modifier.fillMaxSize())
+                            AlmanacFlags.assetName(entry.name)?.let { flagAsset ->
+                                Box(
+                                    Modifier.align(Alignment.TopEnd).padding(v.w(3))
+                                        .width(v.w(31)).height(v.w(24)),
+                                ) {
+                                    Box(
+                                        Modifier.matchParentSize().offset(v.w(1), v.w(1))
+                                            .background(Vga.Black.copy(alpha = 0.65f)),
+                                    )
+                                    Box(
+                                        Modifier.matchParentSize().background(Vga.White).padding(v.w(1.3f)),
+                                    ) {
+                                        PixelImage(
+                                            flagAsset, Modifier.fillMaxSize(),
+                                            contentDescription = null,
+                                        )
+                                    }
+                                }
+                            }
+                        }
                         Spacer(Modifier.height(v.w(2)))
                         Text(entry.name.uppercase(), style = v.text(8.5f, color = Vga.LightGreen, bold = true),
                             textAlign = TextAlign.Center)
@@ -575,13 +637,6 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                         }
                         Text(entry.description, style = v.text(7.5f, color = Vga.White))
                     }
-                }
-                Spacer(Modifier.height(v.w(3)))
-                Row(horizontalArrangement = Arrangement.spacedBy(v.w(6))) {
-                    DosButton(Strings.ui("◀ BACK"), fill = Vga.LightGray, textColor = Vga.Black,
-                        style = v.text(7.5f, bold = true), hPad = v.w(4), vPad = v.w(1.6f)) { selected = null }
-                    DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
-                        style = v.text(7.5f, bold = true), hPad = v.w(4), vPad = v.w(1.6f)) { vm.dismissOverlay() }
                 }
             }
         }

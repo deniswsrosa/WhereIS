@@ -136,13 +136,13 @@ fun spriteExists(name: String): Boolean {
 
 @Composable
 fun PixelImage(name: String, modifier: Modifier = Modifier, scale: ContentScale = ContentScale.FillBounds,
-               alignment: Alignment = Alignment.Center) {
+               alignment: Alignment = Alignment.Center, contentDescription: String? = name) {
     val ctx = LocalContext.current
     val bmp = remember(name) { Sprites.bitmap(ctx, name) }
     if (bmp != null) {
         Image(
-            bitmap = bmp,
-            contentDescription = name, modifier = modifier, contentScale = scale, alignment = alignment,
+            bitmap = bmp, contentDescription = contentDescription, modifier = modifier,
+            contentScale = scale, alignment = alignment,
         )
     } else {
         Box(modifier.background(Vga.Cyan), contentAlignment = Alignment.Center) {
