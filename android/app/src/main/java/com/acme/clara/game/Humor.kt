@@ -28,6 +28,7 @@ object Humor {
     private var self: List<Line> = emptyList()      // day_job, by occupation
     private var suspect: List<Line> = emptyList()   // on_trail, by occupation (pronoun-convertible only)
     private var arrivalFree: List<String> = emptyList(); private var arrivalAll: List<String> = emptyList()
+    private var didYouKnow: List<String> = emptyList()   // almanac trivia asides (all free tier)
     @Volatile private var loadedLang: String? = null
 
     // "They <present-tense/contraction>" wouldn't survive rewriting "They" -> singular "He/She".
@@ -60,6 +61,7 @@ object Humor {
                 val arr = JSONArray(text)
                 val sf = ArrayList<Line>(); val pf = ArrayList<Line>()
                 val aF = ArrayList<String>(); val aA = ArrayList<String>()
+                val dyk = ArrayList<String>()
                 for (i in 0 until arr.length()) {
                     val o = arr.getJSONObject(i)
                     val en = o.getString("en")
@@ -68,10 +70,11 @@ object Humor {
                     when (o.getString("s")) {
                         "arrival" -> { aA.add(en); if (free) aF.add(en) }
                         "on_trail" -> if (!unconvertible.containsMatchIn(en)) pf.add(Line(occ, en, free))
+                        "did_you_know" -> dyk.add(en)
                         else -> sf.add(Line(occ, en, free))   // day_job
                     }
                 }
-                self = sf; suspect = pf; arrivalFree = aF; arrivalAll = aA
+                self = sf; suspect = pf; arrivalFree = aF; arrivalAll = aA; didYouKnow = dyk
                 loadedLang = lang
             }
         }
@@ -97,4 +100,9 @@ object Humor {
 
     /** An arrival-card quip, shown instead of the say-hello line now and then. */
     fun arrivalLine(paid: Boolean): String? = pick(if (paid) arrivalAll else arrivalFree)
+
+    /** A random "did you know?" trivia aside for the World Database's entry-detail footer.
+     *  All lines are free tier, so this ignores the paid gate — kept as a param for symmetry
+     *  with the other pickers, in case a paid-only batch is added later. */
+    fun didYouKnowLine(paid: Boolean = true): String? = pick(didYouKnow)
 }

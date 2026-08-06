@@ -15623,5 +15623,255 @@
   "s": "arrival",
   "t": "paid",
   "en": "O ladrão está por aí bancando o esperto. Você está aqui bancando o incansável. Incansável ganha mais."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "O polvo tem três corações, e o principal para de bater quando ele nada. Por isso prefere andar."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Mel nunca estraga. Potes com milhares de anos ainda estão perfeitos. Paciência, ao que parece."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Wombats fazem cocô em formato de cubo. Com cantos e tudo. A natureza deve ter seus motivos."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Tubarões são mais antigos que as árvores. Já nadavam por aí bem antes de alguém criar um tronco."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "O camarão mantém o coração na cabeça. E nunca comentou nada sobre isso."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Borboletas sentem gosto com os pés. Cada pouso também é uma pequena decisão de lanche."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Gatos não conseguem sentir o gosto doce. Simplesmente não veem a graça."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Elefantes não conseguem pular. As quatro patas ficam no chão, e eles parecem em paz com isso."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Corujas conseguem girar a cabeça quase três quartos de volta, então nunca se dão ao trabalho de virar o corpo."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Beija-flores são as únicas aves que voam de ré. Saem de qualquer lugar na hora que bem entendem."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "A girafa tem exatamente sete ossos no pescoço, os mesmos que você. Só que bem mais compridos."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Camelos guardam gordura nas corcovas, não água. Um mal-entendido que nunca se deram ao trabalho de corrigir."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Ursos polares têm pele preta sob toda aquela pelagem branca. Um segredo bem guardado."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Os olhos da rena mudam de dourado no verão para azul no inverno. Até os olhos deles sentem o frio."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Cabras têm pupilas retangulares e enxergam quase 360 graus. Poucas coisas conseguem pegá-las de surpresa."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Coalas dormem até vinte horas por dia. As outras quatro também são bem tranquilas."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Preguiças conseguem prender a respiração mais tempo que golfinhos, desacelerando bem o coração. Sem pressa, como sempre."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Estrelas-do-mar não têm cérebro nem sangue, e se saem muito bem assim mesmo."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "O caracol carrega milhares de dentinhos. E não tem pressa nenhuma de usá-los."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Alguns sapos congelam quase por completo no inverno, descongelam na primavera e saem pulando, como novos."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Axolotes conseguem regenerar um membro perdido, e até partes do coração. Bem organizados, eles."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Abelhas conseguem aprender a reconhecer rostos humanos. Talvez você já tenha sido notado."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Abelhas dão instruções dançando. Um rebolado ali significa que o almoço é por ali."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Alguns tipos de pinguim pedem em casamento com uma pedrinha cuidadosamente escolhida. Romantismo, basicamente."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Golfinhos criam um assobio pessoal e o usam como nome. Todo mundo ganha o seu, quer queira ou não."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Flamingos nascem cinza e ficam rosa por causa dos camarões que comem. A cor é basicamente uma escolha de dieta."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Só a língua da baleia-azul pode pesar quanto um elefante. O resto da baleia também não é pequeno."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Avestruzes têm olhos maiores que o cérebro. Ao menos enxergam muito bem."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "A língua do camaleão pode ser mais comprida que o resto dele. Alcance não é o problema."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Cangurus não conseguem andar de ré com facilidade. Decidiram apostar tudo em ir pra frente há muito tempo."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "A pulga consegue pular muitas vezes a própria altura. Pequena, e plenamente consciente disso."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Algumas tartarugas vivem bem além dos cem anos, sem nenhuma pressa de parar."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Bananas são, botanicamente, frutas do tipo baga. Morangos, tecnicamente, não são. Ninguém nos perguntou."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Amendoim não é castanha, e sim algo que cresce debaixo da terra como feijão. Uma questão de identidade discreta."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "O caju cresce pendurado embaixo de um fruto macio parecido com maçã, como se fosse um detalhe esquecido."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Um único abacaxi pode levar quase dois anos para crescer. Vale a espera, ele garante."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "O chocolate começa como sementes dentro de um fruto que cresce numa árvore. Uma boa notícia, convenhamos."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "A melancia é cerca de nove partes água em dez. Refrescante, e sincera quanto a isso."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Cogumelos são geneticamente mais parecidos com animais do que com plantas. Uma surpresa discreta de família."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "O bambu pode crescer quase um metro em um único dia. Impaciente, para uma planta."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Girassóis jovens giram ao longo do dia para acompanhar o sol. Os mais velhos desistem e ficam só de frente pro leste."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "O Sol concentra quase toda a massa do sistema solar. O resto de nós é um erro de arredondamento."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Um dia em Vênus dura mais que um ano inteiro no planeta. O tempo se comporta de forma estranha por lá."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "As pegadas deixadas na Lua podem durar milhões de anos. Não tem vento para dar um jeito nelas."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Uma única nuvem pode pesar centenas de toneladas, e mesmo assim flutua sem a menor preocupação."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Aquele cheiro fresco depois da chuva vem de bactérias minúsculas no solo. O crédito é todo delas."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Uma colher de uma estrela colapsada pesaria bilhões de toneladas. Melhor deixar onde está."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Há mais estrelas no universo do que grãos de areia em todas as praias da Terra. Uma quantidade generosa."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "A formiga consegue carregar muitas vezes o próprio peso sem reclamar. Ou reclamando bem baixinho."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Tomates são, botanicamente, frutas. Mas isso fica só entre eles na hora do jantar."
  }
 ]

@@ -15623,5 +15623,255 @@
   "s": "arrival",
   "t": "paid",
   "en": "El ladrón anda por ahí haciéndose el listo. Tú andas aquí siendo incansable. Lo incansable gana más."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los pulpos tienen tres corazones, y el principal deja de latir cuando nadan. Por eso prefieren caminar."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "La miel nunca se echa a perder. Tarros de miles de años siguen en perfecto estado. Paciencia, al parecer."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los wombats producen excrementos con forma de cubo. Con esquinas y todo. La naturaleza tendría sus razones."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los tiburones son más antiguos que los árboles. Ya nadaban mucho antes de que algo tuviera tronco."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "El camarón lleva el corazón en la cabeza. Nunca ha hecho alarde de ello."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Las mariposas saborean con las patas. Cada aterrizaje es también una pequeña decisión gastronómica."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los gatos no pueden percibir el sabor dulce. Simplemente no le ven el atractivo."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los elefantes no pueden saltar. Las cuatro patas se quedan siempre en el suelo, y parecen estar en paz con ello."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los búhos pueden girar la cabeza casi tres cuartas partes de una vuelta completa, así que nunca se molestan en girar el cuerpo."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los colibríes son las únicas aves que pueden volar hacia atrás. Se van de una habitación cuando les da la gana."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Una jirafa tiene exactamente siete huesos en el cuello, los mismos que tú. Los suyos son solo más largos."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los camellos almacenan grasa en las jorobas, no agua. Un malentendido que nunca se han molestado en corregir."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los osos polares tienen la piel negra bajo todo ese pelaje blanco. Un secreto bastante bien guardado."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los ojos del reno pasan de dorados en verano a azules en invierno. Hasta sus ojos notan el frío."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Las cabras tienen pupilas rectangulares y pueden ver casi en todas direcciones. A una cabra le sorprenden pocas cosas."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los koalas duermen hasta veinte horas al día. Las otras cuatro también son bastante tranquilas."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los perezosos pueden aguantar la respiración más tiempo que los delfines, ralentizando el corazón al máximo. Sin prisa, como siempre."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Las estrellas de mar no tienen cerebro ni sangre, y aun así les va perfectamente bien."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Un caracol lleva miles de dientes diminutos. No tiene ninguna prisa por usarlos."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Algunas ranas se congelan casi por completo en invierno, y en primavera se descongelan y se van saltando, como si nada."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los ajolotes pueden regenerar una extremidad perdida, e incluso partes del corazón. Muy prolijo de su parte."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Las abejas pueden aprender a reconocer rostros humanos. Puede que ya te hayan fichado."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Las abejas dan indicaciones bailando. Un pequeño meneo significa que el almuerzo está por allí."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Algunos pingüinos se declaran con una piedrecita cuidadosamente elegida. Romance, en esencia."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los delfines inventan un silbido propio y lo usan como nombre. Todos tienen el suyo, les guste o no."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los flamencos nacen grises y se vuelven rosados por los camarones que comen. El color, en realidad, es cosa de la dieta."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "La lengua de una ballena azul puede pesar sola tanto como un elefante. El resto de la ballena también es grande."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los avestruces tienen los ojos más grandes que el cerebro. Al menos ven de maravilla."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "La lengua de un camaleón puede ser más larga que el resto de su cuerpo. El alcance no es el problema."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los canguros no pueden caminar hacia atrás con facilidad. Se comprometieron con el avance hace mucho tiempo."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Una pulga puede saltar muchas veces su propia altura. Pequeña, y muy consciente de ello."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Algunas tortugas viven bastante más de cien años, sin ninguna prisa particular por parar."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Botánicamente, los plátanos son bayas. Las fresas, técnicamente, no lo son. Nadie nos preguntó."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los cacahuetes no son frutos secos en absoluto, sino que crecen bajo tierra como las judías. Una discreta cuestión de identidad."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los anacardos crecen colgando de la base de una fruta blanda parecida a una manzana, como si fueran un añadido de último momento."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Una sola piña puede tardar casi dos años en crecer. Vale la pena la espera, insiste ella."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "El chocolate empieza como semillas dentro de una fruta que crece en un árbol. Buena noticia, podría decirse."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "La sandía es agua en unas nueve de cada diez partes. Refrescante, y sincera al respecto."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los hongos están más emparentados con los animales que con las plantas. Una sorpresa familiar discreta."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "El bambú puede crecer casi un metro en un solo día. Impaciente, para ser una planta."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Los girasoles jóvenes giran a lo largo del día para seguir al sol. Los más viejos se rinden y se quedan mirando al este."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "El Sol concentra casi toda la masa del sistema solar. El resto de nosotros somos un error de redondeo."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Un día en Venus dura más que todo un año allí. El tiempo se comporta de forma extraña por esos lados."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Las huellas dejadas en la Luna pueden permanecer intactas durante millones de años. No hay viento que las borre."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Una sola nube puede pesar cientos de toneladas, y aun así flota sin la menor preocupación."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Ese olor a fresco después de la lluvia viene de diminutas bacterias en la tierra. El mérito es de ellas."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Una cucharada de una estrella colapsada pesaría miles de millones de toneladas. Mejor dejarla donde está."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Hay más estrellas en el universo que granos de arena en todas las playas de la Tierra. Una cantidad generosa."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Una hormiga puede cargar muchas veces su propio peso sin quejarse. O quejándose muy en silencio."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Botánicamente, el tomate es una fruta. Pero se lo guarda para sí mismo durante la cena."
  }
 ]

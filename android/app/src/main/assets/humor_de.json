@@ -15623,5 +15623,255 @@
   "s": "arrival",
   "t": "paid",
   "en": "Die Zielperson ist da draußen und clever. Du bist hier drin und unermüdlich. Unermüdlich gewinnt öfter."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Oktopusse haben drei Herzen, und das Hauptherz hört auf zu schlagen, wenn sie schwimmen. Deshalb gehen sie lieber zu Fuß."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Honig verdirbt nie. Jahrtausende alte Gläser sind noch immer einwandfrei. Geduld, offenbar."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Wombats produzieren würfelförmigen Kot. Mit Ecken und allem. Die Natur hatte wohl ihre Gründe."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Haie sind älter als Bäume. Sie schwammen längst umher, bevor irgendetwas einen Stamm bekam."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Eine Garnele trägt ihr Herz im Kopf. Sie hat darüber bislang eisern geschwiegen."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Schmetterlinge schmecken mit den Füßen. Jede Landung ist auch eine kleine Entscheidung fürs Essen."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Katzen können Süßes überhaupt nicht schmecken. Sie verstehen den Reiz einfach nicht."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Elefanten können nicht springen. Alle vier Füße bleiben einfach am Boden, und sie scheinen völlig damit im Reinen."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Eulen können den Kopf um etwa drei Viertel drehen, weshalb sie sich den Rest des Körpers einfach sparen."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Kolibris sind die einzigen Vögel, die rückwärts fliegen können. Einen Raum verlassen sie, wann immer sie wollen."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Eine Giraffe hat genau sieben Halswirbel, genau wie Sie. Ihre sind nur etwas länger."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Kamele speichern in ihren Höckern Fett, kein Wasser. Ein Missverständnis, das sie nie richtiggestellt haben."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Eisbären haben unter dem ganzen weißen Fell schwarze Haut. Ein recht gut gehütetes Geheimnis."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Rentieraugen wechseln von Gold im Sommer zu Blau im Winter. Selbst ihre Augen bemerken die Kälte."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Ziegen haben rechteckige Pupillen und sehen fast rundum. An einer Ziege schleicht sich kaum etwas vorbei."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Koalas schlafen bis zu zwanzig Stunden am Tag. Die restlichen vier verlaufen auch recht ruhig."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Faultiere können die Luft länger anhalten als Delfine, indem sie ihr Herz stark verlangsamen. Gemächlich wie eh und je."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Seesterne haben weder Gehirn noch Blut und kommen trotzdem bestens zurecht."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Eine Schnecke trägt tausende winziger Zähne mit sich. Sie hat es nicht eilig, sie zu benutzen."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Manche Frösche frieren im Winter fast völlig durch, tauen im Frühling wieder auf und hüpfen davon, als wäre nichts gewesen."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Axolotl können ein verlorenes Bein nachwachsen lassen, sogar Teile des Herzens. Sehr ordentlich von ihnen."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Bienen können lernen, menschliche Gesichter zu erkennen. Vielleicht sind Sie schon aufgefallen."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Honigbienen geben Wegbeschreibungen durch Tanzen. Ein kleines Wackeln bedeutet: Mittagessen in dieser Richtung."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Manche Pinguine machen mit einem sorgfältig ausgewählten Kieselstein einen Antrag. Romantik, im Grunde."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Delfine erfinden einen eigenen Pfeifton und nutzen ihn als Namen. Jeder bekommt einen, ob er will oder nicht."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Flamingos werden grau geboren und werden durch die Krebstiere, die sie fressen, pink. Die Farbe ist im Grunde eine Ernährungsfrage."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Allein die Zunge eines Blauwals kann so viel wiegen wie ein Elefant. Der Rest des Wals ist ebenfalls groß."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Strauße haben größere Augen als Gehirn. Sehen können sie damit immerhin ausgezeichnet."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Die Zunge eines Chamäleons kann länger sein als der Rest von ihm. An der Reichweite mangelt es nicht."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Kängurus können kaum rückwärtsgehen. Sie haben sich schon vor langer Zeit auf vorwärts festgelegt."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Ein Floh kann ein Vielfaches seiner eigenen Körpergröße springen. Klein, und sich dessen durchaus bewusst."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Manche Schildkröten werden weit über hundert Jahre alt, ohne besondere Eile aufzuhören."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Bananen sind botanisch gesehen Beeren. Erdbeeren streng genommen nicht. Gefragt hat uns keiner."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Erdnüsse sind gar keine Nüsse, sondern wachsen wie Bohnen unter der Erde. Eine stille Identitätsfrage."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Cashewkerne hängen wie ein Nachgedanke unten an einer weichen, apfelähnlichen Frucht."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Eine einzelne Ananas kann fast zwei Jahre zum Wachsen brauchen. Das Warten lohne sich, wie sie behauptet."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Schokolade beginnt als Samen in einer Frucht, die an einem Baum wächst. Eine gute Nachricht, würde man sagen."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Wassermelone besteht zu etwa neun Zehnteln aus Wasser. Erfrischend, und ehrlich damit."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Pilze sind näher mit Tieren verwandt als mit Pflanzen. Eine stille familiäre Überraschung."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Bambus kann an einem einzigen Tag fast einen Meter wachsen. Ungeduldig, für eine Pflanze."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Junge Sonnenblumen drehen sich tagsüber der Sonne nach. Ältere geben das auf und schauen einfach nach Osten."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Die Sonne vereint fast die gesamte Masse des Sonnensystems auf sich. Der Rest von uns ist ein Rundungsfehler."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Ein Tag auf der Venus dauert länger als ein ganzes Jahr dort. Die Zeit spielt dort etwas verrückt."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Fußspuren auf dem Mond können Millionen Jahre lang bestehen bleiben. Es gibt keinen Wind, der sie wegräumt."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Eine einzelne Wolke kann hunderte Tonnen wiegen und treibt trotzdem völlig unbekümmert dahin."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Der frische Geruch nach Regen stammt von winzigen Bakterien im Boden. Ihnen gebührt die Anerkennung."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Ein Löffel voll eines kollabierten Sterns würde Milliarden Tonnen wiegen. Am besten bleibt er, wo er ist."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Es gibt mehr Sterne im Universum als Sandkörner auf allen Stränden der Erde zusammen. Eine großzügige Menge."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Eine Ameise kann ein Vielfaches ihres eigenen Gewichts tragen, ohne zu klagen. Oder mit sehr leisem Klagen."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Tomaten sind botanisch gesehen eine Frucht. Beim Abendessen behalten sie das lieber für sich."
  }
 ]

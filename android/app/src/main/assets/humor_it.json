@@ -15623,5 +15623,255 @@
   "s": "arrival",
   "t": "paid",
   "en": "Il ladro è là fuori a fare il furbo. Tu sei qui a non stancarti mai. Chi non si stanca vince più spesso."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "I polpi hanno tre cuori, e quello principale smette di battere quando nuotano. Perciò preferiscono camminare."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Il miele non scade mai. Vasetti vecchi di migliaia di anni sono ancora perfettamente buoni. Pazienza, a quanto pare."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "I vombati producono escrementi a forma di cubo. Spigoli compresi. La natura avrà avuto le sue ragioni."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Gli squali sono più antichi degli alberi. Nuotavano già molto prima che qualcosa mettesse su un tronco."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Il gambero tiene il cuore nella testa. E non ne ha mai fatto parola."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Le farfalle assaggiano con le zampe. Ogni atterraggio è anche una piccola decisione culinaria."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "I gatti non percepiscono affatto il gusto dolce. Semplicemente non ne colgono il fascino."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Gli elefanti non possono saltare. Tutte e quattro le zampe restano a terra, e sembrano perfettamente in pace con questo."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "I gufi possono ruotare la testa di circa tre quarti di giro, così non si scomodano mai a girare il corpo."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "I colibrì sono gli unici uccelli capaci di volare all'indietro. Lasciano una stanza quando gli pare."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Una giraffa ha esattamente sette vertebre nel collo, le stesse che hai tu. Solo più lunghe."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "I cammelli accumulano grasso nelle gobbe, non acqua. Un equivoco che non si sono mai presi la briga di correggere."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Gli orsi polari hanno la pelle nera sotto tutto quel pelo bianco. Un segreto custodito piuttosto bene."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Gli occhi delle renne passano dall'oro in estate al blu in inverno. Anche i loro occhi sentono il freddo."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Le capre hanno pupille rettangolari e vedono quasi a trecentosessanta gradi. Ben poco riesce a coglierle di sorpresa."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "I koala dormono fino a venti ore al giorno. Anche le altre quattro sono piuttosto rilassate."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "I bradipi riescono a trattenere il respiro più a lungo dei delfini rallentando il battito cardiaco. Impassibili, come sempre."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Le stelle marine non hanno cervello né sangue, e se la cavano benissimo lo stesso."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Una lumaca porta con sé migliaia di minuscoli denti. Non ha alcuna fretta di usarli."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Alcune rane si congelano quasi del tutto in inverno, poi in primavera si scongelano e saltano via come nuove."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Gli axolotl possono far ricrescere un arto perduto, e persino parti del cuore. Molto ordinati, da parte loro."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Le api possono imparare a riconoscere i volti umani. Potresti già essere stato notato."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Le api danno indicazioni ballando. Un piccolo ancheggio significa che il pranzo è da quella parte."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Alcuni pinguini fanno la proposta con un sassolino scelto con cura. Romanticismo, in sostanza."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "I delfini inventano un fischio personale e lo usano come nome. Tutti ne ricevono uno, pronti o no."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "I fenicotteri nascono grigi e diventano rosa grazie ai gamberetti che mangiano. Il colore, in realtà, è una scelta alimentare."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "La sola lingua di una balenottera azzurra può pesare quanto un elefante. Anche il resto della balena non scherza."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Gli struzzi hanno occhi più grandi del cervello. Almeno ci vedono benissimo."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "La lingua di un camaleonte può essere più lunga del resto del suo corpo. Di certo non manca la portata."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "I canguri non riescono a camminare all'indietro con facilità. Hanno scelto di andare avanti molto tempo fa."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Una pulce può saltare molte volte la propria altezza. Piccola, e perfettamente consapevole di esserlo."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Alcune tartarughe vivono ben oltre i cento anni, senza alcuna fretta di smettere."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Botanicamente, le banane sono bacche. Le fragole, tecnicamente, no. Nessuno ce l'ha chiesto."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Le arachidi non sono affatto noci, ma crescono sottoterra come i fagioli. Una discreta questione d'identità."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Gli anacardi crescono appesi sotto un frutto morbido simile a una mela, quasi fossero un ripensamento."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Un singolo ananas può impiegare quasi due anni per crescere. Ne vale la pena, insiste lui."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Il cioccolato nasce come semi dentro un frutto che cresce su un albero. Una buona notizia, si potrebbe dire."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "L'anguria è composta per circa nove decimi da acqua. Rinfrescante, e senza nasconderlo."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "I funghi sono più imparentati con gli animali che con le piante. Una sorpresa di famiglia tenuta nascosta."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Il bambù può crescere quasi un metro in un solo giorno. Impaziente, per essere una pianta."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "I girasoli giovani ruotano durante il giorno per seguire il sole. Quelli più vecchi rinunciano e restano rivolti a est."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Il Sole racchiude quasi tutta la massa dell'intero sistema solare. Il resto di noi è un errore di arrotondamento."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Su Venere un giorno dura più di un anno intero. Da quelle parti il tempo si comporta in modo strano."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Le impronte lasciate sulla Luna possono restare intatte per milioni di anni. Niente vento a spazzarle via."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Una singola nuvola può pesare centinaia di tonnellate, eppure fluttua del tutto indisturbata."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Quel profumo fresco dopo la pioggia viene da minuscoli batteri nel terreno. Il merito è tutto loro."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Un cucchiaino di una stella collassata peserebbe miliardi di tonnellate. Meglio lasciarlo dov'è."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Nell'universo ci sono più stelle che granelli di sabbia su tutte le spiagge della Terra. Una quantità generosa."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Una formica può trasportare molte volte il proprio peso senza lamentarsi. O lamentandosi in modo molto silenzioso."
+ },
+ {
+  "s": "did_you_know",
+  "t": "free",
+  "en": "Botanicamente, il pomodoro è un frutto. Ma a cena preferisce non parlarne."
  }
 ]
