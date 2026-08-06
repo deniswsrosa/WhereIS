@@ -59,9 +59,9 @@ class PlaythroughTest {
         assertEquals("first lead is tagged to the first city", firstCity, leads.first().city)
     }
 
-    // ---------- the whole career, sign-on to Hall of Fame ----------
+    // ---------- the whole career, sign-on to the finale ----------
 
-    @Test fun fullCareerReachesTheFinaleAndHallOfFame() {
+    @Test fun fullCareerReachesTheFinale() {
         val vm = fresh()
         var guard = 0
         var lastCulprit = ""
@@ -80,8 +80,8 @@ class PlaythroughTest {
         assertEquals("the free career tops out at Ace Detective",
             "Ace Detective", GameData.ranks[vm.s.rankIndex])
         assertFalse("no promotion after the finale", vm.s.pendingPromotion)
-        assertTrue("the report reaches the Hall of Fame",
-            vm.s.resultLines.any { it.contains("Hall of Fame") })
+        assertTrue("the finale report celebrates jailing the ring-leader",
+            vm.s.resultLines.any { it.contains("Clara San Diego is behind bars") })
         assertTrue("ring-leader captured", "Clara San Diego" in vm.s.capturedVillains)
         assertTrue("the finale unlocks the Kingpin commendation",
             "kingpin" in vm.s.unlockedAchievements)

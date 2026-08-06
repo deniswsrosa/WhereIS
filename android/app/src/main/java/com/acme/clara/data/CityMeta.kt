@@ -65,7 +65,7 @@ object CityMeta {
         CityInfo("Moroni", "Africa", "the islands north of Madagascar",
             "The chief industry of the Comoros is perfume, made from plants grown on the islands.", true, "city_moroni", greeting = "In French, hello is “Bonjour” (bohn-ZHOOR).", flag = "yellow, white, red and blue bands with a green triangle holding a crescent and four stars", currency = "the Comorian franc"),
         CityInfo("Moscow", "Europe", "Red Square",
-            "The Soviet Union is the largest country in the world. It occupies one-sixth of the earth's land area.", true, "city_moscow", greeting = "In Russian, a friendly hi is “Privet” (pree-VYET).", flag = "three bands of white, blue and red", currency = "the ruble"),
+            "Russia is the largest country in the world. It occupies about one-eighth of the earth's land area.", false, "city_moscow", greeting = "In Russian, a friendly hi is “Privet” (pree-VYET).", flag = "three bands of white, blue and red", currency = "the ruble"),
         CityInfo("New Delhi", "Asia", "the Red Fort",
             "New Delhi, with a metropolitan population of more than 30 million, is the capital of India, a nation of over 1.4 billion people.", false, "city_new_delhi", greeting = "In Hindi, a greeting is “Namaste” (nah-mah-STAY).", flag = "saffron, white and green bands with a navy spoked wheel", currency = "the Indian rupee"),
         CityInfo("New York", "North America", "the Statue of Liberty",

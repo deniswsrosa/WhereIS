@@ -31,7 +31,6 @@ enum class ClueKind { DESTINATION, TRAIT, DANGER, NONE }
 sealed interface Overlay {
     data object About : Overlay
     data object Roster : Overlay
-    data object HallOfFame : Overlay
     /** The Most-Wanted gallery — villains reveal as they're captured. */
     data object MostWanted : Overlay
     /** Commendations earned + career stats. */
@@ -1010,7 +1009,7 @@ class ClaraViewModel : ViewModel() {
         val lines = mutableListOf<String>()
         if (c.name == "Clara San Diego") {
             lines += "You've captured the ring-leader herself - Clara San Diego is behind bars for good!"
-            lines += "Congratulations - you've earned a place in the Interpol Hall of Fame!"
+            lines += "Congratulations - Interpol's most-wanted list is one name shorter tonight!"
         } else {
             // faithful phrasing: the CRIME city's police make the arrest and get the loot back
             lines += "With your help, police in $crimeCity have taken ${c.name} into custody."

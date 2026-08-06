@@ -82,9 +82,6 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
             MenuItemDef(Strings.ui("Passport")) { vm.openOverlay(Overlay.Passport) },
             MenuItemDef(Strings.ui("Most Wanted")) { vm.openOverlay(Overlay.MostWanted) },
             MenuItemDef(Strings.ui("Commendations")) { vm.openOverlay(Overlay.Commendations) },
-            // Disabled for now — kept visible (dimmed, no-op) rather than removed, so it isn't
-            // a mystery when it comes back rather than just vanishing.
-            MenuItemDef(Strings.ui("Hall of Fame"), enabled = false) {},
         ))
         // Dossiers menu lists the ten suspects under their EXE short names
         MenuTitle(v, Strings.ui("Dossiers"), GameData.suspects.mapIndexed { i, su ->
@@ -159,10 +156,6 @@ fun OverlayHost(v: Virtual, vm: ClaraViewModel) {
             Strings.ui("Rank: {0}", Strings.label("rank", GameData.ranks[vm.s.rankIndex])),
             Strings.ui("Cases solved: {0}", vm.s.casesSolved),
         )
-        Overlay.HallOfFame -> Strings.ui("HALL OF FAME") to if (vm.s.casesSolved == 0)
-            listOf(Strings.ui("The Hall of Fame is empty."))
-        else listOf("${vm.s.detectiveName}",
-            Strings.ui("{0} — {1} case(s)", Strings.label("rank", GameData.ranks[vm.s.rankIndex]), vm.s.casesSolved))
         is Overlay.Dossier -> "" to emptyList()   // handled by DossierWindow above
         Overlay.ConfirmQuit -> "" to emptyList()  // handled by ConfirmQuitDialog above
         Overlay.Language -> "" to emptyList()     // handled by LanguageWindow above
