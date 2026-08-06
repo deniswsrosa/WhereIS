@@ -1389,6 +1389,12 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     val quiz = remember { GameData.promotionQuiz.random() }
     val focus = remember { FocusRequester() }
     val done = stage == 4
+    // The quiz answer field only appears once the player has explicitly tapped past this — it
+    // used to auto-focus (and pop the keyboard) as soon as the question finished typing, which
+    // was jarring, and when that was removed instead it wasn't obvious the tiny field on the
+    // paper was even tappable. An explicit "tap to continue" gate, matching every other one on
+    // this screen, makes the reveal deliberate either way.
+    var answerRevealed by remember { mutableStateOf(false) }
     // S1: the captured mugshot slams in and is "filed" in the gallery before the report starts
     // printing — it used to play at the same time as the printer, so its own tap-to-continue and
     // the printer's competed for the same tap and neither was clearly the thing being responded to.
@@ -1466,10 +1472,13 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
         if (stage == 2) {
             // clear any taps that leaked in while earlier stages auto-advanced (§20)
             input = ""
-            // Don't auto-focus: the question may take a moment to read, and summoning the
-            // keyboard the instant it finished typing cut that short. Tapping the answer field
-            // (right there on the paper) brings the keyboard up whenever the player is ready.
+            answerRevealed = false
         }
+    }
+    // Once the player deliberately taps past the "tap to continue" gate, reveal the answer field
+    // and bring the keyboard up — a short delay lets the field finish entering composition first.
+    LaunchedEffect(answerRevealed) {
+        if (answerRevealed) { delay(80); runCatching { focus.requestFocus() } }
     }
     val scroll = rememberScrollState()
     // Snap (not animate) to the bottom: a new LaunchedEffect fires on every keystroke of the
@@ -1485,13 +1494,14 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     v.At(2, 44, 146, 154) {
         Box(Modifier.fillMaxSize()) {
             PixelImage("crime_printer", Modifier.fillMaxSize())
-            val lineH = 7.4f
-            // 10, not 12: matching the pagination gate's page size (below) so a full page always
-            // fits within the sheet's height cap instead of the top line or two overflowing it —
-            // at 12+typing lines the ideal height (~99px) exceeded the 96px cap the sheet is
-            // clamped to, which is what was cutting lines off.
+            val lineH = 7.82f   // matches v.text(6.8f)'s actual lineHeight (6.8 * 1.15), not a rougher estimate
+            val showInput = stage == 2 && answerRevealed
+            // 10, not 12: leaves enough of the height budget free for the answer field's own row
+            // below (when showing) without the total exceeding the sheet's 96px cap — that mismatch
+            // (needing ~91-99px, capped at 96) was cutting off the top line or two.
             val shown = printed.takeLast(10) + (if (typing.isNotEmpty()) listOf(typing) else emptyList())
-            val sheetH = (10f + shown.size * lineH).coerceAtLeast(29f).coerceAtMost(96f)
+            val extraRows = if (showInput) 1 else 0
+            val sheetH = (10f + (shown.size + extraRows) * lineH).coerceAtLeast(29f).coerceAtMost(96f)
             v.At(14, 102f - sheetH, 113, sheetH) {
                 Box(Modifier.fillMaxSize().background(Vga.White).border(BorderStroke(v.w(0.7f), Vga.Black))) {
                     Canvas(Modifier.fillMaxSize()) {
@@ -1507,8 +1517,9 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
                     Column(Modifier.fillMaxSize().padding(start = v.w(8), end = v.w(7), top = v.w(2)),
                         verticalArrangement = Arrangement.Bottom) {
                         shown.forEach { Text(it, style = v.text(6.8f, color = Vga.Black), maxLines = 1) }
-                        // promotion-quiz answer typed directly onto the paper
-                        if (stage == 2) BasicTextField(
+                        // promotion-quiz answer typed directly onto the paper, revealed by the
+                        // gray-strip "tap to continue" gate below rather than appearing on its own
+                        if (showInput) BasicTextField(
                             value = input,
                             onValueChange = { input = it.take(18).filter { c -> c != '\n' } },
                             singleLine = true,
@@ -1527,23 +1538,11 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
                     }
                 }
             }
-            // Paper's full for now — pause and let the reader catch up before typing pushes more
-            // lines by. Same wording and treatment as every other "hold here" moment in the game
-            // (the sign-on printer's segment breaks), and shown right on the printer itself so it's
-            // clear it's the printer waiting on you, not some unrelated prompt.
-            if (waitingForTap) {
-                v.At(4, 132, 138, 20, Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Press any key or", style = v.text(7.5f, color = Vga.White, bold = true))
-                        Text("button to continue.", style = v.text(7.5f, color = Vga.White, bold = true))
-                    }
-                }
-            }
         }
     }
     // right: the JAIL (win) or black panel (loss)
     v.At(150, 26, 168, 146) {
-        Box(Modifier.fillMaxSize().background(Vga.Black)) {
+        Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White))) {
             if (s.won) {
                 PixelImage("jail_cell", Modifier.fillMaxSize())
                 // the suspect's eyes blink behind the bars on a slow loop (dos_jail_eyes_a/b)
@@ -1555,37 +1554,41 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
             }
         }
     }
-    // Tap anywhere to advance past the pagination gate (the hint itself is drawn on the printer).
-    if (waitingForTap) Box(Modifier.fillMaxSize().clickable { waitingForTap = false })
-    // Spoiler-free share of the result: shown as soon as the case is won, well before the
-    // "next case?" prompt exists — it used to appear at the same moment, right above the Yes/No
-    // pair, and read as one grouped question ("share? yes/no") when they're unrelated. Sitting on
-    // screen the whole time (and clear of the jail photo, which it used to overlap) makes it read
-    // as its own standing action instead.
+    // Compact SHARE action in a top corner: it used to be a full-width button sitting right above
+    // the "next case?" Yes/No pair, which read as part of that decision — up here, clearly its own
+    // independent, always-available action instead.
     if (s.won && !s.careerOver) {
-        v.At(150, 174, 168, 9) {
-            YellowButton(v, "SHARE RESULT") { com.acme.clara.ui.shareResult(shareCtx, vm) }
+        v.At(266, 14, 50, 10) {
+            YellowButton(v, "SHARE") { com.acme.clara.ui.shareResult(shareCtx, vm) }
         }
     }
-    // "Ready for your next case?" -> the original's yellow Yes/No buttons
-    if (done) {
-        v.At(152, 186, 76, 12) { YellowButton(v, "Yes") { vm.toBriefingForNext() } }
-        v.At(234, 186, 76, 12) { YellowButton(v, "No") { vm.menuQuitToTitle() } }
-    }
-    // Carmen jailed: career complete — any key returns to the title (off the roster).
-    // White text: unlike the briefing screen, the result screen's background is black.
-    if (stage == 5) {
-        v.At(150, 174, 168, 9) {
-            YellowButton(v, "SHARE RESULT") { com.acme.clara.ui.shareResult(shareCtx, vm) }
-        }
-        v.At(150, 184, 168, 16, Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Press any key or", style = v.text(7.5f, color = Vga.White, bold = true))
-                Text("button to continue.", style = v.text(7.5f, color = Vga.White, bold = true))
+    // A single gray status strip for every "the game is waiting on you" moment on this screen —
+    // matching the sign-on printer's own gray-background / black-text "press any key" treatment.
+    // Previously each moment used white-on-black text floating in a different spot (on the printer,
+    // or wherever), which read as unrelated ad-hoc prompts rather than one consistent "here's what
+    // happens next" zone.
+    v.At(150, 172, 168, 28) {
+        Box(
+            Modifier.fillMaxSize().background(Vga.LightGray).border(BorderStroke(v.w(1), Vga.White)),
+            contentAlignment = Alignment.Center,
+        ) {
+            when {
+                waitingForTap || (stage == 2 && !answerRevealed) || stage == 5 ->
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Press any key or", style = v.text(7.5f, color = Vga.Black, bold = true))
+                        Text("button to continue.", style = v.text(7.5f, color = Vga.Black, bold = true))
+                    }
+                done -> Row(horizontalArrangement = Arrangement.spacedBy(v.w(8))) {
+                    Box(Modifier.size(v.w(76), v.w(12))) { YellowButton(v, "Yes") { vm.toBriefingForNext() } }
+                    Box(Modifier.size(v.w(76), v.w(12))) { YellowButton(v, "No") { vm.menuQuitToTitle() } }
+                }
             }
         }
-        Box(Modifier.fillMaxSize().clickable { vm.menuQuitToTitle() })
     }
+    // Tap anywhere to advance past whichever gate is currently active in the strip above.
+    if (waitingForTap) Box(Modifier.fillMaxSize().clickable { waitingForTap = false })
+    if (stage == 2 && !answerRevealed) Box(Modifier.fillMaxSize().clickable { answerRevealed = true })
+    if (stage == 5) Box(Modifier.fillMaxSize().clickable { vm.menuQuitToTitle() })
     // S1: the captured mugshot slams in and is "filed" in the gallery — plays before the report
     // starts printing (see `slamActive` above).
     if (slamActive) ArrestSlam(v, s.culprit?.name!!) { slamActive = false }
