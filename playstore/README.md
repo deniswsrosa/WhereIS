@@ -31,12 +31,14 @@ Locales prepared: `en-US` (default), `pt-BR`, `es-ES`, `fr-FR`, `de-DE`, `it-IT`
 |------------------|---------------------------------------------|-------------------|
 | App icon         | `graphics/icon_512.png`                     | 512×512 PNG       |
 | Feature graphic  | `graphics/feature_graphic_1024x500.png`     | 1024×500 PNG      |
-| Phone screenshots| `graphics/screenshots/phone/01…08.png`      | 8 shots, 1528×955 |
+| Phone screenshots| `graphics/screenshots/phone/01…08.png`      | 8 framed shots, 1920×1080 |
 
-The screenshots are real gameplay captures (cropped to the game viewport, no status bar):
-city view, witness interview, departure map, crime computer, World Database entry,
-Passport map, HQ briefing printer, and the places-to-visit picker. English screenshots are
-used for every locale (allowed); localized ones can be captured later the same way.
+Marketing-framed real gameplay (pixel caption + white-bordered game viewport on a dark
+scanline canvas): city view, witness interview, departure map, crime computer, World
+Database entry, Passport map, the arrest/jail result screen, and the places-to-visit
+picker. The debug menu is scrubbed from every shot. Unframed clean captures live in
+`graphics/screenshots/raw/` if you ever need them (e.g. localized variants). English
+shots are used for every locale (allowed).
 
 ## 3. App category & tags
 
