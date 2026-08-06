@@ -105,7 +105,7 @@ fun Tour(v: Virtual, vm: ClaraViewModel, suppressed: Boolean = false) {
 
 /** A lesson currently being shown: which control (virtual rect) to spotlight, and what to say.
  *  [info] tips have no single completing action, so they carry a GOT IT button. */
-private class Shown(val id: String, val target: R, val title: String, val text: String, val info: Boolean)
+private class Shown(val id: String, val target: Rect, val title: String, val text: String, val info: Boolean)
 
 /** The one relevant lesson for this game state, or null when the tour should stay quiet. Scanned in
  *  teaching priority: interview → mind-the-clock → crime computer → follow-trail → warrant → arrest. */
@@ -189,18 +189,22 @@ fun tourAllowsTool(s: GameState, tool: Int): Boolean {
     return tool in allowed
 }
 
-private class R(val x: Float, val y: Float, val w: Float, val h: Float)
+// Named `Rect`, not `R`: a private top-level class literally named `R` in this package collides
+// with Android's generated resource class `com.acme.clara.ui.R` at the class-file level, which
+// Robolectric's sandboxed classloader special-cases — any code path touching this class (e.g.
+// `tourAllowsTool`, called from the toolbar) throws IllegalAccessError under test.
+private class Rect(val x: Float, val y: Float, val w: Float, val h: Float)
 
 // The game's fixed layout, in 320x200 virtual pixels (see GameScreens.kt).
-private val TOOL_DEPART = R(190.75f, 163f, 41.75f, 32f)       // toolbar: plane / fly
-private val TOOL_INVESTIGATE = R(232.5f, 163f, 41.75f, 32f)  // toolbar: magnifying glass
-private val TOOL_CRIME = R(274.25f, 163f, 41.75f, 32f)       // toolbar: crime computer
-private val CLOCK = R(4f, 13f, 141f, 30f)                    // top-left city name / clock box
-private val CRT_COMPUTE = R(162f, 84f, 142f, 11f)          // crime computer: the COMPUTE row
-private val TRAVEL_LIST = R(3f, 12f, 143f, 92f)            // travel screen: the destination dropdown
+private val TOOL_DEPART = Rect(190.75f, 163f, 41.75f, 32f)       // toolbar: plane / fly
+private val TOOL_INVESTIGATE = Rect(232.5f, 163f, 41.75f, 32f)  // toolbar: magnifying glass
+private val TOOL_CRIME = Rect(274.25f, 163f, 41.75f, 32f)       // toolbar: crime computer
+private val CLOCK = Rect(4f, 13f, 141f, 30f)                    // top-left city name / clock box
+private val CRT_COMPUTE = Rect(162f, 84f, 142f, 11f)          // crime computer: the COMPUTE row
+private val TRAVEL_LIST = Rect(3f, 12f, 143f, 92f)            // travel screen: the destination dropdown
 
 // The five CRT trait rows (image-relative y = 9 + i*10 inside the CRT box at 150,16 → absolute).
-private fun crtRow(i: Int) = R(162f, 24f + i * 10f, 142f, 11f)
+private fun crtRow(i: Int) = Rect(162f, 24f + i * 10f, 142f, 11f)
 private fun rowIndexOf(cat: String) = when (cat) { "sex" -> 0; "hobby" -> 1; "hair" -> 2; "feature" -> 3; else -> 4 }
 private fun rowLabelOf(cat: String) = listOf("SEX", "HOBBY", "HAIR", "FEATURE", "VEHICLE")[rowIndexOf(cat)]
 private fun compVal(s: GameState, cat: String) = when (cat) {

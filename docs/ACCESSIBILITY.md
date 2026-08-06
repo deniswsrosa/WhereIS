@@ -15,8 +15,18 @@ against the fixed 320×200 pixel-art canvas.
   cue ("Warrant issued", "The thief got away", …) for deaf / hard-of-hearing or muted-context play.
   Off by default; saved with the career.
 - **Screen-reader labels.** Interactive controls carry a `contentDescription` for TalkBack — menu
-  items, the Yes/No and dialog buttons, and the "Choose a game" picker rows (continue / delete /
-  new game).
+  items, the Yes/No and dialog buttons, the "Choose a game" picker rows (continue / delete /
+  new game), the SEE/DEPART/INVESTIGATE/CRIME toolbar (including the locked-by-tour and
+  SEE→HIDE states), the DEPART destination list, the INVESTIGATE venue picker, and the CRIME
+  computer's SEX/HOBBY/HAIR/FEATURE/VEHICLE/COMPUTE rows.
+- **Described, not just present, imagery.** Every `PixelImage` call site now passes an explicit
+  `contentDescription`: witness portraits read "Witness: <occupation>", suspect portraits and
+  mugshots read "Portrait/Mugshot of <name>", city art reads "Photo of <city>", and the sighting/
+  chase story beats (masked face, thug, burglar, cops, escort, jail) are narrated on their
+  container so TalkBack gets one description per beat instead of a raw asset slug. Purely
+  decorative art (toolbar strip, world-map backdrop, printer/computer chrome, splash screens,
+  the DossierCard badge photo) passes `contentDescription = null` so TalkBack skips it instead of
+  reading internal asset filenames.
 - **48 dp touch targets** on the off-canvas UI — dialog buttons (`DosButton`) and the picker rows
   use `minimumInteractiveComponentSize()` / a 48 dp minimum height without changing their look.
 - **16 KB page size.** The app ships no native `.so` libraries (pure Kotlin/Compose), so it is
@@ -27,6 +37,12 @@ against the fixed 320×200 pixel-art canvas.
   Activity is not recreated on those changes.
 
 ## Deliberate trade-offs (documented, not yet "done")
+
+- **New TalkBack strings aren't translated yet.** They're routed through `Strings.ui(...)` (the
+  same `"ui:<english>"`-keyed catalog every other chrome string uses), so they degrade cleanly to
+  English rather than a raw id — but no `ui:` key has been added to the 10 non-English catalogs
+  for them yet. A translation pass (same workflow as the rest of `ui.json`/`ui2.json`) is a
+  follow-up; it does not block release since the English fallback is always correct.
 
 - **Colour is not the only signal — mostly.** Win vs. loss differ structurally (jail art + report
   text), and cues carry captions. The in-canvas toolbar's *green selection border* is still
