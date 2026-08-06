@@ -121,12 +121,13 @@ fun TitleScreen(vm: ClaraViewModel) = VirtualScreen { v ->
  */
 
 // Interior of the white paper sheet in the 320x200 canvas (measured from hq_screen.png:
-// the clean sheet spans x≈23..122, y≈97..146; the printer body begins at y≈148). We clip a
-// hair inside that so no printed line ever renders under the printer's front lip.
-private const val PAPER_X = 22f
+// the sheet's left edge line is x=22, its interior x=23..120, y≈97..146; the printer body
+// begins at y≈148). The overlay starts just inside the edge line (keeping it visible) and
+// runs to the sheet's bottom so it also covers the baked-in paper-guide marks at x24..29.
+private const val PAPER_X = 23f
 private const val PAPER_Y = 98f
-private const val PAPER_W = 98f
-private const val PAPER_H = 45f
+private const val PAPER_W = 97f
+private const val PAPER_H = 49f
 
 private val SIGN_ON_PROMPT = listOf("Detective on duty,", "please enter your name:")
 
@@ -260,7 +261,9 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
     // fixed (flush with the printer's front lip); the top edge is what moves as the sheet grows.
     v.At(PAPER_X, (PAPER_Y + PAPER_H) - paperGrownH, PAPER_W, paperGrownH) {
         Column(
-            Modifier.fillMaxSize().background(Vga.White).padding(horizontal = v.w(2), vertical = v.w(1))
+            // Wider start padding so the printout clears the sprocket strip on the left.
+            Modifier.fillMaxSize().background(Vga.White)
+                .padding(start = v.w(4), end = v.w(2), top = v.w(1), bottom = v.w(1))
                 .verticalScroll(scroll)
         ) {
             printed.forEach { Text(it, style = paperFont) }
@@ -310,6 +313,10 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
             YellowButton(v, "No") { printed.add("N"); printed.add(""); stage = ST_PROMPT }
         }
     }
+    // Menu bar, drawn last so it stays tappable above the gate stages' fullscreen
+    // click-catchers (the art leaves the top strip blank for it, like every other screen).
+    v.At(0, 0, 320, 11) { GameMenuBar(v, vm) }
+    OverlayHost(v, vm)
 }
 
 /** DOS-style dialog button: yellow fill, 1px black border with a small drop shadow,
