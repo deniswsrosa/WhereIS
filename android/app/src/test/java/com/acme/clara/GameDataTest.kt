@@ -97,10 +97,12 @@ class GameDataTest {
         assertEquals("Chief Director", GameData.ranks.last())
         assertEquals("last rank index matches LAST_RANK", Progression.LAST_RANK, GameData.ranks.lastIndex)
         assertTrue(GameData.promotionQuiz.isNotEmpty())
-        for ((q, a) in GameData.promotionQuiz) {
-            assertTrue("quiz question should have a blank", q.contains("_"))
-            assertTrue("quiz answer blank", a.isNotBlank())
+        for (item in GameData.promotionQuiz) {
+            assertTrue("quiz question should have a blank", item.question.contains("_"))
+            assertTrue("quiz answer blank", item.answer.isNotBlank())
         }
+        assertEquals("quiz ids are unique", GameData.promotionQuiz.size,
+            GameData.promotionQuiz.map { it.id }.distinct().size)
     }
 
     @Test fun thirtyCitiesAllOnTheWorldMap() {

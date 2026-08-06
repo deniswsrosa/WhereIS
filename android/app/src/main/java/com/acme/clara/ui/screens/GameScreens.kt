@@ -43,6 +43,7 @@ import com.acme.clara.data.Progression
 import com.acme.clara.data.WorldMap
 import com.acme.clara.game.ClaraViewModel
 import com.acme.clara.game.Overlay
+import com.acme.clara.i18n.Strings
 import com.acme.clara.ui.*
 import com.acme.clara.ui.theme.Vga
 
@@ -1376,6 +1377,12 @@ internal fun promotionPerkLine(rankIndex: Int): String {
     return "As ${GameData.ranks[rankIndex]}, the trail now runs $cities cities — a longer chase, more clues to read."
 }
 
+/** Lowercased with combining diacritics stripped, for accent-insensitive text comparison
+ *  (a translated quiz answer like "Nilo" or "Bagdá" shouldn't fail to match over one accent). */
+private fun foldDiacritics(s: String): String =
+    java.text.Normalizer.normalize(s.lowercase(), java.text.Normalizer.Form.NFD)
+        .replace(Regex("\\p{Mn}+"), "")
+
 @Composable
 fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f) { v ->
     val s = vm.s
@@ -1434,7 +1441,7 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
             s.pendingPromotion -> {
                 typeAll(listOf(
                     "Use the World Almanac and Book of Facts to help you find the missing word in the following sentence:",
-                    quiz.first,
+                    Strings.quizQuestion(quiz),
                 ))
                 stage = 2
             }
@@ -1446,7 +1453,9 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     }
     LaunchedEffect(stage) {
         if (stage == 3) {
-            val correct = input.trim().equals(quiz.second, ignoreCase = true)
+            // Accent-insensitive: a translated answer (e.g. Portuguese "Nilo") shouldn't fail
+            // just because a mobile keyboard made the diacritic (if any) awkward to type.
+            val correct = foldDiacritics(input.trim()) == foldDiacritics(Strings.quizAnswer(quiz))
             if (correct) {
                 vm.resolvePromotion(true)
                 // P4: name what the rank actually changes — route length is the real, coded
@@ -1465,7 +1474,7 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
             } else {
                 // DOS re-asks the same question until it's answered correctly
                 // (dos_quiz_incorrect_try_again.png) — the promotion stays attainable
-                typeAll(listOf("That is incorrect.", "Please try again.", quiz.first))
+                typeAll(listOf("That is incorrect.", "Please try again.", Strings.quizQuestion(quiz)))
                 stage = 2
             }
         }

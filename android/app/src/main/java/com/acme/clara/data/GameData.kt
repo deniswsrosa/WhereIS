@@ -339,19 +339,22 @@ object GameData {
     val CLARA_JAILED get() = t("You've captured the ring-leader herself - Clara San Diego is behind bars for good!")
     val HALL_OF_FAME get() = t("Congratulations - you've earned a place in the Interpol Hall of Fame!")
 
-    // Promotion quiz: almanac fill-in-the-blank (matched case-insensitively).
+    // Promotion quiz: almanac fill-in-the-blank (matched case-insensitively). [id] is a stable key
+    // for localizing the question + answer independently — see Strings.quiz().
     val promotionQuiz = listOf(
-        "______ Island is the \"mainland\" of Japan. (See Japan, Geography: Topography)" to "Honshu",
-        "The capital of Iraq, on the Tigris River, is ______. (See Iraq, Geography)" to "Baghdad",
-        "The ______ River is the longest river in Egypt and in all of Africa." to "Nile",
-        "Mount ______ is the highest mountain in the world, in the Himalayas of Nepal." to "Everest",
-        "The smallest and oldest republic in Europe is San ______." to "Marino",
-        "______ is the capital of Norway and its major port." to "Oslo",
-        "The famous opera house with sail-shaped roofs is found in ______, Australia." to "Sydney",
-        "Machu Picchu, the lost city of the Incas, is located in ______. (See Peru)" to "Peru",
-        "The Comoros island capital of ______ lies between Madagascar and Africa." to "Moroni",
-        "______ is the island nation south of India famous for tea and cinnamon." to "Sri Lanka",
-        "Red Square and St. Basil's cathedral are landmarks of ______." to "Moscow",
-        "The ______ Canal in Egypt connects the Mediterranean and the Red Sea." to "Suez",
+        QuizItem("japan_mainland", "______ Island is the \"mainland\" of Japan. (See Japan, Geography: Topography)", "Honshu"),
+        QuizItem("iraq_capital", "The capital of Iraq, on the Tigris River, is ______. (See Iraq, Geography)", "Baghdad"),
+        QuizItem("egypt_river", "The ______ River is the longest river in Egypt and in all of Africa.", "Nile"),
+        QuizItem("everest", "Mount ______ is the highest mountain in the world, in the Himalayas of Nepal.", "Everest"),
+        QuizItem("san_marino", "The smallest and oldest republic in Europe is San ______.", "Marino"),
+        QuizItem("norway_capital", "______ is the capital of Norway and its major port.", "Oslo"),
+        QuizItem("sydney_opera", "The famous opera house with sail-shaped roofs is found in ______, Australia.", "Sydney"),
+        QuizItem("machu_picchu", "Machu Picchu, the lost city of the Incas, is located in ______. (See Peru)", "Peru"),
+        QuizItem("comoros_capital", "The Comoros island capital of ______ lies between Madagascar and Africa.", "Moroni"),
+        QuizItem("sri_lanka", "______ is the island nation south of India famous for tea and cinnamon.", "Sri Lanka"),
+        QuizItem("moscow", "Red Square and St. Basil's cathedral are landmarks of ______.", "Moscow"),
+        QuizItem("suez_canal", "The ______ Canal in Egypt connects the Mediterranean and the Red Sea.", "Suez"),
     )
 }
+
+data class QuizItem(val id: String, val question: String, val answer: String)

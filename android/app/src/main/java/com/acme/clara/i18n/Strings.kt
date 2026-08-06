@@ -98,4 +98,12 @@ object Strings {
         args.forEachIndexed { i, a -> s = s.replace("{$i}", a?.toString() ?: "") }
         return s
     }
+
+    /** Localized promotion-quiz text. The answer MUST use this too, not the English fallback
+     *  directly — a translated question expects its answer in the same language (e.g. a
+     *  Portuguese player types "Nilo", not "Nile"). */
+    fun quizQuestion(item: com.acme.clara.data.QuizItem): String =
+        if (lang == "en") item.question else active["quiz.${item.id}.q"] ?: item.question
+    fun quizAnswer(item: com.acme.clara.data.QuizItem): String =
+        if (lang == "en") item.answer else active["quiz.${item.id}.a"] ?: item.answer
 }
