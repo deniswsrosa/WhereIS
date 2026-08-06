@@ -89,8 +89,8 @@ keytool -genkeypair -v -keystore ~/keystores/clara-upload.jks \
 #   keyPassword=…
 ```
 
-`android/app/build.gradle.kts` still needs a `signingConfigs.release` block wired to that
-properties file (currently only the debug config exists) — ask and I'll add it. Then:
+Release signing is **already wired**: `signingConfigs.release` reads
+`android/keystore.properties` (git-ignored) when it exists. To rebuild the bundle:
 
 ```bash
 cd android && ./gradlew bundleRelease
@@ -102,7 +102,7 @@ Version is `versionCode 1` / `versionName "1.0"` — bump `versionCode` on every
 ## 8. Remaining loose ends before going live
 
 - [ ] Application ID decision (see top)
-- [ ] Release signing config + keystore
+- [x] Release signing config + keystore (upload key at `~/keystores/clara-upload.jks`, credentials in `android/keystore.properties` — BACK BOTH UP)
 - [ ] Play Billing integration for the expansion unlock (`ClaraViewModel.unlockExpansion()`
       is the entry point; the debug menu's "Paid version" toggle must never ship — it's
       already behind `BuildConfig.DEBUG`, so release builds are safe)
