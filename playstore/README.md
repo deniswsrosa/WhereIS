@@ -30,7 +30,7 @@ Locales prepared: `en-US` (default), `pt-BR`, `es-ES`, `fr-FR`, `de-DE`, `it-IT`
 | Console field    | File                                        | Spec              |
 |------------------|---------------------------------------------|-------------------|
 | App icon         | `graphics/icon_512.png`                     | 512×512 PNG       |
-| Feature graphic  | `graphics/feature_graphic_1024x500.png`     | 1024×500 PNG      |
+| Feature graphic  | `graphics/feature_graphic_1024x500_greatest_chase.png`     | 1024×500 PNG      |
 | Phone screenshots| `graphics/screenshots/phone/01…08.png`      | 8 framed shots, 1920×1080 |
 
 Store-style marketing slides over the key-art backdrop: slide 1 is the hook (brand,
