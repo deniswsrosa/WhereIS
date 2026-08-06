@@ -1073,6 +1073,17 @@ class ClaraViewModel : ViewModel() {
     // ---------- debug-only test shortcuts (menu entry gated behind BuildConfig.DEBUG — never
     // reachable in a release build; see GameMenuBar's Debug menu) ----------
 
+    /** Skip sign-on/briefing entirely and land already at the hideout doorstep — for a debug
+     *  build's cold start (a fresh install with no save), so testing the chase/result flow never
+     *  needs playing through name-entry and the whole clue-gathering loop first. */
+    fun devAutoStart() {
+        if (profileId == null) profileId = newProfileId()
+        // tutorialDone = true: skip the Rookie tour too — its spotlight otherwise swallows taps
+        // outside itself, which just gets in the way of jumping straight into the Debug menu.
+        s = GameState(detectiveName = "Tester", tutorialDone = true)
+        devJumpToHideoutDoorstep()
+    }
+
     /** Jump straight to the hideout with two of its three venues already (harmlessly) visited, so
      *  opening the one remaining venue immediately catches the suspect — skips the whole
      *  clue-gathering loop this normally takes, for fast manual testing of the chase/result flow. */

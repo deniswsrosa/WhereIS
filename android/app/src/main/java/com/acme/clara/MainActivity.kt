@@ -66,7 +66,10 @@ fun ClaraApp() {
         val store = SaveStore(context)
         vm.bindRepository(store)
         when (val outcome = decideLaunch(store.list())) {
-            is LaunchOutcome.SignOn -> Unit
+            // Debug builds skip sign-on on a fresh install (no save yet) and land straight at
+            // the hideout doorstep — chase/result testing shouldn't need playing through
+            // name-entry and the whole clue-gathering loop on every reinstall.
+            is LaunchOutcome.SignOn -> if (BuildConfig.DEBUG) vm.devAutoStart()
             is LaunchOutcome.Continue -> store.load(outcome.id)?.let { vm.resume(it) }
             is LaunchOutcome.Choose -> vm.toChooseGame()
         }

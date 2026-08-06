@@ -237,8 +237,16 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
         ST_GATE2 -> Box(Modifier.fillMaxSize().clickable { stage = ST_ASSIGN })
         ST_BEGIN -> Box(Modifier.fillMaxSize().clickable { onBegin() })
     }
-    // Clean sheet overlay covering the baked prompt, hosting the live printout.
-    v.At(PAPER_X, PAPER_Y, PAPER_W, PAPER_H) {
+    // Ratcheted: the sheet grows from a small starting size (paper feeding out of the printer)
+    // and freezes for good once it reaches the cap — same growth beat as the Result screen's
+    // printer. Real scrolling (below) handles anything past that; this height is purely visual.
+    var peakRows by remember { mutableStateOf(0) }
+    val liveRows = printed.size + (if (typing.isNotEmpty()) 1 else 0) + (if (stage == ST_NAME) 1 else 0)
+    peakRows = maxOf(peakRows, liveRows).coerceAtMost(5)
+    val paperGrownH = (6f + peakRows * 8.05f).coerceAtLeast(16f).coerceAtMost(PAPER_H)
+    // Clean sheet overlay covering the baked prompt, hosting the live printout. Bottom edge stays
+    // fixed (flush with the printer's front lip); the top edge is what moves as the sheet grows.
+    v.At(PAPER_X, (PAPER_Y + PAPER_H) - paperGrownH, PAPER_W, paperGrownH) {
         Column(
             Modifier.fillMaxSize().background(Vga.White).padding(horizontal = v.w(2), vertical = v.w(1))
                 .verticalScroll(scroll)
@@ -1489,12 +1497,12 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     LaunchedEffect(answerRevealed) {
         if (answerRevealed) { delay(80); runCatching { focus.requestFocus() } }
     }
-    val scroll = rememberScrollState()
+    val paperScroll = rememberScrollState()
     // Snap (not animate) to the bottom: a new LaunchedEffect fires on every keystroke of the
     // typewriter effect (every ~16ms), far faster than an animated scroll can settle — so the
     // animated version always lagged behind, leaving the line actually being typed below the
     // visible paper until it finished and the scroll caught up.
-    LaunchedEffect(printed.size, typing, input, stage) { scroll.scrollTo(scroll.maxValue) }
+    LaunchedEffect(printed.size, typing, input, stage) { paperScroll.scrollTo(paperScroll.maxValue) }
 
     v.At(0, 0, 320, 11) { GameMenuBar(v, vm) }
     // city name box
@@ -1503,14 +1511,19 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     v.At(2, 44, 146, 154) {
         Box(Modifier.fillMaxSize()) {
             PixelImage("crime_printer", Modifier.fillMaxSize())
-            val lineH = 7.82f   // matches v.text(6.8f)'s actual lineHeight (6.8 * 1.15), not a rougher estimate
+            val lineH = 7.82f   // matches v.text(6.8f)'s actual lineHeight (6.8 * 1.15)
             val showInput = stage == 2 && answerRevealed
-            // 10, not 12: leaves enough of the height budget free for the answer field's own row
-            // below (when showing) without the total exceeding the sheet's 96px cap — that mismatch
-            // (needing ~91-99px, capped at 96) was cutting off the top line or two.
-            val shown = printed.takeLast(10) + (if (typing.isNotEmpty()) listOf(typing) else emptyList())
-            val extraRows = if (showInput) 1 else 0
-            val sheetH = (10f + (shown.size + extraRows) * lineH).coerceAtLeast(29f).coerceAtMost(96f)
+            // Ratcheted: the sheet's height only ever grows (paper feeding out of the printer),
+            // and freezes for good once it reaches the cap — it used to be recomputed from
+            // whatever was on the currently-visible tail (typing line appearing/disappearing,
+            // the answer field appearing), so it kept shrinking and regrowing by a line's worth
+            // right at the cap, which read as a flicker. Actual overflow is now handled by real
+            // scrolling (below) instead of an estimated line-height budget, so this height is
+            // purely the visual "how tall is the paper right now" — it doesn't need to be exact.
+            var peakRows by remember { mutableStateOf(0) }
+            val liveRows = printed.size + (if (typing.isNotEmpty()) 1 else 0) + (if (showInput) 1 else 0)
+            peakRows = maxOf(peakRows, liveRows).coerceAtMost(10)
+            val sheetH = (10f + peakRows * lineH).coerceAtLeast(29f).coerceAtMost(96f)
             v.At(14, 102f - sheetH, 113, sheetH) {
                 Box(Modifier.fillMaxSize().background(Vga.White).border(BorderStroke(v.w(0.7f), Vga.Black))) {
                     Canvas(Modifier.fillMaxSize()) {
@@ -1523,9 +1536,13 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
                             y -= unit * 6.2f
                         }
                     }
-                    Column(Modifier.fillMaxSize().padding(start = v.w(8), end = v.w(7), top = v.w(2)),
-                        verticalArrangement = Arrangement.Bottom) {
-                        shown.forEach { Text(it, style = v.text(6.8f, color = Vga.Black), maxLines = 1) }
+                    Column(
+                        Modifier.fillMaxSize().padding(start = v.w(8), end = v.w(7), top = v.w(2))
+                            .verticalScroll(paperScroll),
+                        verticalArrangement = Arrangement.Bottom,
+                    ) {
+                        printed.forEach { Text(it, style = v.text(6.8f, color = Vga.Black), maxLines = 1) }
+                        if (typing.isNotEmpty()) Text(typing, style = v.text(6.8f, color = Vga.Black), maxLines = 1)
                         // promotion-quiz answer typed directly onto the paper, revealed by the
                         // gray-strip "tap to continue" gate below rather than appearing on its own
                         if (showInput) BasicTextField(
@@ -1578,7 +1595,7 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     // happens next" zone.
     v.At(150, 172, 168, 28) {
         Box(
-            Modifier.fillMaxSize().background(Vga.LightGray).border(BorderStroke(v.w(1), Vga.White)),
+            Modifier.fillMaxSize().background(Vga.White).border(BorderStroke(v.w(1), Vga.Black)),
             contentAlignment = Alignment.Center,
         ) {
             when {
