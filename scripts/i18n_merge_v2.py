@@ -17,7 +17,8 @@ BUDGETS = [
     (re.compile(r"^ui:(Game|Options|Bureau|Dossiers)$"), 9),
     (re.compile(r"^ui:(SEX|HOBBY|HAIR|FEATURE|VEHICLE)$"), 8),
     (re.compile(r"^ui:COMPUTE$"), 10),
-    (re.compile(r"^ui:(Yes|No|CLOSE|SHARE|HIDE|GOT IT)$"), 8),
+    # CLOSE/GOT IT render via self-sizing wrap-content buttons (DosButton/Pill) -- no hard cap.
+    (re.compile(r"^ui:(Yes|No|SHARE|HIDE)$"), 8),
     (re.compile(r"^tval\."), 14),
     (re.compile(r"^venue\."), 16),
     (re.compile(r"^rank\."), 18),
