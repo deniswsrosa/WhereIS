@@ -1070,6 +1070,40 @@ class ClaraViewModel : ViewModel() {
         autosave()
     }
 
+    // ---------- debug-only test shortcuts (menu entry gated behind BuildConfig.DEBUG — never
+    // reachable in a release build; see GameMenuBar's Debug menu) ----------
+
+    /** Jump straight to the hideout with two of its three venues already (harmlessly) visited, so
+     *  opening the one remaining venue immediately catches the suspect — skips the whole
+     *  clue-gathering loop this normally takes, for fast manual testing of the chase/result flow. */
+    fun devJumpToHideoutDoorstep() {
+        if (s.route.isEmpty() || s.culprit == null) newCase()
+        val culprit = s.culprit ?: return
+        s = s.copy(
+            phase = Phase.CITY, overlay = null, openClue = null,
+            warrantFor = culprit, computed = true,
+            currentCity = s.hideout, progress = s.route.size - 1, onTrack = true,
+            visited = emptySet(),
+        )
+        buildVenues()
+        // Two of the three venues "tried" without running their real capture-odds check (which is
+        // partly random on the 2nd try) — deterministic, so the one remaining venue is guaranteed
+        // to catch the suspect the moment it's opened.
+        s = s.copy(visited = s.venues.indices.take(2).toSet())
+        autosave()
+    }
+
+    /** Jump straight to a finished, winning case on the Result screen — [promotion] also exercises
+     *  the promotion-quiz flow instead of going straight to "ready for your next case?". */
+    fun devJumpToResultWin(promotion: Boolean) {
+        if (s.route.isEmpty() || s.culprit == null) newCase()
+        val culprit = s.culprit ?: return
+        s = s.copy(overlay = null, openClue = null, warrantFor = culprit, computed = true)
+        win(culprit)
+        s = s.copy(pendingPromotion = promotion)
+        autosave()
+    }
+
     /** The promotion quiz was answered: bump the rank only when correct (like the original). */
     fun resolvePromotion(correct: Boolean) {
         val newRank = if (correct && s.rankIndex < GameData.ranks.lastIndex) s.rankIndex + 1 else s.rankIndex

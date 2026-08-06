@@ -90,6 +90,15 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
                 vm.openOverlay(Overlay.Dossier(su))
             }
         })
+        // Dev-only test shortcuts — never compiled into a release build. Labels stay in plain
+        // English on purpose (a developer tool, not player-facing content).
+        if (com.acme.clara.BuildConfig.DEBUG) {
+            MenuTitle(v, "Debug", listOf(
+                MenuItemDef("Jump: hideout doorstep") { vm.devJumpToHideoutDoorstep() },
+                MenuItemDef("Jump: result (win+promo)") { vm.devJumpToResultWin(true) },
+                MenuItemDef("Jump: result (win)") { vm.devJumpToResultWin(false) },
+            ))
+        }
     }
 }
 
