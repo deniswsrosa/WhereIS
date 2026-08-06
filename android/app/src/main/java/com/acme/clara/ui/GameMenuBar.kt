@@ -480,6 +480,15 @@ internal fun RankProgress(v: Virtual, s: com.acme.clara.game.GameState) {
     }
 }
 
+/** One almanac fact: a small cyan label over its white value — stacked, so long values
+ *  (flag descriptions especially) wrap naturally in the detail pane's column. */
+@Composable
+private fun AlmanacFact(v: Virtual, label: String, value: String) {
+    Text(label, style = v.text(6, color = Vga.LightCyan, bold = true))
+    Text(value, style = v.text(7.5f, color = Vga.White))
+    Spacer(Modifier.height(v.w(2.5f)))
+}
+
 /* World Database (the in-game almanac) — a browsable reference over every place the game
  * knows: the original 30 plus both expansion rosters. Free careers see the full list, but
  * only the original 30 open — expansion entries stay dimmed until the paid unlock. It
@@ -538,27 +547,34 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                 DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
                     style = v.text(9, bold = true)) { vm.dismissOverlay() }
             } else {
-                Text(entry.name.uppercase(), style = v.text(8.5f, color = Vga.LightGreen, bold = true))
-                Spacer(Modifier.height(v.w(2)))
-                Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
-                    // The place's postcard (or the procedural VGA card when no photo shipped),
-                    // height-capped so the facts below it stay above the fold.
-                    CityPhoto(entry.name, v,
-                        Modifier.height(v.w(56)).aspectRatio(1.5f)
-                            .align(Alignment.CenterHorizontally))
-                    Spacer(Modifier.height(v.w(3)))
-                    StatRow(v, Strings.ui("Region"), entry.region)
-                    StatRow(v, Strings.ui("Landmark"), entry.landmark)
-                    // The structured attributes the clue engine draws on, surfaced as reference
-                    // rows too (all optional — the fallback CityInfo has none of them).
-                    entry.flag?.let { StatRow(v, Strings.ui("Flag"), it) }
-                    entry.currency?.let { StatRow(v, Strings.ui("Currency"), it.removePrefix("the ")) }
-                    entry.greeting?.let {
+                Spacer(Modifier.height(v.w(3)))
+                // Two-pane entry, like a case-file card: the postcard pinned on the left with
+                // the place's name as its caption, the facts + description reading on the right.
+                Row(Modifier.weight(1f).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(v.w(7))) {
+                    Column(Modifier.width(v.w(108)), horizontalAlignment = Alignment.CenterHorizontally) {
+                        // The postcard (or the procedural VGA card when no photo shipped).
+                        CityPhoto(entry.name, v,
+                            Modifier.fillMaxWidth().aspectRatio(1.5f)
+                                .border(BorderStroke(v.w(0.8f), Vga.White)))
                         Spacer(Modifier.height(v.w(2)))
-                        Text(it, style = v.text(7, color = Vga.LightCyan))
+                        Text(entry.name.uppercase(), style = v.text(8.5f, color = Vga.LightGreen, bold = true),
+                            textAlign = TextAlign.Center)
+                        Text(entry.region, style = v.text(6.5f, color = Vga.LightCyan),
+                            textAlign = TextAlign.Center)
                     }
-                    Spacer(Modifier.height(v.w(3)))
-                    Text(entry.description, style = v.text(7.5f, color = Vga.White))
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+                        // The structured attributes the clue engine draws on, surfaced as
+                        // reference facts (all optional — the fallback CityInfo has none).
+                        AlmanacFact(v, Strings.ui("Landmark"), entry.landmark)
+                        entry.flag?.let { AlmanacFact(v, Strings.ui("Flag"), it) }
+                        entry.currency?.let { AlmanacFact(v, Strings.ui("Currency"), it.removePrefix("the ")) }
+                        entry.greeting?.let {
+                            Text(it, style = v.text(6.5f, color = Vga.LightCyan))
+                            Spacer(Modifier.height(v.w(3)))
+                        }
+                        Text(entry.description, style = v.text(7.5f, color = Vga.White))
+                    }
                 }
                 Spacer(Modifier.height(v.w(3)))
                 Row(horizontalArrangement = Arrangement.spacedBy(v.w(6))) {
