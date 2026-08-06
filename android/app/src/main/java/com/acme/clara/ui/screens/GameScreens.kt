@@ -231,6 +231,18 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
     val paperFont = v.text(7, color = Vga.Black)
 
     PixelImage("hq_screen", Modifier.fillMaxSize())
+    // The header box's "HEADQUARTERS / Monday, 9 a.m." used to be baked into hq_screen.png;
+    // now drawn at runtime (translatable, matching the same box style CityClockBox uses
+    // elsewhere) — a fresh case's clock is always Monday 9 a.m., so clockLabel() just works.
+    v.At(4, 13, 141, 30, Alignment.Center) {
+        Box(Modifier.fillMaxSize().background(Vga.Black)
+            .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(2)), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(Strings.ui("HEADQUARTERS"), style = v.text(9, color = Vga.White, bold = true))
+                Text(vm.clockLabel(), style = v.text(8, color = Vga.White))
+            }
+        }
+    }
     // gate stages: whole screen tappable to advance (like "press any key or button")
     when (stage) {
         ST_GATE1 -> Box(Modifier.fillMaxSize().clickable { stage = ST_FLASH })

@@ -49,7 +49,7 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
     val s = vm.s
     val menuCtx = LocalContext.current
     Row(
-        Modifier.fillMaxWidth().height(v.w(11)).background(Vga.LightGray)
+        Modifier.fillMaxWidth().height(v.w(11)).background(Vga.White)
             .padding(horizontal = v.w(3)),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(v.w(6))
@@ -82,7 +82,9 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
             MenuItemDef(Strings.ui("Passport")) { vm.openOverlay(Overlay.Passport) },
             MenuItemDef(Strings.ui("Most Wanted")) { vm.openOverlay(Overlay.MostWanted) },
             MenuItemDef(Strings.ui("Commendations")) { vm.openOverlay(Overlay.Commendations) },
-            MenuItemDef(Strings.ui("Hall of Fame")) { vm.openOverlay(Overlay.HallOfFame) },
+            // Disabled for now — kept visible (dimmed, no-op) rather than removed, so it isn't
+            // a mystery when it comes back rather than just vanishing.
+            MenuItemDef(Strings.ui("Hall of Fame"), enabled = false) {},
         ))
         // Dossiers menu lists the ten suspects under their EXE short names
         MenuTitle(v, Strings.ui("Dossiers"), GameData.suspects.mapIndexed { i, su ->
