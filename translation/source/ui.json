@@ -2,7 +2,7 @@
  "ui:A witness described the crook. Open the crime computer to log what you heard â one detail per city.": "A witness described the crook. Open the crime computer to log what you heard â one detail per city.",
  "ui:A witness said the thief's {0} is â{1}â. Tap the {2} row, then tap it again until it reads {1}.": "A witness said the thief's {0} is â{1}â. Tap the {2} row, then tap it again until it reads {1}.",
  "ui:About Clara...": "About Clara...",
- "ui:Acme": "Acme",
+ "ui:WDB": "WDB",
  "ui:CHASE THE SUSPECT": "CHASE THE SUSPECT",
  "ui:Commendations": "Commendations",
  "ui:Detective Roster": "Detective Roster",
@@ -37,6 +37,6 @@
  "ui:WHERE NEXT?": "WHERE NEXT?",
  "ui:WRONG TURN": "WRONG TURN",
  "ui:World Database": "World Database",
- "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open Acme â¸ World Database to read up on each destination. Then tap the plane to fly there.": "Your witnesses hinted where the suspect fled next. Not sure of a place? Open Acme â¸ World Database to read up on each destination. Then tap the plane to fly there.",
+ "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open WDB ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Your witnesses hinted where the suspect fled next. Not sure of a place? Open WDB ▸ World Database to read up on each destination. Then tap the plane to fly there.",
  "ui:try it": "try it"
 }

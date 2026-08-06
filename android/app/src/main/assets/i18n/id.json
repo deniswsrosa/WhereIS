@@ -1527,7 +1527,7 @@
  "ui:WARRANT ISSUED": "SURAT PERINTAH TERBIT",
  "ui:WHERE NEXT?": "KE MANA SELANJUTNYA?",
  "ui:WRONG TURN": "SALAH ARAH",
- "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open Acme ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Para saksi memberi petunjuk ke mana tersangka kabur selanjutnya. Belum yakin soal suatu tempat? Buka Acme ▸ Basis Data Dunia untuk membaca tentang tiap tujuan. Lalu ketuk pesawat untuk terbang ke sana.",
+ "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open WDB ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Para saksi memberi petunjuk ke mana tersangka kabur selanjutnya. Belum yakin soal suatu tempat? Buka WDB ▸ Basis Data Dunia untuk membaca tentang tiap tujuan. Lalu ketuk pesawat untuk terbang ke sana.",
  "ui:try it": "coba",
  "ui:“{0}” — pick the matching destination.": "“{0}” — pilih tujuan yang cocok."
 }

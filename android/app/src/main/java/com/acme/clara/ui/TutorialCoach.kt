@@ -150,7 +150,7 @@ private fun lessonFor(s: GameState): Shown? {
 
     if (un("trail") && s.sawTrailClue) when (s.phase) {
         Phase.CITY, Phase.CRIME -> return Shown("trail", TOOL_DEPART, Strings.ui("CHASE THE SUSPECT"),
-            Strings.ui("Your witnesses hinted where the suspect fled next. Not sure of a place? Open Acme ▸ World Database to read up on each destination. Then tap the plane to fly there."), false)
+            Strings.ui("Your witnesses hinted where the suspect fled next. Not sure of a place? Open WDB ▸ World Database to read up on each destination. Then tap the plane to fly there."), false)
         Phase.TRAVEL -> {
             // On the map, remind the player of the witness's hint and spotlight the destination list.
             val clue = s.journal.lastOrNull { it.city == s.currentCity && it.kind == ClueKind.DESTINATION }?.text

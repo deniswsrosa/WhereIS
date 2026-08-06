@@ -1527,7 +1527,7 @@
  "ui:WARRANT ISSUED": "TUTUKLAMA EMRİ ÇIKTI",
  "ui:WHERE NEXT?": "SIRADA NERESİ?",
  "ui:WRONG TURN": "YANLIŞ YÖN",
- "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open Acme ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Tanıkların, şüphelinin sonra nereye kaçtığına dair ipucu verdi. Bir yerden emin değil misin? Her hedef hakkında bilgi almak için Acme ▸ Dünya Veritabanı'nı aç. Sonra oraya uçmak için uçağa dokun.",
+ "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open WDB ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Tanıkların, şüphelinin sonra nereye kaçtığına dair ipucu verdi. Bir yerden emin değil misin? Her hedef hakkında bilgi almak için WDB ▸ Dünya Veritabanı'nı aç. Sonra oraya uçmak için uçağa dokun.",
  "ui:try it": "dene",
  "ui:“{0}” — pick the matching destination.": "“{0}” — eşleşen hedefi seç."
 }

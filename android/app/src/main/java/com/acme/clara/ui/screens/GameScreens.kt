@@ -51,12 +51,12 @@ import com.acme.clara.ui.theme.Vga
  * Faithful to the original attract sequence, each stage on its own screen:
  * 1. three crowns + "Brøderbund Software Presents" alone · 2. black screen, the detective
  * walks across near the bottom · 3. black screen, the police squad marches through ·
- * 4. the ACME Detective Agency scene ("Clara's gang has pulled another caper!").
+ * 4. the World Detective Bureau scene ("Clara's gang has pulled another caper!").
  * Tap anywhere to skip to the title.
  */
 @Composable
 fun IntroScreen(vm: ClaraViewModel) = VirtualScreen { v ->
-    var stage by remember { mutableStateOf(0) }   // 0 crowns · 1 detective · 2 cops · 3 ACME
+    var stage by remember { mutableStateOf(0) }   // 0 crowns · 1 detective · 2 cops · 3 WDB
     var walkX by remember { mutableStateOf(-60f) }
     var frame by remember { mutableStateOf(0) }
     LaunchedEffect(Unit) {
@@ -65,7 +65,7 @@ fun IntroScreen(vm: ClaraViewModel) = VirtualScreen { v ->
         while (walkX < 330f) { delay(60); walkX += 4f; frame++ }
         stage = 2; walkX = -60f
         while (walkX < 330f) { delay(60); walkX += 5f; frame++ }
-        stage = 3                                      // ACME Detective Agency scene
+        stage = 3                                      // World Detective Bureau scene
         delay(4000)
         vm.introDone()
     }
@@ -78,7 +78,7 @@ fun IntroScreen(vm: ClaraViewModel) = VirtualScreen { v ->
             PixelImage("logo_denix", Modifier.fillMaxSize())
         }
         3 -> {
-            PixelImage("intro_acme_agency", Modifier.fillMaxSize())
+            PixelImage("intro_world_detective_bureau", Modifier.fillMaxSize())
             v.At(0, 11, 320, 11, Alignment.Center) {
                 Text("Clara's gang has struck again!",
                     style = v.text(7, color = Vga.LightRed, bold = true))
@@ -113,7 +113,7 @@ fun TitleScreen(vm: ClaraViewModel) = VirtualScreen { v ->
 }
 
 /* --------------------------- HQ PRINTER (sign-on + briefing) ---------------------------
- * Faithful to the original: the ACME HQ dot-matrix printer prints its messages onto one
+ * Faithful to the original: the WDB HQ dot-matrix printer prints its messages onto one
  * continuous sheet. On the first case it asks you to identify yourself, then — without ever
  * switching to a different screen — keeps printing the case briefing on the same paper.
  * The `hq_screen` art (printer body, header, sprocket-feed paper) is reused; we cover the

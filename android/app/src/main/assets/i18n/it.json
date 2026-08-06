@@ -1527,7 +1527,7 @@
  "ui:WARRANT ISSUED": "MANDATO EMESSO",
  "ui:WHERE NEXT?": "DOVE ORA?",
  "ui:WRONG TURN": "STRADA SBAGLIATA",
- "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open Acme ▸ World Database to read up on each destination. Then tap the plane to fly there.": "I tuoi testimoni ti hanno dato un indizio su dove è fuggito il sospettato. Non conosci un luogo? Apri Acme ▸ Banca Dati Mondiale per informarti su ogni destinazione. Poi tocca l'aereo per volare lì.",
+ "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open WDB ▸ World Database to read up on each destination. Then tap the plane to fly there.": "I tuoi testimoni ti hanno dato un indizio su dove è fuggito il sospettato. Non conosci un luogo? Apri WDB ▸ Banca Dati Mondiale per informarti su ogni destinazione. Poi tocca l'aereo per volare lì.",
  "ui:try it": "prova",
  "ui:“{0}” — pick the matching destination.": "“{0}” — scegli la destinazione corrispondente."
 }

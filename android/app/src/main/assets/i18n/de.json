@@ -1527,7 +1527,7 @@
  "ui:WARRANT ISSUED": "HAFTBEFEHL ERLASSEN",
  "ui:WHERE NEXT?": "WOHIN JETZT?",
  "ui:WRONG TURN": "FALSCHE SPUR",
- "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open Acme ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Deine Zeugen haben angedeutet, wohin der Verdächtige als Nächstes floh. Kennst du einen Ort nicht? Öffne Acme ▸ Weltdatenbank, um mehr über jedes Ziel zu erfahren. Tippe dann das Flugzeug an, um dorthin zu fliegen.",
+ "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open WDB ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Deine Zeugen haben angedeutet, wohin der Verdächtige als Nächstes floh. Kennst du einen Ort nicht? Öffne WDB ▸ Weltdatenbank, um mehr über jedes Ziel zu erfahren. Tippe dann das Flugzeug an, um dorthin zu fliegen.",
  "ui:try it": "ausprobieren",
  "ui:“{0}” — pick the matching destination.": "„{0}“ — wähle das passende Ziel."
 }

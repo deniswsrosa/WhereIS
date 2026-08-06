@@ -40,8 +40,8 @@ import com.acme.clara.ui.tappable
 import com.acme.clara.ui.theme.Vga
 
 /**
- * The "Choose a detective" picker — shown at launch when two or more careers exist. It's the ACME
- * agency itself: the office backdrop, a case file per detective (their agency ID photo, name, rank
+ * The "Choose a detective" picker — shown at launch when two or more careers exist. It's the WDB
+ * bureau itself: the office backdrop, a case file per detective (their agency ID photo, name, rank
  * and a case-progress meter). Tapping a file resumes the career; its ✕ retires the agent; the button
  * hires a new one. Composed like the rest of the game — panels over a pixel-art scene, VGA palette.
  */
@@ -50,8 +50,8 @@ fun ChooseGameScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     var refresh by remember { mutableStateOf(0) }
     val games = remember(refresh) { vm.savedGames() }
 
-    // The agency office, dimmed so the dossiers read over it (same scene the sign-on uses).
-    PixelImage("intro_acme_agency", Modifier.fillMaxSize(), ContentScale.FillBounds)
+    // The bureau office, dimmed so the dossiers read over it (same scene the sign-on uses).
+    PixelImage("intro_world_detective_bureau", Modifier.fillMaxSize(), ContentScale.FillBounds)
     Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.62f)))
 
     v.At(0, 0, 320, 200) {

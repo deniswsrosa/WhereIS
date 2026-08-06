@@ -1527,7 +1527,7 @@
  "ui:WARRANT ISSUED": "ARRESTATIEBEVEL",
  "ui:WHERE NEXT?": "WAAR NU NAARTOE?",
  "ui:WRONG TURN": "VERKEERDE AFSLAG",
- "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open Acme ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Je getuigen gaven een hint waar de verdachte daarna heen vluchtte. Weet je een plek niet? Open Acme ▸ Werelddatabase om over elke bestemming te lezen. Tik daarna op het vliegtuig om erheen te vliegen.",
+ "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open WDB ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Je getuigen gaven een hint waar de verdachte daarna heen vluchtte. Weet je een plek niet? Open WDB ▸ Werelddatabase om over elke bestemming te lezen. Tik daarna op het vliegtuig om erheen te vliegen.",
  "ui:try it": "probeer het",
  "ui:“{0}” — pick the matching destination.": "“{0}” — kies de bijpassende bestemming."
 }

@@ -1527,7 +1527,7 @@
  "ui:WARRANT ISSUED": "MANDAT ÉMIS",
  "ui:WHERE NEXT?": "PROCHAINE DESTINATION ?",
  "ui:WRONG TURN": "MAUVAISE PISTE",
- "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open Acme ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Vos témoins ont indiqué où le suspect a fui ensuite. Pas sûr d'un lieu ? Ouvrez Acme ▸ Base de données mondiale pour en savoir plus sur chaque destination. Puis touchez l'avion pour vous y rendre.",
+ "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open WDB ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Vos témoins ont indiqué où le suspect a fui ensuite. Pas sûr d'un lieu ? Ouvrez WDB ▸ Base de données mondiale pour en savoir plus sur chaque destination. Puis touchez l'avion pour vous y rendre.",
  "ui:try it": "essayer",
  "ui:“{0}” — pick the matching destination.": "« {0} » — choisissez la destination correspondante."
 }

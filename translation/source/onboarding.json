@@ -12,7 +12,7 @@
  "ui:MIND THE CLOCK": "MIND THE CLOCK",
  "ui:Three interviews — and look how far the clock jumped. You're on a deadline, so from here on you needn't question everyone: once you have a lead and a description, move on.": "Three interviews — and look how far the clock jumped. You're on a deadline, so from here on you needn't question everyone: once you have a lead and a description, move on.",
  "ui:CHASE THE SUSPECT": "CHASE THE SUSPECT",
- "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open Acme ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Your witnesses hinted where the suspect fled next. Not sure of a place? Open Acme ▸ World Database to read up on each destination. Then tap the plane to fly there.",
+ "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open WDB ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Your witnesses hinted where the suspect fled next. Not sure of a place? Open WDB ▸ World Database to read up on each destination. Then tap the plane to fly there.",
  "ui:WHERE NEXT?": "WHERE NEXT?",
  "ui:“{0}” — pick the matching destination.": "“{0}” — pick the matching destination.",
  "ui:Pick the destination your witnesses pointed to.": "Pick the destination your witnesses pointed to.",

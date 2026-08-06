@@ -1527,7 +1527,7 @@
  "ui:WARRANT ISSUED": "ОРДЕР ВЫДАН",
  "ui:WHERE NEXT?": "КУДА ДАЛЬШЕ?",
  "ui:WRONG TURN": "НЕ ТУДА",
- "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open Acme ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Свидетели подсказали, куда направился подозреваемый. Не знаете город? Откройте Acme ▸ Всемирная база данных и почитайте о каждом месте. Затем нажмите на самолёт, чтобы туда полететь.",
+ "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open WDB ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Свидетели подсказали, куда направился подозреваемый. Не знаете город? Откройте WDB ▸ Всемирная база данных и почитайте о каждом месте. Затем нажмите на самолёт, чтобы туда полететь.",
  "ui:try it": "попробовать",
  "ui:“{0}” — pick the matching destination.": "«{0}» — выберите подходящий пункт назначения."
 }

@@ -1527,7 +1527,7 @@
  "ui:WARRANT ISSUED": "ORDEN DE CAPTURA",
  "ui:WHERE NEXT?": "¿ADÓNDE AHORA?",
  "ui:WRONG TURN": "RUMBO EQUIVOCADO",
- "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open Acme ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Tus testigos dieron pistas de adónde huyó el sospechoso. ¿No conoces el lugar? Abre Acme ▸ Base de Datos Mundial para leer sobre cada destino. Luego toca el avión para volar allí.",
+ "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open WDB ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Tus testigos dieron pistas de adónde huyó el sospechoso. ¿No conoces el lugar? Abre WDB ▸ Base de Datos Mundial para leer sobre cada destino. Luego toca el avión para volar allí.",
  "ui:try it": "inténtalo",
  "ui:“{0}” — pick the matching destination.": "«{0}» — elige el destino que corresponda."
 }
