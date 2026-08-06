@@ -26,3 +26,4 @@ generated_imgs/
 # the curated evidence (FILMSTRIP.png, distinct_poses/, native_frames/) is tracked
 work/burglar_snapshots/*/f[0-9]*.png
 scripts/__pycache__/
+android/keystore.properties
