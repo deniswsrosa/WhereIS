@@ -385,8 +385,13 @@ run but n=1 per case.)
 - **No sound** anywhere (DOS has PC-speaker beeps for teletype, menus, chase).
 - **Menu bar Game/Options/Acme dropdown contents** unverified against DOS (Dossiers is
   done). Capture each menu in DOSBox and mirror.
-- **Travel drop-down grow animation**: DOS animates the depart city-list box growing out of
-  the city box when DEPART opens; Android pops it instantly.
+- ~~Travel drop-down grow animation~~ — **done in 02e38e2**, this bullet was stale. Verified
+  in `TravelScreen` (GameScreens.kt): a `grow` state animates 0→1 via `LaunchedEffect`
+  and drives the destination box's height (`v.At(4, 13, 141, 24f + (fullH - 24f) * grow)`),
+  growing it out of the city box exactly as the changelog note above describes. (The SEE
+  dropdown, `SeeDropdown`, still pops instantly with no grow — unconfirmed either way
+  against DOS since reference captures are single static frames and can't show animation
+  timing; not in scope here.)
 
 ## Suggested priority order for the next session
 
