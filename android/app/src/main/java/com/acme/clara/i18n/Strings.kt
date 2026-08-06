@@ -51,16 +51,29 @@ object Strings {
     fun init(context: Context) {
         appCtx = context.applicationContext
         en = load("en")
-        val saved = appCtx!!.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, "en") ?: "en"
-        lang = if (saved in LANGUAGES) saved else "en"
+        // No saved choice means first launch: follow the device language when we ship it.
+        // The game keeps following the device until the player explicitly picks a language
+        // in Options ▸ Language — only that persists a choice.
+        val saved = appCtx!!.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, null)
+        lang = if (saved != null) { if (saved in LANGUAGES) saved else "en" } else deviceDefault()
         active = if (lang == "en") en else load(lang)
     }
 
+    /** The device locale's language, mapped onto our catalog codes; English when unsupported.
+     *  Android still reports Indonesian under the legacy ISO tag "in" — our catalog uses "id". */
+    private fun deviceDefault(): String {
+        val code = java.util.Locale.getDefault().language.let { if (it == "in") "id" else it }
+        return if (code in LANGUAGES) code else "en"
+    }
+
     fun setLanguage(code: String) {
-        if (code !in LANGUAGES || code == lang) return
+        if (code !in LANGUAGES) return
+        // Persist even a pick that matches the current (device-derived) language, so an
+        // explicit choice stays put if the phone's language changes later.
+        appCtx?.getSharedPreferences(PREFS, Context.MODE_PRIVATE)?.edit()?.putString(KEY, code)?.apply()
+        if (code == lang) return
         lang = code
         active = if (code == "en") en else load(code)
-        appCtx?.getSharedPreferences(PREFS, Context.MODE_PRIVATE)?.edit()?.putString(KEY, code)?.apply()
         revision++
     }
 
