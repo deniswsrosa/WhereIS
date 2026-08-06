@@ -1520,6 +1520,7 @@
  "ui:MIND THE CLOCK": "AWASI WAKTU",
  "ui:Open a place and talk to a witness — try all three here ({0}/3). Each offers something different: where the suspect fled, what they look like, or just gossip.": "Buka sebuah tempat dan bicara dengan saksi — coba ketiganya di sini ({0}/3). Masing-masing memberi info berbeda: ke mana tersangka kabur, seperti apa cirinya, atau sekadar gosip.",
  "ui:Pick the destination your witnesses pointed to.": "Pilih tujuan yang ditunjuk oleh para saksimu.",
+ "ui:Press any key or": "Tekan tombol apa saja",
  "ui:QUESTION THE WITNESSES": "TANYAI SAKSI",
  "ui:RECORD THE THIEF": "CATAT SANG PENCURI",
  "ui:RUN THE COMPUTER": "JALANKAN KOMPUTER",
@@ -1535,10 +1536,13 @@
  "ui:WORLD DATABASE": "BASIS DATA DUNIA",
  "ui:WRONG TURN": "SALAH ARAH",
  "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open Bureau ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Para saksi memberi petunjuk ke mana tersangka kabur selanjutnya. Belum yakin soal suatu tempat? Buka Bureau ▸ Basis Data Dunia untuk membaca tentang tiap tujuan. Lalu ketuk pesawat untuk terbang ke sana.",
+ "ui:button to continue.": "untuk melanjutkan.",
  "ui:review due": "waktunya diulas",
  "ui:seen recently": "baru dilihat",
  "ui:try it": "coba",
+ "ui:{0} of {1} places unlocked": "{0} dari {1} tempat terbuka",
  "ui:{0} places on file": "{0} tempat dalam arsip",
+ "ui:{0}, locked": "{0}, terkunci",
  "ui:“{0}” — pick the matching destination.": "“{0}” — pilih tujuan yang cocok.",
  "ui:◀ BACK": "◀ KEMBALI"
 }

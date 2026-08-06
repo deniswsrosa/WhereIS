@@ -297,8 +297,8 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
     if (stage == ST_GATE1 || stage == ST_GATE2 || stage == ST_BEGIN) {
         v.At(150, 172, 166, 22, Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Press any key or", style = v.text(9.5f, color = Vga.Black, bold = true))
-                Text("button to continue.", style = v.text(9.5f, color = Vga.Black, bold = true))
+                Text(Strings.ui("Press any key or"), style = v.text(9.5f, color = Vga.Black, bold = true))
+                Text(Strings.ui("button to continue."), style = v.text(9.5f, color = Vga.Black, bold = true))
             }
         }
     }
@@ -354,7 +354,7 @@ private fun CountryText(v: Virtual, info: com.acme.clara.data.CityInfo, paid: Bo
 
 /* ----------------------------- CITY ----------------------------- */
 @Composable
-private fun CityPhoto(city: String, v: Virtual, modifier: Modifier) {
+fun CityPhoto(city: String, v: Virtual, modifier: Modifier) {
     val info = CityMeta.of(city)
     // Resolve the briefing postcard: the explicit drawable first, then derive city_<slug> /
     // country_<slug> from the name (many expansion cities ship a sprite but leave drawable null),
@@ -1620,8 +1620,8 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
             when {
                 waitingForTap || (stage == 2 && !answerRevealed) || stage == 5 ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Press any key or", style = v.text(7.5f, color = Vga.Black, bold = true))
-                        Text("button to continue.", style = v.text(7.5f, color = Vga.Black, bold = true))
+                        Text(Strings.ui("Press any key or"), style = v.text(7.5f, color = Vga.Black, bold = true))
+                        Text(Strings.ui("button to continue."), style = v.text(7.5f, color = Vga.Black, bold = true))
                     }
                 done -> Row(horizontalArrangement = Arrangement.spacedBy(v.w(8))) {
                     Box(Modifier.size(v.w(76), v.w(12))) { YellowButton(v, "Yes") { vm.toBriefingForNext() } }
@@ -1670,8 +1670,8 @@ internal fun ArrestSlam(v: Virtual, name: String, onDone: () -> Unit) {
             Spacer(Modifier.height(v.w(4)))
             Text("FILED IN MOST WANTED", style = v.text(9, color = Vga.Yellow, bold = true))
             Spacer(Modifier.height(v.w(6)))
-            Text("Press any key or", style = v.text(7.5f, color = Vga.White, bold = true))
-            Text("button to continue.", style = v.text(7.5f, color = Vga.White, bold = true))
+            Text(Strings.ui("Press any key or"), style = v.text(7.5f, color = Vga.White, bold = true))
+            Text(Strings.ui("button to continue."), style = v.text(7.5f, color = Vga.White, bold = true))
         }
     }
 }

@@ -1520,6 +1520,7 @@
  "ui:MIND THE CLOCK": "OCCHIO ALL'OROLOGIO",
  "ui:Open a place and talk to a witness — try all three here ({0}/3). Each offers something different: where the suspect fled, what they look like, or just gossip.": "Apri un luogo e parla con un testimone — provali tutti e tre qui ({0}/3). Ognuno offre qualcosa di diverso: dove è fuggito il sospettato, il suo aspetto, o solo pettegolezzi.",
  "ui:Pick the destination your witnesses pointed to.": "Scegli la destinazione indicata dai tuoi testimoni.",
+ "ui:Press any key or": "Premi un tasto o un",
  "ui:QUESTION THE WITNESSES": "INTERROGA I TESTIMONI",
  "ui:RECORD THE THIEF": "REGISTRA IL LADRO",
  "ui:RUN THE COMPUTER": "AVVIA IL COMPUTER",
@@ -1535,10 +1536,13 @@
  "ui:WORLD DATABASE": "BANCA DATI MONDIALE",
  "ui:WRONG TURN": "STRADA SBAGLIATA",
  "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open Bureau ▸ World Database to read up on each destination. Then tap the plane to fly there.": "I tuoi testimoni ti hanno dato un indizio su dove è fuggito il sospettato. Non conosci un luogo? Apri Bureau ▸ Banca Dati Mondiale per informarti su ogni destinazione. Poi tocca l'aereo per volare lì.",
+ "ui:button to continue.": "pulsante per continuare.",
  "ui:review due": "da ripassare",
  "ui:seen recently": "visto di recente",
  "ui:try it": "prova",
+ "ui:{0} of {1} places unlocked": "{0} luoghi sbloccati su {1}",
  "ui:{0} places on file": "{0} luoghi in archivio",
+ "ui:{0}, locked": "{0}, bloccato",
  "ui:“{0}” — pick the matching destination.": "“{0}” — scegli la destinazione corrispondente.",
  "ui:◀ BACK": "◀ INDIETRO"
 }

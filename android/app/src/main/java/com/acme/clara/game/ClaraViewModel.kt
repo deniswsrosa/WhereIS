@@ -374,10 +374,9 @@ class ClaraViewModel : ViewModel() {
     // Options > Sound is a silent checkmark toggle in the original (the √ beside the item
     // reflects the state); the actual mute is applied by the audio engine in the UI layer.
     fun toggleSound() { s = s.copy(soundOn = !s.soundOn, overlay = null) }
-    fun showJoystick() {
-        s = s.copy(overlay = Overlay.Info("JOYSTICK",
-            listOf("Joystick missing", "or badly centered.")))
-    }
+    /** Debug-only: flip the paid entitlement both ways to test free vs. paid behavior
+     *  (the real purchase path only ever grants it — see [unlockExpansion]). */
+    fun devTogglePaid() { s = s.copy(expansionUnlocked = !s.expansionUnlocked); autosave() }
 
     // ---------- case generation ----------
     private fun newCase() {

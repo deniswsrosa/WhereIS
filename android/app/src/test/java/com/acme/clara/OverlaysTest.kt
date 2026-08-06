@@ -39,7 +39,9 @@ class OverlaysTest {
         vm.openOverlay(Overlay.Almanac)
         host(vm)
         compose.onNodeWithText("WORLD DATABASE").assertIsDisplayed()
-        compose.onNodeWithText("Cairo").assertExists()     // a place on file
+        // The grid is lazy, so assert on an entry near the top of the alphabetical list
+        // (an expansion place — listed even on the free tier, just locked).
+        compose.onNodeWithText("Abu Simbel").assertExists()
     }
 
     @Test fun hintOverlayShowsAHint() {

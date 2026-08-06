@@ -1520,6 +1520,7 @@
  "ui:MIND THE CLOCK": "СЛЕДИТЕ ЗА ВРЕМЕНЕМ",
  "ui:Open a place and talk to a witness — try all three here ({0}/3). Each offers something different: where the suspect fled, what they look like, or just gossip.": "Зайдите в заведение и поговорите со свидетелем — опросите всех троих здесь ({0}/3). Каждый расскажет своё: куда сбежал подозреваемый, как он выглядит, или просто слухи.",
  "ui:Pick the destination your witnesses pointed to.": "Выберите город, на который указали свидетели.",
+ "ui:Press any key or": "Нажмите любую клавишу",
  "ui:QUESTION THE WITNESSES": "ОПРОСИТЕ СВИДЕТЕЛЕЙ",
  "ui:RECORD THE THIEF": "ОПИШИТЕ ВОРА",
  "ui:RUN THE COMPUTER": "ЗАПУСТИТЕ КОМПЬЮТЕР",
@@ -1535,10 +1536,13 @@
  "ui:WORLD DATABASE": "ВСЕМИРНАЯ БАЗА ДАННЫХ",
  "ui:WRONG TURN": "НЕ ТУДА",
  "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open Bureau ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Свидетели подсказали, куда направился подозреваемый. Не знаете город? Откройте Bureau ▸ Всемирная база данных и почитайте о каждом месте. Затем нажмите на самолёт, чтобы туда полететь.",
+ "ui:button to continue.": "или кнопку, чтобы продолжить.",
  "ui:review due": "пора повторить",
  "ui:seen recently": "недавно просмотрено",
  "ui:try it": "попробовать",
+ "ui:{0} of {1} places unlocked": "Открыто {0} из {1} мест",
  "ui:{0} places on file": "{0} мест в картотеке",
+ "ui:{0}, locked": "{0} — заблокировано",
  "ui:“{0}” — pick the matching destination.": "«{0}» — выберите подходящий пункт назначения.",
  "ui:◀ BACK": "◀ НАЗАД"
 }

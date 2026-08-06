@@ -1520,6 +1520,7 @@
  "ui:MIND THE CLOCK": "SAATE DİKKAT",
  "ui:Open a place and talk to a witness — try all three here ({0}/3). Each offers something different: where the suspect fled, what they look like, or just gossip.": "Bir mekân aç ve bir tanıkla konuş — buradaki üçünü de dene ({0}/3). Her biri farklı bir şey sunar: şüphelinin nereye kaçtığı, neye benzediği ya da sadece dedikodu.",
  "ui:Pick the destination your witnesses pointed to.": "Tanıklarının işaret ettiği hedefi seç.",
+ "ui:Press any key or": "Devam etmek için bir tuşa",
  "ui:QUESTION THE WITNESSES": "TANIKLARI SORGULA",
  "ui:RECORD THE THIEF": "HIRSIZI KAYDET",
  "ui:RUN THE COMPUTER": "BİLGİSAYARI ÇALIŞTIR",
@@ -1535,10 +1536,13 @@
  "ui:WORLD DATABASE": "DÜNYA VERİTABANI",
  "ui:WRONG TURN": "YANLIŞ YÖN",
  "ui:Your witnesses hinted where the suspect fled next. Not sure of a place? Open Bureau ▸ World Database to read up on each destination. Then tap the plane to fly there.": "Tanıkların, şüphelinin sonra nereye kaçtığına dair ipucu verdi. Bir yerden emin değil misin? Her hedef hakkında bilgi almak için Bureau ▸ Dünya Veritabanı'nı aç. Sonra oraya uçmak için uçağa dokun.",
+ "ui:button to continue.": "veya düğmeye basın.",
  "ui:review due": "tekrar vakti",
  "ui:seen recently": "yakınlarda görüldü",
  "ui:try it": "dene",
+ "ui:{0} of {1} places unlocked": "{1} yerden {0} tanesi açık",
  "ui:{0} places on file": "{0} yer kayıtlı",
+ "ui:{0}, locked": "{0}, kilitli",
  "ui:“{0}” — pick the matching destination.": "“{0}” — eşleşen hedefi seç.",
  "ui:◀ BACK": "◀ GERİ"
 }

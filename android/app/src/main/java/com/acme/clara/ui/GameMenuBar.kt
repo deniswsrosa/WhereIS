@@ -6,6 +6,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.DropdownMenu
@@ -40,6 +43,7 @@ import com.acme.clara.game.MostWanted
 import com.acme.clara.game.Overlay
 import com.acme.clara.game.WantedEntry
 import com.acme.clara.i18n.Strings
+import com.acme.clara.ui.screens.CityPhoto
 import com.acme.clara.ui.theme.Vga
 
 private data class MenuItemDef(val label: String, val enabled: Boolean = true, val action: () -> Unit)
@@ -54,14 +58,15 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(v.w(6))
     ) {
-        // Menu contents match the DOS EXE menu resources: Game = About Clara... / New /
-        // Save (always grayed — no save slots in the remake yet) / Quit (with the original
-        // "Do you really want to quit?" confirm); Options = Sound / Joystick.
+        // Menu contents follow the DOS EXE menu resources, adapted for the remake:
+        // Game = About Clara... / New Case (the EXE's "New": re-deal the case in this career) /
+        // New Game (fresh career) / Quit (with the original confirm). The EXE's Joystick item
+        // was dropped — a touch game has no joystick to calibrate.
         // A leading check/space marks Options toggle state; keep it out of the translated label.
         fun chk(on: Boolean, label: String) = (if (on) "√" else " ") + Strings.ui(label)
         MenuTitle(v, Strings.ui("Game"), listOf(
             MenuItemDef(Strings.ui("About Clara...")) { vm.openOverlay(Overlay.About) },
-            MenuItemDef(Strings.ui("New")) { vm.menuNewCase() },
+            MenuItemDef(Strings.ui("New Case")) { vm.menuNewCase() },
             MenuItemDef(Strings.ui("New Game")) { vm.newGameFlow() },
             MenuItemDef(Strings.ui("Quit")) { vm.openOverlay(Overlay.ConfirmQuit) },
         ))
@@ -72,7 +77,6 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
             MenuItemDef(chk(com.acme.clara.notify.Reminders.enabled(menuCtx), "Reminders")) {
                 com.acme.clara.notify.Reminders.setEnabled(menuCtx, !com.acme.clara.notify.Reminders.enabled(menuCtx))
             },
-            MenuItemDef(" " + Strings.ui("Joystick")) { vm.showJoystick() },
             MenuItemDef(" " + Strings.ui("Language...")) { vm.openOverlay(Overlay.Language) },
         ))
         MenuTitle(v, Strings.ui("Bureau"), listOf(
@@ -96,6 +100,9 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
                 MenuItemDef("Jump: hideout doorstep") { vm.devJumpToHideoutDoorstep() },
                 MenuItemDef("Jump: result (win+promo)") { vm.devJumpToResultWin(true) },
                 MenuItemDef("Jump: result (win)") { vm.devJumpToResultWin(false) },
+                MenuItemDef((if (s.expansionUnlocked) "√ " else "  ") + "Paid version") {
+                    vm.devTogglePaid()
+                },
             ))
         }
     }
@@ -473,13 +480,20 @@ internal fun RankProgress(v: Virtual, s: com.acme.clara.game.GameState) {
     }
 }
 
-/* World Database (the in-game almanac) — a browsable Interpol reference over CityMeta.
- * Master list of cities → tap one for its region, landmark and facts. It names places, not
- * the next city, so it's a reference the player still has to reason from. */
+/* World Database (the in-game almanac) — a browsable reference over every place the game
+ * knows: the original 30 plus both expansion rosters. Free careers see the full list, but
+ * only the original 30 open — expansion entries stay dimmed until the paid unlock. It
+ * names places, not the next city, so it's a reference the player still has to reason from. */
 @Composable
 private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
     var selected by remember { mutableStateOf<String?>(null) }
-    val cities = remember { com.acme.clara.data.CityMeta.all.values.sortedBy { it.name } }
+    val paid = vm.s.expansionUnlocked
+    val freeNames = remember { com.acme.clara.data.CityMeta.all.keys }
+    val names = remember {
+        (com.acme.clara.data.CityMeta.all.keys +
+            com.acme.clara.data.Expansion.byName.keys +
+            com.acme.clara.data.Expansion2.byName.keys).toSortedSet().toList()
+    }
 
     Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
         contentAlignment = Alignment.Center) {
@@ -487,28 +501,37 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally) {
             Text(Strings.ui("WORLD DATABASE"), style = v.text(10, color = Vga.Yellow, bold = true))
 
-            val entry = selected?.let { name -> cities.firstOrNull { it.name == name } }
+            // CityMeta.of resolves any known place (localized), so the detail view works for
+            // expansion entries too — reachable only when unlocked, since locked rows don't tap.
+            val entry = selected?.let { com.acme.clara.data.CityMeta.of(it) }
             if (entry == null) {
-                Text(Strings.ui("{0} places on file", cities.size), style = v.text(7, color = Vga.LightCyan))
-                Spacer(Modifier.height(v.w(3)))
-                Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
-                    cities.forEach { info ->
-                        // L4: flag where each fact sits on the spaced-repetition curve.
-                        val fresh = SpacedRepetition.isFresh(info.name, vm.s.cityLastSeen, vm.s.casesSolved)
-                        val due = SpacedRepetition.isDue(info.name, vm.s.cityLastSeen, vm.s.casesSolved)
-                        val marker = when { fresh -> Strings.ui("seen recently"); due -> Strings.ui("review due"); else -> "" }
-                        Row(Modifier.fillMaxWidth().clickable { selected = info.name }
-                            .labelled("${info.name}, ${info.region}${if (marker.isNotEmpty()) ", $marker" else ""}")
-                            .padding(vertical = v.w(1.4f)),
-                            horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(info.name, style = v.text(7.5f, color = Vga.White, bold = true))
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text(info.region, style = v.text(6.5f, color = Vga.LightCyan))
-                                if (marker.isNotEmpty())
-                                    Text(marker, style = v.text(5.5f,
-                                        color = if (fresh) Vga.LightGreen else Vga.Yellow))
-                            }
+                Text(
+                    if (paid) Strings.ui("{0} places on file", names.size)
+                    else Strings.ui("{0} of {1} places unlocked", freeNames.size, names.size),
+                    style = v.text(7, color = Vga.LightCyan))
+                // L4 legend: a name's color marks where it sits on the spaced-repetition curve.
+                Row(horizontalArrangement = Arrangement.spacedBy(v.w(5))) {
+                    Text(Strings.ui("seen recently"), style = v.text(6, color = Vga.LightGreen))
+                    Text(Strings.ui("review due"), style = v.text(6, color = Vga.Yellow))
+                }
+                Spacer(Modifier.height(v.w(2)))
+                LazyVerticalGrid(columns = GridCells.Fixed(2),
+                    modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    items(names) { name ->
+                        val unlocked = paid || name in freeNames
+                        val fresh = unlocked && SpacedRepetition.isFresh(name, vm.s.cityLastSeen, vm.s.casesSolved)
+                        val due = unlocked && SpacedRepetition.isDue(name, vm.s.cityLastSeen, vm.s.casesSolved)
+                        val color = when {
+                            !unlocked -> Vga.LightGray
+                            fresh -> Vga.LightGreen
+                            due -> Vga.Yellow
+                            else -> Vga.White
                         }
+                        Text(name, style = v.text(7, color = color, bold = unlocked),
+                            modifier = Modifier
+                                .clickable(enabled = unlocked) { selected = name }
+                                .labelled(if (unlocked) name else Strings.ui("{0}, locked", name))
+                                .padding(vertical = v.w(1.2f), horizontal = v.w(1)))
                     }
                 }
                 Spacer(Modifier.height(v.w(3)))
@@ -518,6 +541,12 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                 Text(entry.name.uppercase(), style = v.text(8.5f, color = Vga.LightGreen, bold = true))
                 Spacer(Modifier.height(v.w(2)))
                 Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
+                    // The place's postcard (or the procedural VGA card when no photo shipped),
+                    // height-capped so the facts below it stay above the fold.
+                    CityPhoto(entry.name, v,
+                        Modifier.height(v.w(56)).aspectRatio(1.5f)
+                            .align(Alignment.CenterHorizontally))
+                    Spacer(Modifier.height(v.w(3)))
                     StatRow(v, Strings.ui("Region"), entry.region)
                     StatRow(v, Strings.ui("Landmark"), entry.landmark)
                     // The structured attributes the clue engine draws on, surfaced as reference
