@@ -38,7 +38,7 @@ class OverlaysTest {
         val vm = ClaraViewModel().apply { signOn("Ada") }
         vm.openOverlay(Overlay.Almanac)
         host(vm)
-        compose.onNodeWithText("INTERPOL DATABASE").assertIsDisplayed()
+        compose.onNodeWithText("WORLD DATABASE").assertIsDisplayed()
         compose.onNodeWithText("Cairo").assertExists()     // a place on file
     }
 

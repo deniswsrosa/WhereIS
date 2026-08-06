@@ -9,6 +9,7 @@ import com.acme.clara.save.SaveCodec
 import com.acme.clara.save.SaveMeta
 import com.acme.clara.save.decideLaunch
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -53,6 +54,22 @@ class SaveTest {
         assertNotNull(back)
         assertEquals("meta round-trips", snap.meta, back!!.meta)
         assertEquals("full state round-trips", snap.state, back.state)
+    }
+
+    @Test fun codecMigratesRenamedCitiesInOldSaves() {
+        // A pre-rename save refers to the city as "Peking" everywhere; loading it must
+        // come back as "Beijing" or route/map/CityMeta lookups would all miss.
+        val vm = ClaraViewModel().apply { signOn("Ada Lovelace") }
+        val snap = vm.snapshot("profile-1", 12345L)
+        val old = SaveCodec.encode(snap.meta, snap.state)
+            .replace("\"Beijing\"", "\"Peking\"")   // simulate the old on-disk form
+        val back = SaveCodec.decode(old)
+        assertNotNull(back)
+        val s = back!!.state
+        assertFalse("no Peking survives in the route", "Peking" in s.route)
+        assertFalse("no Peking in depart options", "Peking" in s.departOptions)
+        assertFalse("no Peking in visited places", "Peking" in s.visitedPlaces)
+        assertFalse("no Peking in city-last-seen", "Peking" in s.cityLastSeen.keys)
     }
 
     @Test fun codecReturnsNullOnGarbage() {

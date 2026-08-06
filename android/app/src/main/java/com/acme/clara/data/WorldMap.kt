@@ -21,7 +21,7 @@ object WorldMap {
         "Montreal" to Offset(0.2765f, 0.2529f), "Moroni" to Offset(0.6226f, 0.6949f),
         "Moscow" to Offset(0.6059f, 0.1444f), "New Delhi" to Offset(0.7232f, 0.4122f),
         "New York" to Offset(0.2752f, 0.3005f), "Oslo" to Offset(0.5263f, 0.0979f),
-        "Paris" to Offset(0.5014f, 0.2184f), "Peking" to Offset(0.8393f, 0.3084f),
+        "Paris" to Offset(0.5014f, 0.2184f), "Beijing" to Offset(0.8393f, 0.3084f),
         "Port Moresby" to Offset(0.9304f, 0.6827f), "Reykjavik" to Offset(0.4295f, 0.0489f),
         "Rio de Janeiro" to Offset(0.3666f, 0.7491f), "Rome" to Offset(0.5315f, 0.2889f),
         "San Marino" to Offset(0.5313f, 0.2686f), "Singapore" to Offset(0.802f, 0.6184f),

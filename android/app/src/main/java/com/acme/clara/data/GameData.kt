@@ -34,7 +34,7 @@ object GameData {
         "New York",
         "Oslo",
         "Paris",
-        "Peking",
+        "Beijing",
         "Port Moresby",
         "Reykjavik",
         "Rio de Janeiro",

@@ -82,7 +82,7 @@ object CountryShapes {
         "Oslo" to "NOR",
         "Palau" to "PLW",
         "Paris" to "FRA",
-        "Peking" to "CHN",
+        "Beijing" to "CHN",
         "Philippines" to "PHL",
         "Pisa" to "ITA",
         "Pompeii" to "ITA",

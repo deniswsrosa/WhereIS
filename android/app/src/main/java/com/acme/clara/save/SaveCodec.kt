@@ -107,6 +107,12 @@ object SaveCodec {
         "sawTrailClue" to s.sawTrailClue,
     )
 
+    // City renames across releases; applied to every city-name field on load so old
+    // careers keep resuming (an unmapped stale name would fall through to the generic
+    // "one of the great cities" CityInfo and break route/map lookups).
+    private val renamedCities = mapOf("Peking" to "Beijing")
+    private fun city(n: String): String = renamedCities[n] ?: n
+
     private fun readState(m: Map<*, *>): GameState {
         val phase = runCatching { Phase.valueOf(str(m["phase"])) }.getOrDefault(Phase.CITY)
         // Never resume into a transient animation/front-of-house phase — clamp to CITY.
@@ -121,9 +127,9 @@ object SaveCodec {
             casesSolved = int(m["casesSolved"]),
             culprit = suspect(m["culprit"]),
             treasure = str(m["treasure"]),
-            route = strList(m["route"]),
+            route = strList(m["route"]).map(::city),
             progress = int(m["progress"]),
-            currentCity = str(m["currentCity"]),
+            currentCity = city(str(m["currentCity"])),
             clock = int(m["clock"]),
             caseDeadlineHours = int(m["caseDeadlineHours"], 152),
             onTrack = bool(m["onTrack"], true),
@@ -135,7 +141,7 @@ object SaveCodec {
             compFeature = nstr(m["compFeature"]), compVehicle = nstr(m["compVehicle"]),
             warrantFor = suspect(m["warrantFor"]),
             computed = bool(m["computed"], false),
-            departOptions = strList(m["departOptions"]),
+            departOptions = strList(m["departOptions"]).map(::city),
             careerOver = bool(m["careerOver"], false),
             selectedTool = int(m["selectedTool"], 2),
             won = bool(m["won"], false),
@@ -149,13 +155,13 @@ object SaveCodec {
             journal = journalList(m["journal"]),
             capturedVillains = strList(m["capturedVillains"]).toSet(),
             unlockedAchievements = strList(m["unlockedAchievements"]).toSet(),
-            visitedPlaces = strList(m["visitedPlaces"]).toSet(),
+            visitedPlaces = strList(m["visitedPlaces"]).map(::city).toSet(),
             warmUpNextCase = bool(m["warmUpNextCase"], false),
             streakDays = int(m["streakDays"]),
             streakFreezes = int(m["streakFreezes"]),
             lastSolveEpochDay = int(m["lastSolveEpochDay"]),
             cityLastSeen = strList(m["cityLastSeen"]).mapNotNull { e ->
-                val p = e.split('\u001F'); if (p.size == 2) p[1].toIntOrNull()?.let { p[0] to it } else null
+                val p = e.split('\u001F'); if (p.size == 2) p[1].toIntOrNull()?.let { city(p[0]) to it } else null
             }.toMap(),
             expansionUnlocked = bool(m["expansionUnlocked"], false),
             hintFreeSolves = int(m["hintFreeSolves"]),
@@ -193,7 +199,7 @@ object SaveCodec {
         val mm = e as? Map<*, *> ?: return@mapNotNull null
         JournalEntry(
             kind = runCatching { ClueKind.valueOf(str(mm["kind"])) }.getOrDefault(ClueKind.NONE),
-            text = str(mm["text"]), city = str(mm["city"]),
+            text = str(mm["text"]), city = city(str(mm["city"])),
         )
     }
 

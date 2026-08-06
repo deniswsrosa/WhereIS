@@ -485,18 +485,18 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
         contentAlignment = Alignment.Center) {
         Column(Modifier.fillMaxWidth(0.9f).fillMaxHeight(0.9f).background(Vga.Blue).padding(v.w(5)),
             horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("INTERPOL DATABASE", style = v.text(10, color = Vga.Yellow, bold = true))
+            Text(Strings.ui("WORLD DATABASE"), style = v.text(10, color = Vga.Yellow, bold = true))
 
             val entry = selected?.let { name -> cities.firstOrNull { it.name == name } }
             if (entry == null) {
-                Text("${cities.size} places on file", style = v.text(7, color = Vga.LightCyan))
+                Text(Strings.ui("{0} places on file", cities.size), style = v.text(7, color = Vga.LightCyan))
                 Spacer(Modifier.height(v.w(3)))
                 Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
                     cities.forEach { info ->
                         // L4: flag where each fact sits on the spaced-repetition curve.
                         val fresh = SpacedRepetition.isFresh(info.name, vm.s.cityLastSeen, vm.s.casesSolved)
                         val due = SpacedRepetition.isDue(info.name, vm.s.cityLastSeen, vm.s.casesSolved)
-                        val marker = when { fresh -> "seen recently"; due -> "review due"; else -> "" }
+                        val marker = when { fresh -> Strings.ui("seen recently"); due -> Strings.ui("review due"); else -> "" }
                         Row(Modifier.fillMaxWidth().clickable { selected = info.name }
                             .labelled("${info.name}, ${info.region}${if (marker.isNotEmpty()) ", $marker" else ""}")
                             .padding(vertical = v.w(1.4f)),
@@ -512,22 +512,30 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                     }
                 }
                 Spacer(Modifier.height(v.w(3)))
-                DosButton("CLOSE", fill = Vga.Green, textColor = Vga.White,
+                DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
                     style = v.text(9, bold = true)) { vm.dismissOverlay() }
             } else {
                 Text(entry.name.uppercase(), style = v.text(8.5f, color = Vga.LightGreen, bold = true))
                 Spacer(Modifier.height(v.w(2)))
                 Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
-                    StatRow(v, "Region", entry.region)
-                    StatRow(v, "Landmark", entry.landmark)
+                    StatRow(v, Strings.ui("Region"), entry.region)
+                    StatRow(v, Strings.ui("Landmark"), entry.landmark)
+                    // The structured attributes the clue engine draws on, surfaced as reference
+                    // rows too (all optional — the fallback CityInfo has none of them).
+                    entry.flag?.let { StatRow(v, Strings.ui("Flag"), it) }
+                    entry.currency?.let { StatRow(v, Strings.ui("Currency"), it.removePrefix("the ")) }
+                    entry.greeting?.let {
+                        Spacer(Modifier.height(v.w(2)))
+                        Text(it, style = v.text(7, color = Vga.LightCyan))
+                    }
                     Spacer(Modifier.height(v.w(3)))
                     Text(entry.description, style = v.text(7.5f, color = Vga.White))
                 }
                 Spacer(Modifier.height(v.w(3)))
                 Row(horizontalArrangement = Arrangement.spacedBy(v.w(6))) {
-                    DosButton("◀ BACK", fill = Vga.LightGray, textColor = Vga.Black,
+                    DosButton(Strings.ui("◀ BACK"), fill = Vga.LightGray, textColor = Vga.Black,
                         style = v.text(9, bold = true)) { selected = null }
-                    DosButton("CLOSE", fill = Vga.Green, textColor = Vga.White,
+                    DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
                         style = v.text(9, bold = true)) { vm.dismissOverlay() }
                 }
             }
