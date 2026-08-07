@@ -11,8 +11,7 @@ import kotlin.math.tan
 /**
  * Paid-tier expansion: 68 new destinations + new venues, gated by GameState.expansionUnlocked.
  * The free game ships the original 30; unlocking merges these in for case routes, decoys,
- * map dots and flight times. Witnesses for the new venues reuse existing occupations via the
- * one-line placeholders in [venueOccupations] until bespoke sprites are drawn.
+ * map dots and flight times. Each new venue has its own bespoke witness (see [venueOccupations]).
  */
 object Expansion {
     // Map dot from real (lat, lon), calibrated to the base map's own hand-placed dots:
@@ -258,30 +257,36 @@ object Expansion {
         "Research Laboratory",
         "Restaurant / Café",
         "Television Station",
+        "Clock Tower Plaza",
     )
 
-    // Bespoke witnesses drawn for the expansion (need their own sprites eventually).
-    val newWitnesses: List<String> = listOf("Croupier", "Stationmaster", "Radio announcer", "Stage manager", "History professor")
+    // Bespoke witnesses drawn for the expansion — every new venue now has its own sprite.
+    val newWitnesses: List<String> = listOf(
+        "Croupier", "Stationmaster", "Radio announcer", "Stage manager", "History professor",
+        "Antique dealer", "Court clerk", "Exchange clerk", "Head nurse", "City editor",
+        "Desk sergeant", "Control room engineer", "Prison warden", "Laboratory technician",
+        "Head waiter", "News producer", "Clock keeper",
+    )
 
-    // Which witness staffs each new venue. Reused venues point at an existing occupation —
-    // swap any single line here to give that venue its own witness later.
+    // Which witness staffs each new venue.
     val venueOccupations: Map<String, List<String>> = mapOf(
         "Casino" to listOf("Croupier"),
         "Railway Station" to listOf("Stationmaster"),
         "Radio Station" to listOf("Radio announcer"),
         "Opera House" to listOf("Stage manager"),
         "University" to listOf("History professor"),
-        "Antique Shop" to listOf("Curator"),
-        "Courthouse" to listOf("Under Secretary"),
-        "Currency Exchange" to listOf("Teller"),
-        "Hospital" to listOf("House detective"),
-        "Newspaper Office" to listOf("Messenger"),
-        "Police Headquarters" to listOf("Customs officer"),
-        "Power Plant" to listOf("Analyst"),
-        "Prison" to listOf("Palace guard"),
-        "Research Laboratory" to listOf("Analyst"),
-        "Restaurant / Café" to listOf("Waiter"),
-        "Television Station" to listOf("Radio announcer"),
+        "Antique Shop" to listOf("Antique dealer"),
+        "Courthouse" to listOf("Court clerk"),
+        "Currency Exchange" to listOf("Exchange clerk"),
+        "Hospital" to listOf("Head nurse"),
+        "Newspaper Office" to listOf("City editor"),
+        "Police Headquarters" to listOf("Desk sergeant"),
+        "Power Plant" to listOf("Control room engineer"),
+        "Prison" to listOf("Prison warden"),
+        "Research Laboratory" to listOf("Laboratory technician"),
+        "Restaurant / Café" to listOf("Head waiter"),
+        "Television Station" to listOf("News producer"),
+        "Clock Tower Plaza" to listOf("Clock keeper"),
     )
 
     // Per-venue apology shown when the suspect never passed through (wrong-city / off-track).
@@ -302,6 +307,7 @@ object Expansion {
         "Research Laboratory" to "No one like that has signed into the lab.",
         "Restaurant / Café" to "No one like that has dined here today.",
         "Television Station" to "Nobody like that has been in the studio.",
+        "Clock Tower Plaza" to "No one like that has stopped to watch the clock strike.",
     )
 
     // Per-city venue bias: characteristic venues appear more often (Las Vegas -> the casino).

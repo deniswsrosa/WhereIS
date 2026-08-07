@@ -15,7 +15,7 @@ import org.junit.Test
 import kotlin.math.hypot
 
 /**
- * The paid-tier expansion: 68 new destinations + 16 new venues. Covers data integrity, map
+ * The paid-tier expansion: 68 new destinations + 17 new venues. Covers data integrity, map
  * projection / flight-time sanity, the free-vs-paid gate, the authored-clue engine, and that
  * the entitlement round-trips through the save.
  */
@@ -72,8 +72,8 @@ class ExpansionTest {
 
     // ---- venues ---------------------------------------------------------------------------
 
-    @Test fun sixteenNewVenuesWithoutDuplicatingRiverfront() {
-        assertEquals(16, Expansion.venues.size)
+    @Test fun seventeenNewVenuesWithoutDuplicatingRiverfront() {
+        assertEquals(17, Expansion.venues.size)
         assertFalse("Riverfront already exists in the base set", "Riverfront" in Expansion.venues)
         assertTrue("no overlap with base venues", Expansion.venues.none { it in GameData.venues })
         Expansion.venues.forEach { v ->
