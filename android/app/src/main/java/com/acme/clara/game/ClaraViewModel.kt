@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.acme.clara.data.CityInfo
 import com.acme.clara.data.CityMeta
 import com.acme.clara.data.Expansion
@@ -16,6 +17,12 @@ import com.acme.clara.save.SaveData
 import com.acme.clara.save.SaveMeta
 import com.acme.clara.save.SaveRepository
 import kotlin.random.Random
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 enum class Phase { INTRO, TITLE, SIGN_ON, BRIEFING, CITY, TRAVEL, CRIME, CHASE, RESULT, CHOOSE_GAME }
 
@@ -206,6 +213,15 @@ class ClaraViewModel : ViewModel() {
     private var profileId: String? = null
     private var clock: () -> Long = { 0L }
 
+    // Actual disk writes run off the main thread so gameplay is never blocked by I/O, but they
+    // must still land in the order they were queued — a slow earlier write finishing after a
+    // newer one would resurrect stale data. limitedParallelism(1) gives a single-worker view of
+    // Dispatchers.IO: coroutines dispatched to it run one at a time, in dispatch order, so two
+    // autosaves fired back-to-back always complete on disk in the order they were fired.
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val saveDispatcher: CoroutineDispatcher = Dispatchers.IO.limitedParallelism(1)
+    private var pendingSaveJob: Job? = null
+
     /** Wire continuous autosave to a repository + profile. A no-op until attached (e.g. in tests). */
     fun attachSave(repository: SaveRepository, id: String, now: () -> Long = { System.currentTimeMillis() }) {
         repo = repository; profileId = id; clock = now
@@ -269,11 +285,29 @@ class ClaraViewModel : ViewModel() {
     /** Load a saved career into this ViewModel (launch continue / picker). */
     fun loadCareer(data: SaveData) { profileId = data.meta.id; s = data.state }
 
-    /** Persist the current state to the active profile — the state on disk always equals the screen. */
+    /** Persist the current state to the active profile. [snapshot] is captured synchronously
+     *  here — cheap, in-memory, and always a consistent point-in-time copy of [s] — so what
+     *  eventually reaches disk is never a half-mutated object no matter how long the write is
+     *  queued. The write itself is dispatched to [saveDispatcher] so gameplay is never blocked
+     *  by disk I/O. This means the on-disk file can lag a few milliseconds behind the screen
+     *  between actions; [flushPendingSave] closes that gap at the one moment it actually
+     *  matters (backgrounding — see MainActivity.onStop). */
     private fun autosave() {
         val r = repo ?: return
         val id = profileId ?: return
-        r.save(snapshot(id, clock()))
+        val data = snapshot(id, clock())
+        pendingSaveJob = viewModelScope.launch(saveDispatcher) { r.save(data) }
+    }
+
+    /** Block the calling thread until the most recently queued autosave write has actually
+     *  completed on disk. This is the one deliberate main-thread I/O wait left in the app: call
+     *  it only at the last-reliable-checkpoint before Android may kill the process
+     *  (MainActivity.onStop), where the durability guarantee autosave used to provide
+     *  synchronously on every action must still hold. It waits only on the single
+     *  already-in-flight/queued write, never re-triggers unrelated work, and is a no-op if
+     *  nothing is pending (e.g. no autosave has fired yet, or it already completed). */
+    fun flushPendingSave() {
+        pendingSaveJob?.let { job -> runBlocking { job.join() } }
     }
 
     fun toggleHaptics() { s = s.copy(hapticsOn = !s.hapticsOn, overlay = null) }

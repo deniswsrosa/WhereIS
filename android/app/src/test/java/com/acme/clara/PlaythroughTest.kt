@@ -99,6 +99,7 @@ class PlaythroughTest {
         vm.setComp("hair", vm.s.culprit!!.tHair)
         val culprit = vm.s.culprit!!
         val route = vm.s.route
+        vm.flushPendingSave()   // autosave writes off-thread now; wait for it before reading the repo
 
         // cold start of a new ViewModel + the same store — the launch flow continues p1
         val outcome = decideLaunch(repo.list())
@@ -122,8 +123,8 @@ class PlaythroughTest {
 
     @Test fun launchFlowPicksAmongTwoSavedCareers() {
         val repo = InMemorySaveRepository()
-        ClaraViewModel().apply { attachSave(repo, "alpha") { 10L }; signOn("Alpha") }
-        ClaraViewModel().apply { attachSave(repo, "beta") { 99L }; signOn("Beta") }
+        ClaraViewModel().apply { attachSave(repo, "alpha") { 10L }; signOn("Alpha") }.flushPendingSave()
+        ClaraViewModel().apply { attachSave(repo, "beta") { 99L }; signOn("Beta") }.flushPendingSave()
 
         val outcome = decideLaunch(repo.list())
         assertTrue(outcome is LaunchOutcome.Choose)

@@ -49,9 +49,22 @@ import com.acme.clara.ui.theme.Vga
 
 private data class MenuItemDef(val label: String, val enabled: Boolean = true, val action: () -> Unit)
 
+/** The four GameState fields the menu bar actually renders — everything else in GameState
+ *  (clock, flying, journal, venues, ...) is irrelevant to it. */
+private data class MenuBarFlags(
+    val soundOn: Boolean, val hapticsOn: Boolean, val captionsOn: Boolean, val expansionUnlocked: Boolean,
+)
+
 @Composable
 fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
-    val s = vm.s
+    // GameMenuBar is the persistent top strip on every gameplay screen, so it's composed on
+    // essentially every frame. It only ever reads these four toggle flags, but `val s = vm.s`
+    // used to subscribe this whole composable to the entire GameState — recomposing it on
+    // every clock tick, flight, and journal entry even though nothing it draws had changed.
+    val s by remember { derivedStateOf {
+        val st = vm.s
+        MenuBarFlags(st.soundOn, st.hapticsOn, st.captionsOn, st.expansionUnlocked)
+    } }
     val menuCtx = LocalContext.current
     Row(
         Modifier.fillMaxWidth().height(v.w(11)).background(Vga.White)
@@ -146,7 +159,15 @@ private fun MenuTitle(v: Virtual, title: String, items: List<MenuItemDef>) {
 /** Renders the active menu overlay as a centred VGA dialog. Returns nothing if none. */
 @Composable
 fun OverlayHost(v: Virtual, vm: ClaraViewModel) {
-    val o = vm.s.overlay ?: return
+    // OverlayHost is composed unconditionally on every gameplay screen (HQ printer, city,
+    // crime computer, chase, result) purely so it can react the moment a menu overlay opens.
+    // The rest of the time — the vast majority of frames, since an overlay is open only while
+    // a menu window is up — it just returns null. Reading `vm.s.overlay` directly would still
+    // recompose this on every unrelated GameState change (clock ticks, flying, journal
+    // entries, ...) just to immediately bail again; the derivedStateOf selector means this
+    // scope only re-runs when the overlay actually opens, closes, or switches.
+    val overlaySlice by remember { derivedStateOf { vm.s.overlay } }
+    val o = overlaySlice ?: return
     if (o is Overlay.Dossier) { DossierWindow(v, o.suspect) { vm.dismissOverlay() }; return }
     if (o is Overlay.ConfirmQuit) { ConfirmQuitDialog(v, vm); return }
     if (o is Overlay.Language) { LanguageWindow(v, vm); return }
@@ -355,8 +376,12 @@ private fun DossierWindow(v: Virtual, su: Suspect, onClose: () -> Unit) {
  * crooks show their portrait and name; the rest stay locked behind a "?" until jailed. */
 @Composable
 private fun MostWantedWindow(v: Virtual, vm: ClaraViewModel) {
-    val gallery = MostWanted.gallery(vm.s.capturedVillains)
-    val caught = MostWanted.capturedCount(vm.s.capturedVillains)
+    // The whole villain gallery is rebuilt from capturedVillains alone; isolate that one field
+    // from the rest of GameState so re-opening this window doesn't rebuild the gallery on
+    // unrelated state churn (it only ever needs to run again when a new villain is caught).
+    val capturedVillains by remember { derivedStateOf { vm.s.capturedVillains } }
+    val gallery = MostWanted.gallery(capturedVillains)
+    val caught = MostWanted.capturedCount(capturedVillains)
     Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
         contentAlignment = Alignment.Center) {
         Column(Modifier.fillMaxWidth(0.92f).fillMaxHeight(0.9f).background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(5)),
@@ -572,12 +597,20 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                     Text(Strings.ui("review due"), style = v.text(6, color = Vga.Yellow))
                 }
                 Spacer(Modifier.height(v.w(2)))
+                // Every one of these ~130+ grid cells used to read vm.s.cityLastSeen/casesSolved
+                // directly, subscribing each cell individually to the whole GameState — while the
+                // almanac is open, that's ~130 recompositions for a single unrelated field change
+                // anywhere else in the game. Both fields only ever move together (cityLastSeen is
+                // stamped with the case index at the moment a case is solved), so one selector
+                // covering the pair is enough to isolate the grid from everything else.
+                val spaced by remember { derivedStateOf { vm.s.cityLastSeen to vm.s.casesSolved } }
                 LazyVerticalGrid(columns = GridCells.Fixed(2),
                     modifier = Modifier.weight(1f).fillMaxWidth()) {
                     items(names) { name ->
+                        val (cityLastSeen, casesSolved) = spaced
                         val unlocked = paid || AlmanacFlags.countryCode(name) in freeCountryCodes
-                        val fresh = unlocked && SpacedRepetition.isFresh(name, vm.s.cityLastSeen, vm.s.casesSolved)
-                        val due = unlocked && SpacedRepetition.isDue(name, vm.s.cityLastSeen, vm.s.casesSolved)
+                        val fresh = unlocked && SpacedRepetition.isFresh(name, cityLastSeen, casesSolved)
+                        val due = unlocked && SpacedRepetition.isDue(name, cityLastSeen, casesSolved)
                         val color = when {
                             !unlocked -> Vga.LightGray
                             fresh -> Vga.LightGreen
@@ -656,14 +689,18 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
  * the paid expansion adds its 68 to the world and paints in everything already visited. */
 @Composable
 private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
-    val s = vm.s
-    val paid = s.expansionUnlocked
+    // The map below redraws a Canvas path for every visited country on each recomposition —
+    // real work, not free layout. It only ever depends on expansionUnlocked + visitedPlaces,
+    // so isolate it from the rest of GameState (clock, journal, venues, ...) rather than
+    // repainting the whole world map on unrelated state changes while the passport is open.
+    val passportSlice by remember { derivedStateOf { vm.s.expansionUnlocked to vm.s.visitedPlaces } }
+    val (paid, visitedPlacesRaw) = passportSlice
     // Free tier tracks silently but reveals nothing: the passport stays sealed until the
     // paid unlock, which then paints in every country already visited (see PassportSealed).
     if (!paid) { PassportSealed(v, vm); return }
     val placeCountry = CountryShapes.placeCountry
     val universe = placeCountry.values.toSet()
-    val visitedPlaces = s.visitedPlaces.filter { it in placeCountry }
+    val visitedPlaces = visitedPlacesRaw.filter { it in placeCountry }
     val visitedCountries = visitedPlaces.mapNotNull { placeCountry[it] }.toSet()
 
     Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },

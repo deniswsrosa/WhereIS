@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -50,8 +51,14 @@ import com.acme.clara.ui.theme.Vga
  */
 @Composable
 fun Tour(v: Virtual, vm: ClaraViewModel, suppressed: Boolean = false) {
+    // Tour is composed on every gameplay screen for the player's whole career, but
+    // tutorialActive is only ever true for the guided first case — false for every session
+    // after. Gate on that one flag via derivedStateOf so this scope stops reacting to every
+    // GameState change (clock, journal, venues, ...) the moment the tour is over, instead of
+    // re-running for the rest of the career just to immediately bail on the next line.
+    val active by remember { derivedStateOf { vm.s.tutorialActive } }
+    if (!active || suppressed) return
     val s = vm.s
-    if (!s.tutorialActive || suppressed) return
     // A witness testimony or a menu window owns the screen — never spotlight over it.
     if (s.openClue != null || s.overlay != null) return
     val shown = lessonFor(s) ?: return

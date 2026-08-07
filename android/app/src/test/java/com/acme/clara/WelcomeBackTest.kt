@@ -30,6 +30,7 @@ class WelcomeBackTest {
         val vm = ClaraViewModel().apply { signOn("Ada") }
         vm.attachSave(repo, "p1") { 0L }        // career saved at t=0
         vm.openVenue(0)
+        vm.flushPendingSave()                   // autosave writes off-thread now; wait for it
         val saved = repo.load("p1")!!           // meta.lastPlayed == 0
 
         val reopened = ClaraViewModel()
@@ -56,6 +57,7 @@ class WelcomeBackTest {
         val vm = ClaraViewModel().apply { signOn("Ada") }
         vm.attachSave(repo, "p1") { 0L }
         vm.openVenue(0)
+        vm.flushPendingSave()
         val saved = repo.load("p1")!!
 
         val reopened = ClaraViewModel()

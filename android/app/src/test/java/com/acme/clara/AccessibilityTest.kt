@@ -32,8 +32,8 @@ class AccessibilityTest {
 
     @Test fun pickerRowsExposeScreenReaderLabels() {
         val repo = InMemorySaveRepository()
-        ClaraViewModel().apply { attachSave(repo, "a") { 1L }; signOn("Ada") }
-        ClaraViewModel().apply { attachSave(repo, "b") { 2L }; signOn("Grace") }
+        ClaraViewModel().apply { attachSave(repo, "a") { 1L }; signOn("Ada") }.flushPendingSave()
+        ClaraViewModel().apply { attachSave(repo, "b") { 2L }; signOn("Grace") }.flushPendingSave()
         val vm = ClaraViewModel().apply { bindRepository(repo) { 0L } }
 
         compose.setContent { ChooseGameScreen(vm) }

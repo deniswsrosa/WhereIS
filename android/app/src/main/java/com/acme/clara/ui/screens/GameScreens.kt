@@ -643,20 +643,33 @@ private fun SightingPanel(v: Virtual, level: Int, onDone: () -> Unit) {
     }
 }
 
+/** [GameToolbar]'s whole rendering only depends on which tool is selected and which tools the
+ *  tour currently allows — a tiny slice of GameState next to the case-progress fields
+ *  (clock, journal, venues, flying...) that actually change on almost every gameplay action. */
+private data class ToolbarState(val selected: Int, val allowed: Set<Int>)
+
 /** The authentic 4-icon toolbar strip (SEE · DEPART · INVESTIGATE · CRIME). The green
  *  selection border tracks the last activated tool (vm.s.selectedTool), like the original.
  *  While the SEE dropdown is open, `seeLabel` covers the SEE caption with "HIDE". */
 @Composable
 fun GameToolbar(v: Virtual, vm: ClaraViewModel, seeLabel: String? = null,
                 onSee: (() -> Unit)? = null, onInvestigate: (() -> Unit)? = null) {
-    val selected = vm.s.selectedTool
+    // Called from both CityScreen and ChaseScreen, so this reads vm.s on nearly every
+    // gameplay frame; without the selector it recomposes on every case-progress change
+    // (clock, journal, venues, flying, ...) even though only the selected tool and the tour's
+    // per-tool lock state ever affect what's drawn here.
+    val toolbar by remember { derivedStateOf {
+        val st = vm.s
+        ToolbarState(st.selectedTool, (0..3).filterTo(mutableSetOf()) { com.acme.clara.ui.tourAllowsTool(st, it) })
+    } }
+    val selected = toolbar.selected
     // same x-extent as the right panel above it — in the original both strips share one width
     v.At(149, 163, 167, 32) {
         Box(Modifier.fillMaxSize()) {
             PixelImage("toolbar_bar", Modifier.fillMaxSize())
             Row(Modifier.fillMaxSize()) {
                 // During a guided step the tour disables the tools it isn't pointing at.
-                fun ok(i: Int) = com.acme.clara.ui.tourAllowsTool(vm.s, i)
+                fun ok(i: Int) = i in toolbar.allowed
                 ToolZone(Modifier.weight(1f), selected == 0, ok(0), v) { onSee?.invoke() }
                 ToolZone(Modifier.weight(1f), selected == 1, ok(1), v) { vm.gotoTravel() }
                 ToolZone(Modifier.weight(1f), selected == 2, ok(2), v) { onInvestigate?.invoke() }
