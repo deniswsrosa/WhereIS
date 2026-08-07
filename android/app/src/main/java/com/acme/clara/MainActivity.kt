@@ -18,6 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.acme.clara.audio.GameSound
 import com.acme.clara.audio.HapticEngine
@@ -53,6 +54,14 @@ class MainActivity : ComponentActivity() {
         super.onStop()
         GameSound.pauseTheme()
         if (Reminders.enabled(this)) WelcomeBackNotifier.schedule(this)   // on by default
+        // onStop is the practical last-reliable-checkpoint before Android may kill the process:
+        // autosave writes are dispatched off the main thread for gameplay smoothness (see
+        // ClaraViewModel.autosave), so block here — the one deliberate exception — until the
+        // most recently queued write has actually landed on disk. ViewModelProvider(this) hands
+        // back the same instance Compose's viewModel() created (this Activity is the default
+        // ViewModelStoreOwner for the composition), so this is a no-op if the game never got
+        // far enough to have anything pending.
+        ViewModelProvider(this)[ClaraViewModel::class.java].flushPendingSave()
     }
 }
 
