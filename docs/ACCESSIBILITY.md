@@ -27,6 +27,11 @@ against the fixed 320×200 pixel-art canvas.
   decorative art (toolbar strip, world-map backdrop, printer/computer chrome, splash screens,
   the DossierCard badge photo) passes `contentDescription = null` so TalkBack skips it instead of
   reading internal asset filenames.
+- **TalkBack strings translated.** The 21 `ui:` keys this accessibility pass introduced (toolbar
+  tool names, portrait/mugshot/photo/witness labels, the chase-beat narrations, `visited`/`any`,
+  and the DEPART/result-screen labels) now have entries in all 10 non-English catalogs, merged via
+  the same `translation/<lang>/ui2.json` → `scripts/i18n_merge_v2.py merge <lang>` pipeline as the
+  rest of the chrome text — no English fallback leakage for non-English players.
 - **48 dp touch targets** on the off-canvas UI — dialog buttons (`DosButton`) and the picker rows
   use `minimumInteractiveComponentSize()` / a 48 dp minimum height without changing their look.
 - **16 KB page size.** The app ships no native `.so` libraries (pure Kotlin/Compose), so it is
@@ -37,12 +42,6 @@ against the fixed 320×200 pixel-art canvas.
   Activity is not recreated on those changes.
 
 ## Deliberate trade-offs (documented, not yet "done")
-
-- **New TalkBack strings aren't translated yet.** They're routed through `Strings.ui(...)` (the
-  same `"ui:<english>"`-keyed catalog every other chrome string uses), so they degrade cleanly to
-  English rather than a raw id — but no `ui:` key has been added to the 10 non-English catalogs
-  for them yet. A translation pass (same workflow as the rest of `ui.json`/`ui2.json`) is a
-  follow-up; it does not block release since the English fallback is always correct.
 
 - **Colour is not the only signal — mostly.** Win vs. loss differ structurally (jail art + report
   text), and cues carry captions. The in-canvas toolbar's *green selection border* is still
