@@ -18,8 +18,10 @@ During a rotation the layout is momentarily measured with a **0 (or unbounded) h
 `maxWidth/maxHeight` produce `Infinity`/`NaN`, so `unit` becomes `NaN`/`Infinity`, and
 `Modifier.size(NaN, NaN)` throws inside Compose layout → the activity crashes.
 
-## Fix 1 — guard VirtualScreen (file: app/src/main/java/com/acme/carmen/ui/CommonUi.kt)
-Replace the body of `VirtualScreen` with the version in `CommonUi.kt.fixed` (same folder). Key change:
+## Fix 1 — guard VirtualScreen (file: app/src/main/java/com/acme/clara/ui/CommonUi.kt)
+Replace the body of `VirtualScreen` with a guarded version. Key change (this fix has since landed in
+`CommonUi.kt` itself; the standalone `CommonUi.kt.fixed` companion file this note originally pointed
+to has been removed as dead weight — the snippet below is kept for the historical record):
 
 ```kotlin
 val wv = maxWidth.value
@@ -39,8 +41,8 @@ android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|ke
 ```
 
 ## Apply
-1. Overwrite `CommonUi.kt` with `CommonUi.kt.fixed`.
-2. Edit the manifest's `configChanges` as above.
+1. Apply the `VirtualScreen` guard above to `CommonUi.kt` — already done in the current tree.
+2. Edit the manifest's `configChanges` as above — already done in the current tree.
 3. Rebuild:
    ```
    cd android
