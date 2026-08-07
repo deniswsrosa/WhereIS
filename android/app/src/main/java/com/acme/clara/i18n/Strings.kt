@@ -1,8 +1,11 @@
 package com.acme.clara.i18n
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import org.json.JSONObject
 
@@ -17,6 +20,12 @@ import org.json.JSONObject
  *    Kotlin fallback. This lets a language be partially translated without ever breaking the build.
  *
  * Changing the language bumps [revision]; the root composable keys off it to re-render everything.
+ *
+ * [init] loads the (tiny) English catalog synchronously — it's the fallback for every lookup
+ * below and must always be ready before the first frame. A non-English catalog can run into the
+ * hundreds of KB, so it's parsed on a background thread instead; [ready] flips to true (and
+ * [revision] bumps) once it lands. Callers on the UI thread should gate first-frame rendering on
+ * [ready] to avoid a flash of untranslated (English-fallback) chrome.
  */
 object Strings {
     /** Offered languages: code -> endonym shown in the picker. */
@@ -46,9 +55,34 @@ object Strings {
     var revision by mutableIntStateOf(0)
         private set
 
+    /** True once [active] holds the catalog for the resolved [language] — always true for English
+     *  (loaded synchronously), false during the brief window a non-English cold-start catalog is
+     *  still parsing on a background thread. The root composable should gate first-frame
+     *  rendering on this so it never flashes untranslated chrome. */
+    var ready by mutableStateOf(true)
+        private set
+
     val language: String get() = lang
 
     fun init(context: Context) {
+        val resolved = resolveLanguageAndEnglish(context)
+        if (resolved == "en") {
+            // English's catalog IS `en`, already loaded above — nothing to wait on.
+            active = en
+            ready = true
+        } else {
+            // Put the object in a valid, non-crashing state immediately (every lookup falls back
+            // to `en`/the raw id while `active` is empty) and parse the real catalog off-thread so
+            // it never blocks the first frame.
+            active = emptyMap()
+            ready = false
+            loadAsync(resolved)
+        }
+    }
+
+    /** Sets [appCtx]/[en]/[lang] from the saved preference (or device default). Shared by [init]
+     *  and [ensureInit], which differ only in how they then populate [active]. */
+    private fun resolveLanguageAndEnglish(context: Context): String {
         appCtx = context.applicationContext
         en = load("en")
         // No saved choice means first launch: follow the device language when we ship it.
@@ -56,7 +90,23 @@ object Strings {
         // in Options ▸ Language — only that persists a choice.
         val saved = appCtx!!.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, null)
         lang = if (saved != null) { if (saved in LANGUAGES) saved else "en" } else deviceDefault()
-        active = if (lang == "en") en else load(lang)
+        return lang
+    }
+
+    /** Parses `assets/i18n/<code>.json` on a background thread and, if [lang] hasn't moved on to
+     *  something else in the meantime, publishes it as [active] on the main thread. */
+    private fun loadAsync(code: String) {
+        Thread {
+            val result = load(code)
+            Handler(Looper.getMainLooper()).post {
+                // Guards against a setLanguage() call racing ahead of this cold-start load.
+                if (lang == code) {
+                    active = result
+                    ready = true
+                    revision++
+                }
+            }
+        }.start()
     }
 
     /** The device locale's language, mapped onto our catalog codes; English when unsupported.
@@ -66,6 +116,11 @@ object Strings {
         return if (code in LANGUAGES) code else "en"
     }
 
+    /** Called from Options ▸ Language — a deliberate, infrequent user action, unlike [init]'s
+     *  cold start. Stays synchronous on purpose: [ready] already gates the very first frame, and
+     *  reusing that same gate mid-game (blanking the whole screen while the player is mid-session)
+     *  would trade a sub-frame cold-start stall for a visible, worse mid-game one. The parse
+     *  itself is still just a few hundred KB and finishes well within one frame in practice. */
     fun setLanguage(code: String) {
         if (code !in LANGUAGES) return
         // Persist even a pick that matches the current (device-derived) language, so an
@@ -74,6 +129,7 @@ object Strings {
         if (code == lang) return
         lang = code
         active = if (code == "en") en else load(code)
+        ready = true
         revision++
     }
 
@@ -101,8 +157,18 @@ object Strings {
      *  place's other catalog entries. Falls back to the English name. */
     fun place(name: String): String = if (lang == "en") name else active["city.$name.name"] ?: name
 
-    /** Load the catalog when called outside the Activity lifecycle (workers, notifications). */
-    fun ensureInit(context: Context) { if (appCtx == null) init(context) }
+    /** Load the catalog when called outside the Activity lifecycle (workers, notifications).
+     *  Unlike [init], this stays fully synchronous: these callers (e.g. [WelcomeBackWorker])
+     *  read [ui]/[get] immediately afterward on a background thread with no Compose recomposition
+     *  to pick up a later async update, so a partial (English-fallback) catalog here would leak
+     *  into user-visible text — a background thread has no first frame to protect, so there's
+     *  nothing to gain by not blocking it for the parse. */
+    fun ensureInit(context: Context) {
+        if (appCtx != null) return
+        val resolved = resolveLanguageAndEnglish(context)
+        active = if (resolved == "en") en else load(resolved)
+        ready = true
+    }
 
     /** UI-chrome convenience: the English text stays at the call site and doubles as the fallback,
      *  so wrapping a literal never changes the English build. Translation is keyed by "ui:<english>".

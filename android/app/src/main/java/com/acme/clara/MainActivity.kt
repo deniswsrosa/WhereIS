@@ -100,21 +100,29 @@ fun ClaraApp() {
     androidx.compose.foundation.layout.Box(
         Modifier.fillMaxSize().background(Vga.Black).windowInsetsPadding(WindowInsets.systemBars)
     ) {
-        // Re-render the whole tree when the language changes so every Strings.get() re-reads.
-        androidx.compose.runtime.key(com.acme.clara.i18n.Strings.revision) {
-            when (vm.s.phase) {
-                Phase.INTRO -> IntroScreen(vm)
-                Phase.TITLE -> TitleScreen(vm)
-                Phase.SIGN_ON -> SignOnScreen(vm)
-                Phase.BRIEFING -> BriefingScreen(vm)
-                Phase.CITY -> CityScreen(vm)
-                Phase.TRAVEL -> TravelScreen(vm)
-                Phase.CRIME -> CrimeScreen(vm)
-                Phase.CHASE -> ChaseScreen(vm)
-                Phase.RESULT -> ResultScreen(vm)
-                Phase.CHOOSE_GAME -> ChooseGameScreen(vm)
+        // Non-English cold start: the real catalog is still parsing off the main thread (see
+        // Strings.init). Render nothing but the black backdrop above until it lands, rather than
+        // flash the real screens with English-fallback chrome — chrome text is exactly what isn't
+        // loaded yet, so there's nothing worth translating on this placeholder either. In practice
+        // this is sub-frame; English-default-locale users never see it (Strings.ready is true
+        // synchronously for them).
+        if (com.acme.clara.i18n.Strings.ready) {
+            // Re-render the whole tree when the language changes so every Strings.get() re-reads.
+            androidx.compose.runtime.key(com.acme.clara.i18n.Strings.revision) {
+                when (vm.s.phase) {
+                    Phase.INTRO -> IntroScreen(vm)
+                    Phase.TITLE -> TitleScreen(vm)
+                    Phase.SIGN_ON -> SignOnScreen(vm)
+                    Phase.BRIEFING -> BriefingScreen(vm)
+                    Phase.CITY -> CityScreen(vm)
+                    Phase.TRAVEL -> TravelScreen(vm)
+                    Phase.CRIME -> CrimeScreen(vm)
+                    Phase.CHASE -> ChaseScreen(vm)
+                    Phase.RESULT -> ResultScreen(vm)
+                    Phase.CHOOSE_GAME -> ChooseGameScreen(vm)
+                }
+                com.acme.clara.ui.CaptionOverlay(vm)
             }
-            com.acme.clara.ui.CaptionOverlay(vm)
         }
     }
 }
