@@ -1,5 +1,6 @@
 package com.acme.clara
 
+import com.acme.clara.billing.BillingManager
 import com.acme.clara.game.ClaraViewModel
 import com.acme.clara.game.Overlay
 import com.acme.clara.game.WelcomeBack
@@ -46,9 +47,15 @@ class WelcomeBackTest {
         assertEquals("free hint doesn't cost the badge", 0, reopened.s.hintsUsed)
         reopened.dismissOverlay()
 
-        // the next hint costs the badge
+        // the next ask: today (SALES_ENABLED off) it still costs the badge; once sales are live an
+        // unpaid career is offered the purchase instead of a further hint (requestHint()'s paid gate).
         reopened.requestHint()
-        assertEquals(1, reopened.s.hintsUsed)
+        if (BillingManager.SALES_ENABLED) {
+            assertEquals(Overlay.PurchaseOffer("Bureau hint"), reopened.s.overlay)
+            assertEquals(0, reopened.s.hintsUsed)
+        } else {
+            assertEquals(1, reopened.s.hintsUsed)
+        }
     }
 
     @Test fun returningPromptlyBanksNothing() {

@@ -72,6 +72,34 @@ class SaveTest {
         assertFalse("no Peking in city-last-seen", "Peking" in s.cityLastSeen.keys)
     }
 
+    @Test fun codecLoadsAPreExpansionSaveMissingThisSessionsNewFields() {
+        // Simulates a save written before expansionUnlocked/bureauTipUsed existed on disk: strip
+        // those keys out of an otherwise-real, valid save and confirm decode() still succeeds with
+        // safe defaults rather than crashing or silently corrupting the rest of the state — the
+        // exact scenario an existing player's save hits on the first launch after this update.
+        val vm = ClaraViewModel().apply { signOn("Ada Lovelace") }
+        val snap = vm.snapshot("profile-1", 12345L)
+        val fullText = SaveCodec.encode(snap.meta, snap.state)
+        val preExpansionText = Json.encode(
+            (Json.decode(fullText) as Map<*, *>).let { root ->
+                val state = (root["state"] as Map<*, *>).toMutableMap()
+                state.remove("expansionUnlocked")
+                state.remove("bureauTipUsed")
+                linkedMapOf("v" to root["v"], "meta" to root["meta"], "state" to state)
+            }
+        )
+
+        val back = SaveCodec.decode(preExpansionText)
+        assertNotNull("an old save without these keys still loads", back)
+        assertFalse("missing expansionUnlocked defaults to free tier, not a crash",
+            back!!.state.expansionUnlocked)
+        assertFalse("missing bureauTipUsed defaults to not-yet-spent",
+            back.state.bureauTipUsed)
+        // everything else that WAS present still round-trips untouched
+        assertEquals("the rest of the career is unaffected",
+            snap.state.copy(expansionUnlocked = false, bureauTipUsed = false), back.state)
+    }
+
     @Test fun codecReturnsNullOnGarbage() {
         assertNull(SaveCodec.decode("not json"))
         assertNull(SaveCodec.decode("{}"))            // missing meta/state
@@ -123,6 +151,25 @@ class SaveTest {
         assertEquals(7L, loaded.meta.lastPlayed)
         assertTrue("visit is captured on disk", loaded.state.visited.isNotEmpty())
         assertEquals("disk equals screen", vm.snapshot("p1", 7L).state, loaded.state)
+    }
+
+    @Test fun optionsTogglesAutosaveImmediately() {
+        // Regression: toggleSound/toggleHaptics/toggleCaptions used to flip the in-memory flag
+        // without ever calling autosave(), so a crash right after opening Options and toggling
+        // one lost the change on next launch — the same class of bug the autosave/SaveStore work
+        // this session was about, just missed on these three call sites.
+        val repo = InMemorySaveRepository()
+        val vm = ClaraViewModel().apply { signOn("Grace") }
+        vm.attachSave(repo, "p1") { 7L }
+
+        vm.toggleSound()
+        assertEquals("sound flip is on disk", vm.s.soundOn, repo.load("p1")!!.state.soundOn)
+
+        vm.toggleHaptics()
+        assertEquals("haptics flip is on disk", vm.s.hapticsOn, repo.load("p1")!!.state.hapticsOn)
+
+        vm.toggleCaptions()
+        assertEquals("captions flip is on disk", vm.s.captionsOn, repo.load("p1")!!.state.captionsOn)
     }
 
     @Test fun loadCareerRestoresExactly() {

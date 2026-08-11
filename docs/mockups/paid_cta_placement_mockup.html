@@ -1,0 +1,1528 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Where is Clara? — Paid CTA placement mockups</title>
+  <style>
+    :root {
+      --black: #050609;
+      --panel: #0b0d10;
+      --white: #f4f3ea;
+      --gray: #a7a7a7;
+      --dark-gray: #383b3f;
+      --yellow: #fff12f;
+      --cyan: #18e9ef;
+      --green: #04bb13;
+      --red: #d81919;
+      --shadow: 10px 10px 0 rgba(0, 0, 0, .45);
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { background: #090b0e; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--white);
+      background:
+        radial-gradient(circle at 50% -20%, #272c34 0, #101318 44%, #080a0d 80%);
+      font-family: "Courier New", Courier, monospace;
+    }
+
+    button, a { font: inherit; }
+
+    .page {
+      width: min(1480px, 100%);
+      margin: 0 auto;
+      padding: clamp(20px, 4vw, 58px);
+    }
+
+    .page-header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 28px;
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--yellow);
+      font-size: clamp(24px, 3vw, 44px);
+      line-height: 1;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      text-shadow: 3px 3px 0 #000;
+    }
+
+    .intro {
+      max-width: 720px;
+      margin: 10px 0 0;
+      color: var(--cyan);
+      font-size: clamp(13px, 1.3vw, 17px);
+      line-height: 1.45;
+    }
+
+    .hint {
+      flex: 0 0 auto;
+      color: var(--gray);
+      font-size: 13px;
+      text-align: right;
+    }
+
+    .section-kicker {
+      margin: 0 0 7px;
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .strategy-heading {
+      margin: 0;
+      color: var(--yellow);
+      font-size: clamp(22px, 3vw, 38px);
+      line-height: 1.08;
+      text-transform: uppercase;
+      text-shadow: 3px 3px 0 #000;
+    }
+
+    .strategy-lead {
+      max-width: 930px;
+      margin: 12px 0 22px;
+      color: var(--white);
+      font-size: clamp(13px, 1.2vw, 17px);
+      line-height: 1.55;
+    }
+
+    .strategy-lead strong { color: var(--cyan); }
+
+    /* Shared "screen" chrome used by every mockup card */
+    .mockup-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(25px, 3vw, 44px);
+    }
+
+    .mockup-card { min-width: 0; }
+
+    .placement-label {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      margin: 0 0 11px;
+      color: var(--yellow);
+      font-size: clamp(15px, 1.6vw, 21px);
+      font-weight: 700;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .placement-label span {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      color: #090909;
+      background: var(--yellow);
+      border: 2px solid var(--white);
+      box-shadow: 3px 3px 0 #000;
+    }
+
+    .placement-meta {
+      min-height: 36px;
+      margin: -3px 0 10px 42px;
+      color: var(--gray);
+      font-size: clamp(10px, .95vw, 13px);
+      line-height: 1.35;
+    }
+
+    .placement-meta strong {
+      color: var(--cyan);
+      text-transform: uppercase;
+    }
+
+    .screen {
+      position: relative;
+      aspect-ratio: 16 / 10;
+      overflow: hidden;
+      background: var(--black);
+      border: 3px solid var(--white);
+      box-shadow: var(--shadow);
+      isolation: isolate;
+    }
+
+    .screen-inner {
+      position: absolute;
+      inset: 0;
+      padding: clamp(12px, 2vw, 24px);
+    }
+
+    .screen-title {
+      margin: 0;
+      color: var(--yellow);
+      font-size: clamp(18px, 2vw, 29px);
+      line-height: 1;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .muted { color: var(--gray); }
+
+    .dos-button {
+      min-height: 44px;
+      border: 2px solid #111;
+      border-radius: 0;
+      padding: 10px 17px;
+      color: #111;
+      background: var(--yellow);
+      box-shadow: 4px 4px 0 #000;
+      font-weight: 700;
+      font-size: clamp(13px, 1.45vw, 20px);
+      line-height: 1;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .dos-button:hover,
+    .dos-button:focus-visible {
+      outline: 3px solid var(--cyan);
+      outline-offset: 3px;
+      filter: brightness(1.08);
+    }
+
+    .dos-button.green {
+      color: var(--white);
+      background: var(--green);
+      border-color: var(--white);
+    }
+
+    .dos-button.gray { background: #b8b8b8; }
+
+    .text-button {
+      border: 0;
+      padding: 8px 10px;
+      color: #c8c8c8;
+      background: transparent;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .text-button:hover,
+    .text-button:focus-visible { color: var(--cyan); outline: 1px solid var(--cyan); }
+
+    .commercial-badge {
+      width: fit-content;
+      padding: 4px 17px;
+      color: #111;
+      background: var(--yellow);
+      font-size: clamp(9px, 1vw, 13px);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    /* Short scannable bullet list — used instead of dense paragraphs */
+    .bullet-list {
+      margin: 8px 0 0;
+      padding-left: 20px;
+    }
+
+    .bullet-list li {
+      margin: 0 0 7px;
+      color: #d2d2cc;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .bullet-list li::marker { color: var(--yellow); }
+    .bullet-list strong { color: var(--cyan); }
+
+    /* Ten-wave-at-a-glance table */
+    .wave-table-wrap {
+      margin: 16px 0 20px;
+      overflow-x: auto;
+      border: 1px solid #363c43;
+    }
+
+    .wave-table {
+      width: 100%;
+      min-width: 560px;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .wave-table th,
+    .wave-table td {
+      padding: 9px 12px;
+      border-bottom: 1px solid #2c3036;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .wave-table th {
+      color: var(--cyan);
+      background: #0d1013;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .wave-table td { color: var(--gray); }
+    .wave-table tr:last-child td { border-bottom: 0; }
+    .wave-table tr.clara-row td:first-child { color: var(--white); }
+
+    .wave-table .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+    }
+
+    .wave-table .tag.boss { background: #2a2f14; color: var(--yellow); }
+    .wave-table .tag.successor { background: #2a1418; color: #ff8f8f; }
+    .wave-table .tag.clara { background: var(--red); color: #fff; }
+
+    /* Design-principles library */
+    .principles {
+      margin-top: clamp(34px, 5vw, 62px);
+    }
+
+    .principles-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .principle-card {
+      padding: 16px;
+      background: #0b0e12;
+      border: 1px solid #3d434a;
+      border-left: 3px solid var(--cyan);
+    }
+
+    .principle-card h3 {
+      margin: 0 0 6px;
+      color: var(--white);
+      font-size: 14px;
+      line-height: 1.3;
+      text-transform: uppercase;
+    }
+
+    .principle-card p {
+      margin: 0 0 8px;
+      color: var(--gray);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .principle-card cite {
+      display: block;
+      color: var(--cyan);
+      font-size: 11px;
+      font-style: normal;
+      font-weight: 700;
+    }
+
+    /* CTA placement map — persistent menu-bar entry */
+    .menubar-screen {
+      background: url("../../playstore/graphics/screenshots/raw/02_witness_interview.png") center / cover no-repeat;
+    }
+
+    .menubar-screen::before {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      inset: 0;
+      background: rgba(3, 4, 6, .3);
+    }
+
+    .dos-menubar {
+      position: absolute;
+      z-index: 2;
+      inset: 0 0 auto;
+      display: flex;
+      align-items: center;
+      height: 9%;
+      padding: 0 3%;
+      background: var(--white);
+      border-bottom: 2px solid #111;
+    }
+
+    .dos-menubar-item {
+      padding: 0 2.6%;
+      color: #111;
+      background: transparent;
+      border: 0;
+      font-family: inherit;
+      font-size: clamp(7px, .82vw, 12px);
+      font-weight: 700;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+    }
+
+    .dos-menubar-item.campaign {
+      position: relative;
+      margin-left: auto;
+      cursor: pointer;
+    }
+
+    .dos-menubar-item.campaign::after {
+      content: "";
+      position: absolute;
+      top: 1px;
+      right: 0;
+      width: 6px;
+      height: 6px;
+      background: var(--red);
+      border-radius: 50%;
+    }
+
+    .menubar-callout {
+      position: absolute;
+      z-index: 2;
+      right: 3%;
+      top: 15%;
+      max-width: 44%;
+      padding: 7px 9px;
+      color: #111;
+      background: var(--yellow);
+      border: 2px solid #111;
+      box-shadow: 3px 3px 0 #000;
+      font-size: clamp(7px, .82vw, 11px);
+      line-height: 1.4;
+      font-weight: 700;
+    }
+
+    .menubar-caption {
+      position: absolute;
+      z-index: 2;
+      inset: auto 0 0;
+      margin: 0;
+      padding: 6px 3%;
+      color: var(--white);
+      background: rgba(0, 0, 0, .72);
+      font-size: clamp(7px, .82vw, 11px);
+      text-align: center;
+    }
+
+    /* CTA placement map — passport */
+    .passport-screen .screen-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .stamp-count {
+      margin: 4px 0 7px;
+      color: var(--yellow);
+      font-size: clamp(20px, 2.3vw, 32px);
+      font-weight: 700;
+      letter-spacing: .03em;
+    }
+
+    .passport-copy {
+      margin: 0 0 9px;
+      color: var(--cyan);
+      font-size: clamp(11px, 1.15vw, 16px);
+    }
+
+    .locked-map {
+      position: relative;
+      width: 94%;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      background: #102f3c;
+      border: 2px solid var(--white);
+    }
+
+    .locked-map::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: url("../../android/app/src/main/assets/sprites/screens/world_map_clean.png") center / 100% 100% no-repeat;
+      image-rendering: pixelated;
+      filter: brightness(.47) saturate(.65);
+    }
+
+    .pixel-lock {
+      position: absolute;
+      left: 50%;
+      top: 48%;
+      width: 56px;
+      height: 48px;
+      transform: translate(-50%, -50%);
+      background: #bdbdbd;
+      border: 5px solid #292929;
+      box-shadow: inset 0 -8px 0 #777, 5px 5px 0 #000;
+    }
+
+    .pixel-lock::before {
+      content: "";
+      position: absolute;
+      left: 10px;
+      top: -37px;
+      width: 27px;
+      height: 34px;
+      border: 7px solid #bdbdbd;
+      border-bottom: 0;
+      box-shadow: 0 0 0 5px #292929;
+    }
+
+    .pixel-lock::after {
+      content: "";
+      position: absolute;
+      left: 22px;
+      top: 16px;
+      width: 9px;
+      height: 17px;
+      background: #111;
+      clip-path: polygon(50% 0, 100% 40%, 75% 100%, 25% 100%, 0 40%);
+    }
+
+    .instant-note {
+      position: absolute;
+      inset: auto 0 9px;
+      color: var(--cyan);
+      font-size: clamp(10px, 1vw, 14px);
+    }
+
+    .passport-actions {
+      display: grid;
+      justify-items: center;
+      gap: 2px;
+      width: min(92%, 510px);
+      margin-top: 10px;
+    }
+
+    .passport-actions .dos-button { width: 100%; }
+
+    /* CTA placement map — database */
+    .database-screen .screen-inner {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .database-kicker {
+      margin: 8px 0 10px;
+      color: var(--cyan);
+      font-size: clamp(13px, 1.5vw, 20px);
+      text-align: center;
+    }
+
+    .database-entry {
+      display: grid;
+      grid-template-columns: 43% 1fr;
+      gap: clamp(12px, 2vw, 25px);
+      flex: 1;
+      min-height: 0;
+    }
+
+    .postcard {
+      position: relative;
+      overflow: hidden;
+      min-height: 130px;
+      border: 3px solid var(--white);
+      background: #3547a7;
+    }
+
+    .postcard img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      image-rendering: pixelated;
+    }
+
+    .locked-stamp {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) rotate(-11deg);
+      padding: 5px 10px;
+      color: var(--red);
+      border: 5px solid var(--red);
+      background: rgba(0, 0, 0, .45);
+      font-size: clamp(22px, 3vw, 42px);
+      font-weight: 900;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    .facts {
+      min-width: 0;
+      overflow: hidden;
+      font-size: clamp(10px, 1.15vw, 16px);
+      line-height: 1.25;
+    }
+
+    .facts p { margin: 0 0 9px; }
+    .facts strong { display: block; color: var(--cyan); }
+    .facts .locked-fact { filter: blur(4px); user-select: none; }
+
+    .database-actions {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: stretch;
+      margin-top: 13px;
+    }
+
+    .purchase-note {
+      grid-column: 1 / -1;
+      margin-top: -8px;
+      color: var(--gray);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    /* CTA placement map — travel-screen nudge */
+    .nudge-screen .screen-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      text-align: center;
+    }
+
+    .nudge-route {
+      margin: 0;
+      color: var(--gray);
+      font-size: clamp(11px, 1.2vw, 15px);
+    }
+
+    .nudge-chip {
+      padding: 10px 18px;
+      color: #111;
+      background: var(--cyan);
+      border: 2px solid var(--white);
+      font-weight: 700;
+      font-size: clamp(12px, 1.35vw, 18px);
+      text-transform: uppercase;
+    }
+
+    .nudge-hint { margin: 0; font-size: clamp(9px, 1vw, 13px); }
+
+    /* CTA placement map — post-purchase ceremony */
+    .ceremony-screen {
+      background: url("../../playstore/graphics/screenshots/raw/07_case_solved.png") center / cover no-repeat;
+    }
+
+    .ceremony-screen::before {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      inset: 0;
+      background: rgba(0, 0, 0, .8);
+    }
+
+    .ceremony-panel {
+      position: absolute;
+      z-index: 1;
+      inset: 6%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: clamp(14px, 2.4vw, 26px);
+      text-align: center;
+      background: rgba(3, 4, 6, .94);
+      border: 2px solid var(--white);
+    }
+
+    .ceremony-title {
+      margin: 2px 0 0;
+      color: var(--yellow);
+      font-size: clamp(18px, 2.2vw, 30px);
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .ceremony-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      width: 100%;
+      margin: 8px 0 4px;
+    }
+
+    .ceremony-item {
+      padding: 8px 6px;
+      border: 1px solid #4b4f54;
+      background: #0d1013;
+    }
+
+    .ceremony-item strong {
+      display: block;
+      color: var(--cyan);
+      font-size: clamp(13px, 1.5vw, 19px);
+    }
+
+    .ceremony-item span {
+      display: block;
+      margin-top: 2px;
+      color: var(--gray);
+      font-size: clamp(8px, .9vw, 12px);
+      line-height: 1.3;
+    }
+
+    /* Story flow (Clara / masterminds) */
+    .simple-direction { margin-top: clamp(40px, 6vw, 72px); }
+
+    .direction-banner {
+      margin: 18px 0 22px;
+      padding: clamp(16px, 2.5vw, 28px);
+      color: #111;
+      background: var(--yellow);
+      border: 3px solid var(--white);
+      box-shadow: 8px 8px 0 #000;
+    }
+
+    .direction-banner span {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .direction-banner strong {
+      display: block;
+      font-size: clamp(17px, 2vw, 27px);
+      line-height: 1.25;
+    }
+
+    .story-flow {
+      display: grid;
+      grid-template-columns: 1.15fr .8fr 1.25fr .8fr .9fr;
+      gap: 9px;
+      align-items: stretch;
+      margin: 22px 0;
+    }
+
+    .story-stage {
+      position: relative;
+      padding: 15px;
+      background: #0b0e12;
+      border: 1px solid #444a51;
+    }
+
+    .story-stage:not(:last-child)::after {
+      content: "▶";
+      position: absolute;
+      z-index: 2;
+      right: -13px;
+      top: 50%;
+      color: var(--yellow);
+      transform: translateY(-50%);
+    }
+
+    .story-stage strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--cyan);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .story-stage p {
+      margin: 0;
+      color: var(--gray);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .story-stage.clara { border-color: var(--red); }
+    .story-stage.final { border-color: var(--yellow); }
+
+    .simple-rule-grid,
+    .early-value-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .simple-rule,
+    .early-value-card {
+      padding: 15px;
+      background: #0b0e12;
+      border: 1px solid #3d434a;
+    }
+
+    .simple-rule h3,
+    .early-value-card h3 {
+      margin: 0 0 7px;
+      color: var(--cyan);
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .simple-rule p,
+    .early-value-card p {
+      margin: 0;
+      color: var(--gray);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .simple-rule strong,
+    .early-value-card strong { color: var(--white); }
+
+    .spec-callout {
+      margin: 17px 0 22px;
+      padding: 14px 17px;
+      color: #d7d7d1;
+      background: #0b1015;
+      border-left: 4px solid var(--green);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .spec-callout strong { color: var(--cyan); }
+
+    .simple-screen-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 22px;
+    }
+
+    .simple-screen-card h3 {
+      min-height: 34px;
+      margin: 0 0 7px;
+      color: var(--yellow);
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .simple-screen-card > p {
+      min-height: 50px;
+      margin: 0 0 9px;
+      color: var(--gray);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .simple-game-screen {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 16 / 11;
+      padding: 5%;
+      background: #020305;
+      border: 3px solid var(--white);
+      box-shadow: 7px 7px 0 #000;
+    }
+
+    .simple-game-screen h4 {
+      margin: 0 0 3%;
+      color: var(--yellow);
+      font-size: clamp(12px, 1.45vw, 20px);
+      line-height: 1;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .escape-layout {
+      display: grid;
+      grid-template-columns: 57% 1fr;
+      gap: 5%;
+      height: 61%;
+      align-items: center;
+    }
+
+    .escape-report {
+      padding: 7%;
+      color: #111;
+      background: var(--white);
+      border: 2px solid #111;
+      font-size: clamp(7px, .78vw, 10px);
+      line-height: 1.4;
+    }
+
+    .escape-report strong { color: #007c83; }
+
+    .clara-escape {
+      position: relative;
+      display: grid;
+      height: 80%;
+      place-items: center;
+      overflow: hidden;
+      background: #211015;
+      border: 2px solid var(--red);
+    }
+
+    .clara-escape img {
+      width: 90%;
+      height: 90%;
+      object-fit: contain;
+      image-rendering: pixelated;
+      transform: translateX(15%) rotate(3deg);
+    }
+
+    .clara-escape::after {
+      content: "ESCAPED";
+      position: absolute;
+      inset: auto 0 6%;
+      color: #fff;
+      background: var(--red);
+      font-size: clamp(7px, .8vw, 11px);
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .clara-escape.captured::after {
+      content: "IN CUSTODY";
+      background: #087c18;
+    }
+
+    .screen-mini-action {
+      display: block;
+      width: 100%;
+      margin-top: 3%;
+      padding: 5px;
+      color: #111;
+      background: var(--yellow);
+      border: 1px solid #111;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: clamp(7px, .8vw, 11px);
+      font-weight: 700;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .boss-counter {
+      color: var(--cyan);
+      font-size: clamp(8px, .9vw, 12px);
+      text-align: center;
+    }
+
+    .continent-bosses {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      margin: 5% 0;
+    }
+
+    .continent-boss {
+      padding: 7px 3px;
+      color: #999;
+      background: #14181d;
+      border: 1px solid #41464d;
+      font-size: clamp(6px, .67vw, 9px);
+      font-weight: 700;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .continent-boss.done { color: #fff; background: #087714; }
+    .continent-boss.active { color: #111; background: var(--yellow); }
+
+    .coverage-meter {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 3px;
+      margin: 4% 0;
+    }
+
+    .coverage-meter span {
+      display: block;
+      aspect-ratio: 1.25;
+      background: #20252b;
+      border: 1px solid #515860;
+    }
+
+    .coverage-meter .covered { background: var(--green); border-color: #d8ffd9; }
+
+    /* Engineering reality check */
+    .ship-check { margin-top: clamp(40px, 6vw, 72px); }
+
+    .risk-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .risk-card {
+      padding: 16px 18px;
+      background: #0b0e12;
+      border: 1px solid #3d434a;
+      border-left: 4px solid var(--red);
+    }
+
+    .risk-card.solved { border-left-color: var(--green); }
+
+    .risk-card h3 {
+      margin: 0 0 7px;
+      color: var(--white);
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .risk-card p {
+      margin: 0;
+      color: var(--gray);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .risk-card code {
+      color: var(--cyan);
+      font-size: 11px;
+    }
+
+    /* Implementation notes (collapsible detail) */
+    .current-notes {
+      margin-top: 24px;
+      background: #0b0e12;
+      border: 1px solid #3e444b;
+    }
+
+    .current-notes > summary {
+      padding: 15px 17px;
+      color: var(--cyan);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .current-notes-body {
+      padding: 0 17px 17px;
+      border-top: 1px dashed #3e444b;
+    }
+
+    .strategy-note {
+      margin: 34px 0 0;
+      padding: 14px 18px;
+      color: var(--gray);
+      border: 1px solid #454a50;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .strategy-note strong { color: var(--cyan); }
+
+    .simple-assets {
+      margin-top: 20px;
+      padding: 17px;
+      color: var(--gray);
+      background: #0b0e12;
+      border: 1px solid #3e444b;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .simple-assets strong { color: var(--cyan); }
+
+    .source-library {
+      margin-top: 18px;
+      padding: 15px 18px;
+      color: var(--gray);
+      border: 1px dashed #52585f;
+      font-size: 11px;
+      line-height: 1.8;
+    }
+
+    .source-library strong { color: var(--cyan); }
+
+    .source-library a {
+      color: var(--white);
+      text-decoration-color: var(--cyan);
+      text-underline-offset: 3px;
+    }
+
+    /* Shared interactive purchase dialog */
+    .modal-backdrop {
+      position: fixed;
+      z-index: 20;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(0, 0, 0, .82);
+    }
+
+    .modal-backdrop[hidden] { display: none; }
+
+    .purchase-dialog {
+      width: min(620px, 100%);
+      padding: clamp(20px, 4vw, 38px);
+      background: var(--black);
+      border: 3px solid var(--white);
+      box-shadow: 12px 12px 0 #000;
+      text-align: center;
+    }
+
+    .purchase-dialog h2 {
+      margin: 0;
+      color: var(--yellow);
+      font-size: clamp(24px, 5vw, 38px);
+      text-transform: uppercase;
+    }
+
+    .purchase-dialog .dialog-subtitle {
+      margin: 8px 0 20px;
+      color: var(--cyan);
+    }
+
+    .dialog-benefits {
+      margin: 0 0 22px;
+      padding: 0;
+      list-style: none;
+      text-align: left;
+      line-height: 1.7;
+    }
+
+    .dialog-benefits li::before { content: "◆ "; color: var(--yellow); }
+
+    .dialog-actions { display: grid; gap: 8px; }
+
+    .toast {
+      position: fixed;
+      z-index: 30;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      padding: 12px 18px;
+      color: #111;
+      background: var(--yellow);
+      border: 2px solid #111;
+      box-shadow: 4px 4px 0 #000;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .toast[hidden] { display: none; }
+
+    @media (max-width: 900px) {
+      .page-header { display: block; }
+      .hint { margin-top: 12px; text-align: left; }
+      .mockup-grid { grid-template-columns: 1fr; }
+      .placement-label { margin-top: 8px; }
+      .placement-meta { min-height: 0; }
+      .screen { max-height: 620px; }
+      .dos-button { min-height: 38px; }
+      .principles-grid { grid-template-columns: 1fr; }
+      .risk-grid { grid-template-columns: 1fr; }
+      .story-flow { grid-template-columns: 1fr; }
+      .story-stage:not(:last-child)::after { content: "▼"; right: 50%; top: auto; bottom: -15px; transform: translateX(50%); }
+      .simple-screen-grid { grid-template-columns: 1fr; }
+      .simple-screen-card h3, .simple-screen-card > p { min-height: 0; }
+    }
+
+    @media (max-width: 520px) {
+      .page { padding: 18px 12px 36px; }
+      .screen-inner { padding: 10px; }
+      .database-entry { grid-template-columns: 40% 1fr; gap: 9px; }
+      .database-actions { gap: 8px; }
+      .ceremony-panel { inset: 3%; }
+      .ceremony-grid { grid-template-columns: 1fr; }
+      .simple-rule-grid, .early-value-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .dos-button { transition: filter .12s ease, background-color .12s ease; }
+      .modal-backdrop { animation: fade-in .14s ease-out; }
+      .purchase-dialog { animation: dialog-in .18s steps(3, end); }
+      @keyframes fade-in { from { opacity: 0; } }
+      @keyframes dialog-in { from { transform: scale(.94); } }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="page-header">
+      <div>
+        <h1>Paid story &amp; CTA direction</h1>
+        <p class="intro">6 CTA placements. 10 unlock waves — the same ones already in the design doc, untouched. Clara personally shows up only 6 times, so it still means something when she does.</p>
+      </div>
+      <p class="hint">Interactive prototype · click any highlighted CTA</p>
+    </header>
+
+    <section class="principles" aria-labelledby="principles-title">
+      <p class="section-kicker">Why each CTA sits where it sits</p>
+      <h2 class="strategy-heading" id="principles-title">Design principles, not gut feel</h2>
+      <p class="strategy-lead">Every placement below traces back to one of these. If a proposed CTA can't cite one, it doesn't ship.</p>
+      <div class="principles-grid">
+        <article class="principle-card">
+          <h3>Never interrupt flow</h3>
+          <p>An offer never appears mid-case, mid-chase, or during a promotion quiz — only at natural pauses (travel screen, case-closed, menu).</p>
+          <cite>Csikszentmihalyi's flow, via Schell — The Art of Game Design</cite>
+        </article>
+        <article class="principle-card">
+          <h3>Open a curiosity gap</h3>
+          <p>Locked content is never a blank void. The passport shows the shape of the unlit world; the database shows one real fact and blurs the rest.</p>
+          <cite>Schell — The Art of Game Design; Koster — A Theory of Fun</cite>
+        </article>
+        <article class="principle-card">
+          <h3>Sell at peak investment</h3>
+          <p>The primary offer fires the moment a player's stake is highest: right after 13 free wins and a personal rival who just got away.</p>
+          <cite>Eyal — Hooked (Trigger → Action → Reward → Investment)</cite>
+        </article>
+        <article class="principle-card">
+          <h3>One fair price, no pressure</h3>
+          <p>Single price, no countdown, no fake scarcity. "Not now" and "Restore purchase" are always as visible as "Buy."</p>
+          <cite>Luton — Free-to-Play</cite>
+        </article>
+        <article class="principle-card">
+          <h3>Show the collection</h3>
+          <p>Stamp counts, database completion, and a mastermind roster all make "how much is left" visible — ownership of a whole set, not a single item.</p>
+          <cite>Chou — Actionable Gamification (Octalysis)</cite>
+        </article>
+        <article class="principle-card">
+          <h3>Always leave a way back</h3>
+          <p>A player who declines at the peak moment isn't nagged again — but the offer stays one tap away in the Database, the Passport, and a permanent menu entry, indefinitely.</p>
+          <cite>Luton — Free-to-Play</cite>
+        </article>
+      </div>
+    </section>
+
+    <section class="cta-map" aria-labelledby="cta-map-title">
+      <p class="section-kicker">CTA placement map</p>
+      <h2 class="strategy-heading" id="cta-map-title">Six touchpoints across the free career</h2>
+      <p class="strategy-lead">Five low-key placements a player can find whenever they're curious, plus the one moment — Clara's escape in Case 14, detailed further down — that does the actual selling.</p>
+
+      <div class="mockup-grid">
+        <article class="mockup-card">
+          <p class="placement-label"><span>1</span> Persistent menu bar — always there</p>
+          <p class="placement-meta"><strong>Always reachable, never loud.</strong> A real menu title, styled exactly like Game/Options/Bureau/Dossiers — not a banner, not animated, doesn't push anything at you unprompted. Tapping it opens the <strong>same purchase popup as every other CTA on this page</strong> — not the Passport, not a new screen, the one shared dialog at the bottom of this file.</p>
+          <div class="screen menubar-screen">
+            <div class="dos-menubar">
+              <span class="dos-menubar-item">Game</span>
+              <span class="dos-menubar-item">Options</span>
+              <span class="dos-menubar-item">Bureau</span>
+              <span class="dos-menubar-item">Dossiers</span>
+              <button type="button" class="dos-menubar-item campaign js-open-purchase" data-source="Persistent menu bar">Campaign</button>
+            </div>
+            <div class="menubar-callout">Quiet until tapped. Tap it → the same purchase popup as every CTA here.</div>
+            <p class="menubar-caption">Case 7 of 14 · Ace Detective in progress</p>
+          </div>
+        </article>
+
+        <article class="mockup-card">
+          <p class="placement-label"><span>2</span> Passport — locked map</p>
+          <p class="placement-meta"><strong>Curiosity + ownership.</strong> Every free stamp already glows; the rest of the world sits behind frosted glass with a lock, not nothing.</p>
+          <div class="screen passport-screen">
+            <div class="screen-inner">
+              <h2 class="screen-title">Passport</h2>
+              <p class="stamp-count">30 / 231 stamped</p>
+              <p class="passport-copy">Tap anywhere on the locked map to preview what's behind it.</p>
+              <div class="locked-map">
+                <div class="pixel-lock"></div>
+              </div>
+              <p class="instant-note">Wave 1 unlocks instantly. The rest, you earn.</p>
+              <div class="passport-actions">
+                <button type="button" class="dos-button green js-open-purchase" data-source="Passport locked map">Unlock World Campaign · €5.99</button>
+                <button type="button" class="text-button">Not now</button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="mockup-card">
+          <p class="placement-label"><span>3</span> World Database — locked entry</p>
+          <p class="placement-meta"><strong>Curiosity + variable reward.</strong> Tapping a locked country shows one real fact free and blurs the rest — enough to want more, never enough to feel withheld.</p>
+          <div class="screen database-screen">
+            <div class="screen-inner">
+              <h2 class="screen-title">World Database</h2>
+              <p class="database-kicker">Santorini · Greece — Southern Europe</p>
+              <div class="database-entry">
+                <div class="postcard">
+                  <img src="../../android/app/src/main/assets/sprites/cities/city_santorini.png" alt="Santorini postcard art">
+                  <div class="locked-stamp">LOCKED</div>
+                </div>
+                <div class="facts">
+                  <p><strong>Region</strong>Southern Europe, Aegean Sea</p>
+                  <p class="locked-fact"><strong>Currency</strong>Euro (€) — six more facts inside</p>
+                  <p class="locked-fact"><strong>Famous for</strong>Whitewashed cliffside villages, sunset views</p>
+                </div>
+              </div>
+              <div class="database-actions">
+                <button type="button" class="dos-button js-open-purchase" data-source="Database locked entry">Unlock World Database · €5.99</button>
+                <button type="button" class="dos-button gray">Maybe later</button>
+              </div>
+              <p class="purchase-note">One purchase. Then you earn the rest, wave by wave.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="mockup-card">
+          <p class="placement-label"><span>4</span> Travel screen — soft nudge</p>
+          <p class="placement-meta"><strong>Flow, not interruption.</strong> A passive chip two cases before the free career ends. No modal, no button — it can be looked at and ignored in the same second.</p>
+          <div class="screen nudge-screen">
+            <div class="screen-inner">
+              <h2 class="screen-title">Flight Board</h2>
+              <p class="nudge-route">Case 12 of 14 · Ace Detective in progress</p>
+              <div class="nudge-chip">2 cases until the international manhunt</div>
+              <p class="nudge-hint muted">No purchase button here — on purpose.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="mockup-card">
+          <p class="placement-label"><span>5</span> Right after purchase — unlock ceremony</p>
+          <p class="placement-meta"><strong>Confirm the value first.</strong> The first screen a buyer sees is the payoff, not a receipt — it sets the tone for the whole campaign and cuts buyer's remorse.</p>
+          <div class="screen ceremony-screen">
+            <div class="ceremony-panel">
+              <div class="commercial-badge">You're in</div>
+              <h3 class="ceremony-title">Welcome, Special Agent</h3>
+              <div class="ceremony-grid">
+                <div class="ceremony-item"><strong>Wave 1</strong><span>Europe — 33 destinations, unlocked now</span></div>
+                <div class="ceremony-item"><strong>Passport</strong><span>Wave 1 painted in already</span></div>
+                <div class="ceremony-item"><strong>9 more</strong><span>waves still to earn</span></div>
+              </div>
+              <button type="button" class="dos-button green">Continue to Case 14</button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="simple-direction" aria-labelledby="simple-story-title">
+      <p class="section-kicker">The sixth touchpoint · the one that actually sells</p>
+      <h2 class="strategy-heading" id="simple-story-title">Five families. Ten captures. One Clara.</h2>
+      <p class="strategy-lead">Clara runs five crime families. Each has a <strong>Boss</strong> (caught early) and a <strong>Successor</strong> (caught later, after the Boss falls). Only once all ten are behind bars does Clara run out of places to hide.</p>
+
+      <div class="direction-banner">
+        <span>The entire paid story in one sentence</span>
+        <strong>Every wave you already earn ends in a capture — and starting at wave 6, Clara shows up to watch it happen.</strong>
+      </div>
+
+      <div class="story-flow" aria-label="Simple free and paid story flow">
+        <article class="story-stage"><strong>Cases 1–13 · Free</strong><p>Original career, unchanged.</p></article>
+        <article class="story-stage clara"><strong>Case 14 · Clara</strong><p>Her one early appearance. She tips you off: this is a syndicate.</p></article>
+        <article class="story-stage"><strong>Waves 1–5</strong><p>Marquee regions. Last case of each wave: a Boss falls. No Clara yet.</p></article>
+        <article class="story-stage clara"><strong>Waves 6–10</strong><p>Lesser-known regions. Last case of each wave: a Successor falls — and Clara shows up.</p></article>
+        <article class="story-stage final"><strong>Wave 10 · final</strong><p>Last Successor falls. Clara has nowhere left. Chief Director awarded.</p></article>
+      </div>
+
+      <div class="simple-rule-grid">
+        <article class="simple-rule"><h3>One capture per wave</h3><p><strong>The last case of every wave is an arrest</strong> — locked to that wave's region and fame tier. Everything before it plays exactly like a normal case.</p></article>
+        <article class="simple-rule"><h3>Bosses share a family with their Successor</h3><p><strong>Same region, same crime family, same base design</strong> — recolored, not redrawn. A captured Boss can even tip you off about their Successor.</p></article>
+        <article class="simple-rule"><h3>Clara is rare on purpose</h3><p><strong>One appearance at Case 14, then one per Successor capture</strong> (waves 6–10). Six total across the whole campaign — not once every few cases.</p></article>
+      </div>
+
+      <p class="spec-callout"><strong>The ten waves, at a glance</strong> — reused directly from the existing design doc. No new gating logic, no new content type, just a capture bolted onto the case each wave already ends on.</p>
+
+      <div class="wave-table-wrap">
+        <table class="wave-table">
+          <thead>
+            <tr><th>Wave</th><th>Patent earned</th><th>Family &amp; role</th><th>Clara?</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>W1</td><td>Special Agent</td><td>Europe — <span class="tag boss">Boss</span></td><td>—</td></tr>
+            <tr><td>W2</td><td>Field Inspector</td><td>Americas — <span class="tag boss">Boss</span></td><td>—</td></tr>
+            <tr><td>W3</td><td>Senior Inspector</td><td>Asia — <span class="tag boss">Boss</span></td><td>—</td></tr>
+            <tr><td>W4</td><td>Inspector</td><td>Africa — <span class="tag boss">Boss</span></td><td>—</td></tr>
+            <tr><td>W5</td><td>Chief Inspector</td><td>Oceania &amp; Frontiers — <span class="tag boss">Boss</span></td><td>—</td></tr>
+            <tr class="clara-row"><td>W6</td><td>Superintendent</td><td>Europe — <span class="tag successor">Successor</span></td><td><span class="tag clara">Clara</span></td></tr>
+            <tr class="clara-row"><td>W7</td><td>Commander</td><td>Americas — <span class="tag successor">Successor</span></td><td><span class="tag clara">Clara</span></td></tr>
+            <tr class="clara-row"><td>W8</td><td>Deputy Director</td><td>Asia — <span class="tag successor">Successor</span></td><td><span class="tag clara">Clara</span></td></tr>
+            <tr class="clara-row"><td>W9</td><td>Director</td><td>Africa — <span class="tag successor">Successor</span></td><td><span class="tag clara">Clara</span></td></tr>
+            <tr class="clara-row"><td>W10</td><td>Chief Director</td><td>Oceania &amp; Frontiers — <span class="tag successor">Successor</span></td><td><span class="tag clara">Clara — final</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="simple-screen-grid">
+        <article class="simple-screen-card">
+          <h3>1 · Case 14 — the one early appearance</h3>
+          <p>13 wins, then a personal rival who slips away. This is the <strong>only</strong> time Clara shows up before wave 6 — everything after this plays like a normal case until the Successor arcs begin.</p>
+          <div class="simple-game-screen">
+            <h4>Case closed... almost</h4>
+            <div class="escape-layout">
+              <div class="escape-report"><strong>CLARA ENCOUNTER · 1 OF 6</strong><br><br>The stolen Master Atlas is safe. Clara escaped.<br><br>Left behind: proof this wasn't a lone thief — a five-family network, and Europe's Boss is named.<br><br><strong>NEXT PAID CASE: WAVE 1 BEGINS</strong></div>
+              <div class="clara-escape"><img src="../../android/app/src/main/assets/sprites/suspects/suspect_clara_san_diego.png" alt="Clara escaping after Case 14"></div>
+            </div>
+            <button type="button" class="screen-mini-action js-open-purchase" data-source="Case 14 Clara escape">Unlock World Campaign &amp; begin Wave 1 · €5.99</button>
+          </div>
+        </article>
+
+        <article class="simple-screen-card">
+          <h3>2 · Wave 1 finale — a Boss falls, no Clara</h3>
+          <p>The last case of every marquee wave (1–5) ends like this: a standard arrest, a standard promotion. Clara doesn't show up — that's deliberate. Her appearances are saved for later.</p>
+          <div class="simple-game-screen">
+            <h4>Europe's Boss captured</h4>
+            <div class="escape-layout">
+              <div class="escape-report"><strong>INTERPOL REPORT</strong><br><br>Europe operation dismantled. The Boss is in custody.<br><br>Masterminds captured: 1 of 10<br>Waves complete: 1 of 10<br><br><strong>PROMOTION PENDING</strong></div>
+              <div class="clara-escape captured"><img src="../../android/app/src/main/assets/sprites/suspects/suspect_merey_laroc.png" alt="Placeholder art for Europe's captured Boss"></div>
+            </div>
+            <div class="screen-mini-action">Take quiz · earn Special Agent</div>
+          </div>
+        </article>
+
+        <article class="simple-screen-card">
+          <h3>3 · Wave 6 finale — a Successor falls, Clara reappears</h3>
+          <p>Five waves later the pattern breaks. Europe's Successor — who took over when the Boss fell — gets caught too. This time Clara is in the room, and gets out again.</p>
+          <div class="simple-game-screen">
+            <h4>Clara escaped again</h4>
+            <div class="escape-layout">
+              <div class="escape-report"><strong>CLARA ENCOUNTER · 2 OF 6</strong><br><br>Europe's Successor is in custody — Clara was there, and got out.<br><br>Four families left. Four more Successors, four more chances to corner her.<br><br><strong>NEXT: WAVE 7 BEGINS</strong></div>
+              <div class="clara-escape"><img src="../../android/app/src/main/assets/sprites/suspects/suspect_clara_san_diego.png" alt="Clara escaping again after the Europe Successor's arrest"></div>
+            </div>
+            <div class="screen-mini-action">Open the Successor's warrant</div>
+          </div>
+        </article>
+
+        <article class="simple-screen-card">
+          <h3>4 · Wave 10 finale — the true capture</h3>
+          <p>The last Successor falls. Every family is gone. This is the one finale on this page that isn't a template — it's bespoke, because it's the only one that needs to be.</p>
+          <div class="simple-game-screen">
+            <h4>Case closed. For real, this time.</h4>
+            <div class="escape-layout">
+              <div class="escape-report"><strong>CASE FILE · CLOSED</strong><br><br>All five families dismantled. Clara is under arrest.<br><br>Masterminds captured: 10 of 10<br>Clara encounters: 6 of 6<br><br><strong>CHIEF DIRECTOR AWARDED</strong></div>
+              <div class="clara-escape captured"><img src="../../android/app/src/main/assets/sprites/suspects/suspect_clara_san_diego.png" alt="Clara under arrest at last"></div>
+            </div>
+            <div class="screen-mini-action">View the final case file</div>
+          </div>
+        </article>
+      </div>
+
+      <details class="current-notes">
+        <summary>Implementation notes · paid perks, promotions, and required assets</summary>
+        <div class="current-notes-body">
+          <p class="spec-callout"><strong>Progress display:</strong> reuses the existing <code>RankProgress</code> composable and <code>casesToNextPromotion()</code> — the same "N of M cases to next rank" counter already in the game. Add one caption line underneath naming the current family and role. No new meter to build.</p>
+
+          <p class="spec-callout"><strong>Patents:</strong> free promotions stay unchanged (Sleuth, Private Eye, Investigator, Ace Detective — cases 1/5/9/13). Every wave's final capture then triggers the existing promotion quiz and awards that wave's patent, exactly as already documented: <strong>Special Agent → Field Inspector → Senior Inspector → Inspector → Chief Inspector → Superintendent → Commander → Deputy Director → Director → Chief Director.</strong> No new names, and no separate "final award" — Chief Director already is the wave-10 patent.</p>
+
+          <p class="section-kicker">Paid value before Case 14</p>
+          <div class="early-value-grid">
+            <article class="early-value-card"><h3>New destinations now</h3><p>The first case after purchase draws from <strong>Wave 1 (Europe, 33 destinations)</strong> — already unlocked at purchase. Before Case 14, cap it at one new destination per case.</p></article>
+            <article class="early-value-card"><h3>World tools now</h3><p>Unseal Wave 1 of the painted Passport and Wave 1's World Database entries immediately. New postcards, facts, and venues work in the next case.</p></article>
+            <article class="early-value-card"><h3>Comfort perks now</h3><p>Offer the optional <strong>+8-hour Travel Buffer</strong>, one Bureau hint, and Case Planner. Original Clock and free accessibility remain available.</p></article>
+          </div>
+          <p class="strategy-note"><strong>CTA timing:</strong> the early offer appears only after an intentional tap on a locked Database destination or Passport tile. The primary offer appears after Clara escapes in Case 14. No offer interrupts a promotion or active case.</p>
+
+          <div class="simple-assets">
+            <strong>Required story assets</strong>
+            <ul class="bullet-list">
+              <li>One reusable Clara-escape template — used at Case 14 and every wave-6-through-10 finale</li>
+              <li>One bespoke final-capture screen — wave 10 only</li>
+              <li><strong>5 base mastermind designs</strong>, each with a Boss and a Successor variant (recolor/reaccessory, not redraw) — 10 portraits total</li>
+              <li>5 route-piece stamps, one per family</li>
+              <li>6 Clara clue reports (Case 14 + waves 6–10)</li>
+              <li>10 mastermind briefings + 10 arrest reports — Boss and Successor each get their own</li>
+              <li>10 patent lines — already named in the design doc, copy only, no new names</li>
+              <li>2–3 alternate finale win-conditions, cycled across the 8 templated captures (bespoke treatment stays reserved for wave 1 and wave 10)</li>
+            </ul>
+            <p style="margin: 10px 0 0;">Everything else — postcards, map, country data, witnesses, clues, warrants, chase, jail, Database, Passport, travel screen, and the <code>RankProgress</code> counter — is reused unmodified. Ordinary World Case generation doesn't change; only each wave's final case adds a region + fame-tier filter, using <code>CityInfo.region</code>, which already exists on every city, free and paid.</p>
+          </div>
+
+          <p class="source-library"><strong>Design basis:</strong> see "Design principles" above — Schell, Koster, Eyal, Luton, and Chou — for the source behind each placement. Net result, unchanged in spirit and now durable in mechanics: the wave system reveals the world at its own pace; a capture happens on schedule; Clara is rare enough that her six appearances still mean something.</p>
+        </div>
+      </details>
+    </section>
+
+    <section class="ship-check" aria-labelledby="ship-check-title">
+      <p class="section-kicker">Before this ships</p>
+      <h2 class="strategy-heading" id="ship-check-title">Engineering reality check</h2>
+      <p class="strategy-lead">Implemented in <code>android/</code> and merged into this checkout — real billing, real game logic, all 134 tests passing (131 existing + 3 new). One manual step remains outside the codebase.</p>
+      <div class="risk-grid">
+        <article class="risk-card">
+          <h3>One step left: create the real product</h3>
+          <p>Play Billing is fully wired (<code>billing/BillingManager.kt</code>), and <code>unlockExpansion()</code> now has real callers — the Campaign menu entry, Passport, Database, and a late-purchase path that retroactively grants Special Agent if you buy after an unpaid Case 14 escape. The one thing left is outside any codebase: create the actual in-app product in Play Console. Until then every buy button correctly shows "Not available yet" instead of crashing. Full steps: <code>docs/06-play-console-iap-setup.md</code>.</p>
+        </article>
+        <article class="risk-card solved">
+          <h3>Reconciled with the wave model</h3>
+          <p>Ships on the existing 10-wave, rank-gated reveal exactly as documented in <code>05-game-design-and-progression.md</code> — same patents, same §7 fairness math, unmodified. The mastermind story rides on top as a forced culprit + a capture line on each wave's last case; it doesn't replace the gating.</p>
+        </article>
+        <article class="risk-card solved">
+          <h3>Region-locking uses Progression.wave, not CityInfo.region</h3>
+          <p>Turned out <code>CityInfo.region</code> is messy free text on the 133 newer cities ("the Balkans (Southeast Europe)", not a clean "Europe" bucket) — not reliable for this. <code>Progression.wave</code> (already built for the reveal system) buckets every paid city into exactly the right marquee/lesser-known group instead, so the finale's route restriction is a one-line filter with no new data model.</p>
+        </article>
+        <article class="risk-card solved">
+          <h3>Zero new character art</h3>
+          <p>The 5 Bosses and 5 Successors (one region does double duty) are the 9 existing non-Clara dossier suspects — Lady Agatha Wayland, Merey LaRoc, Fast Eddie B. and the rest — all already shipping a portrait sprite. Result-screen flavor text and the RankProgress caption are written in English directly in code; translating that into the other 9 languages through the existing pipeline is the one content task still open.</p>
+        </article>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="modal-backdrop" id="purchase-modal" hidden>
+    <section class="purchase-dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-description">
+      <div class="commercial-badge" style="margin: 0 auto 14px;">Optional one-time purchase</div>
+      <h2 id="dialog-title">International Campaign</h2>
+      <p class="dialog-subtitle" id="dialog-description">Dismantle Clara's five crime families, one wave at a time — and finally catch her.</p>
+      <ul class="dialog-benefits">
+        <li><strong>Finish the story:</strong> five crime families, then Clara herself</li>
+        <li><strong>201 new places</strong> to explore, unlocked wave by wave</li>
+        <li><strong>Extra comforts:</strong> +8h buffer, a hint, trip planner</li>
+        <li><strong>Buy once:</strong> no subscription — progress always saved</li>
+      </ul>
+      <div class="dialog-actions">
+        <button class="dos-button" id="confirm-purchase">Unlock World Campaign — €5.99</button>
+        <button class="dos-button gray" id="close-modal">Not now</button>
+        <button class="text-button js-restore">Restore purchase</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script>
+    const modal = document.querySelector('#purchase-modal');
+    const closeModalButton = document.querySelector('#close-modal');
+    const confirmPurchase = document.querySelector('#confirm-purchase');
+    const toast = document.querySelector('#toast');
+    let previousFocus = null;
+    let toastTimer = null;
+
+    function showToast(message) {
+      clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.hidden = false;
+      toastTimer = setTimeout(() => { toast.hidden = true; }, 2200);
+    }
+
+    function openPurchase(source) {
+      previousFocus = document.activeElement;
+      modal.dataset.source = source;
+      modal.hidden = false;
+      confirmPurchase.focus();
+    }
+
+    function closePurchase() {
+      modal.hidden = true;
+      if (previousFocus) previousFocus.focus();
+    }
+
+    document.querySelectorAll('.js-open-purchase').forEach(button => {
+      button.addEventListener('click', () => openPurchase(button.dataset.source));
+    });
+
+    document.querySelectorAll('.js-restore').forEach(button => {
+      button.addEventListener('click', () => showToast('Prototype: checking Google Play purchases…'));
+    });
+
+    closeModalButton.addEventListener('click', closePurchase);
+    confirmPurchase.addEventListener('click', () => {
+      const source = modal.dataset.source || 'Unknown';
+      closePurchase();
+      showToast(`Prototype purchase started from: ${source}`);
+    });
+
+    modal.addEventListener('click', event => {
+      if (event.target === modal) closePurchase();
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !modal.hidden) closePurchase();
+    });
+  </script>
+</body>
+</html>

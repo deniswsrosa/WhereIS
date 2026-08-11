@@ -61,29 +61,35 @@ class PlaythroughTest {
 
     // ---------- the whole career, sign-on to the finale ----------
 
-    @Test fun fullCareerReachesTheFinale() {
+    @Test fun fullCareerReachesCase14WhereClaraEscapes() {
+        // Case 14 is the story's inciting incident, not a clean capture: an unpaid player always
+        // sees Clara get away there (see Masterminds.kt) — the free career keeps going after it
+        // rather than ending, so this loop is bounded by case count, not by careerOver.
         val vm = fresh()
-        var guard = 0
         var lastCulprit = ""
-        while (!vm.s.careerOver && guard++ < 30) {
+        // Captured right after the case-14 solve, before nextCase() wipes resultLines for case 15.
+        var case14ResultLines = emptyList<String>()
+        var case14CapturedVillains = emptySet<String>()
+        repeat(14) { i ->
             lastCulprit = vm.s.culprit!!.name
             vm.solveCurrentCase()
-            assertTrue("case ${vm.s.casesSolved + 1} should be solvable in time", vm.s.won)
-            if (vm.s.careerOver) break
+            assertTrue("case ${vm.s.casesSolved} should be solvable in time", vm.s.won)
+            assertFalse("an unpaid career never ends, not even at Clara", vm.s.careerOver)
+            if (i == 13) { case14ResultLines = vm.s.resultLines; case14CapturedVillains = vm.s.capturedVillains }
             if (vm.s.pendingPromotion) vm.resolvePromotion(true)   // ace the quiz each time
             vm.nextCase()
         }
 
-        assertTrue("the career ends by jailing the ring-leader", vm.s.careerOver)
-        assertEquals("the finale culprit is Clara", "Clara San Diego", lastCulprit)
-        assertEquals("14 cases make a career", 14, vm.s.casesSolved)
+        assertEquals("the case-14 culprit is Clara", "Clara San Diego", lastCulprit)
+        assertEquals("14 cases make the free career", 14, vm.s.casesSolved)
         assertEquals("the free career tops out at Ace Detective",
             "Ace Detective", GameData.ranks[vm.s.rankIndex])
-        assertFalse("no promotion after the finale", vm.s.pendingPromotion)
-        assertTrue("the finale report celebrates jailing the ring-leader",
-            vm.s.resultLines.any { it.contains("Clara San Diego is behind bars") })
-        assertTrue("ring-leader captured", "Clara San Diego" in vm.s.capturedVillains)
-        assertTrue("the finale unlocks the Kingpin commendation",
+        assertFalse("no promotion for an unpaid Case 14 escape", vm.s.pendingPromotion)
+        assertTrue("the Case 14 report says she got away, not that she's jailed",
+            case14ResultLines.any { it.contains("slipped away") })
+        assertFalse("she's not in the Most Wanted gallery yet — she escaped, not was jailed",
+            "Clara San Diego" in case14CapturedVillains)
+        assertFalse("Case 14 alone doesn't unlock the Kingpin commendation — only the true finale does",
             "kingpin" in vm.s.unlockedAchievements)
     }
 

@@ -22,7 +22,9 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,6 +41,9 @@ import com.acme.clara.ui.VirtualScreen
 import com.acme.clara.ui.labelled
 import com.acme.clara.ui.tappable
 import com.acme.clara.ui.theme.Vga
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * The "Choose a detective" picker — shown at launch when two or more careers exist. It's the WDB
@@ -49,7 +54,14 @@ import com.acme.clara.ui.theme.Vga
 @Composable
 fun ChooseGameScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     var refresh by remember { mutableStateOf(0) }
-    val games = remember(refresh) { vm.savedGames() }
+    val scope = rememberCoroutineScope()
+    // savedGames()/resumeById() read + JSON-decode every save file on disk (SaveStore.list()/
+    // load()) — off the main thread here, same reasoning as MainActivity's cold-start read.
+    // deleteGame() itself stays synchronous (see ClaraViewModel kdoc), so by the time a delete
+    // bumps `refresh` the file is already gone and this re-fetch correctly won't see it.
+    val games by produceState(initialValue = emptyList<SaveMeta>(), refresh) {
+        value = withContext(Dispatchers.IO) { vm.savedGames() }
+    }
 
     // The bureau office, dimmed so the dossiers read over it (same scene the sign-on uses).
     PixelImage("intro_world_detective_bureau", Modifier.fillMaxSize(), ContentScale.FillBounds)
@@ -77,7 +89,7 @@ fun ChooseGameScreen(vm: ClaraViewModel) = VirtualScreen { v ->
             ) {
                 games.forEach { m ->
                     DossierCard(v, m,
-                        onResume = { vm.resumeById(m.id) },
+                        onResume = { scope.launch { withContext(Dispatchers.IO) { vm.resumeById(m.id) } } },
                         onDelete = { vm.deleteGame(m.id); refresh++ })
                 }
             }

@@ -46,6 +46,7 @@ import com.acme.clara.game.WantedEntry
 import com.acme.clara.i18n.Strings
 import com.acme.clara.ui.screens.CityPhoto
 import com.acme.clara.ui.theme.Vga
+import kotlinx.coroutines.launch
 
 private data class MenuItemDef(val label: String, val enabled: Boolean = true, val action: () -> Unit)
 
@@ -94,6 +95,16 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
                 vm.openOverlay(Overlay.Dossier(su))
             }
         })
+        // Persistent, always-reachable purchase entry — styled as a real menu title like every
+        // other one here, not a banner. Hidden once already owned; there's nothing left to sell.
+        // Also hidden while BillingManager.SALES_ENABLED is false (see its kdoc).
+        if (!s.expansionUnlocked && com.acme.clara.billing.BillingManager.SALES_ENABLED) {
+            MenuTitle(v, Strings.ui("Campaign"), listOf(
+                MenuItemDef(Strings.ui("Unlock the World Campaign...")) {
+                    vm.openOverlay(Overlay.PurchaseOffer("Persistent menu bar"))
+                },
+            ))
+        }
         // Dev-only test shortcuts — never compiled into a release build. Labels stay in plain
         // English on purpose (a developer tool, not player-facing content).
         if (com.acme.clara.BuildConfig.DEBUG) {
@@ -154,6 +165,8 @@ fun OverlayHost(v: Virtual, vm: ClaraViewModel) {
     if (o is Overlay.Commendations) { CommendationsWindow(v, vm); return }
     if (o is Overlay.Almanac) { AlmanacWindow(v, vm); return }
     if (o is Overlay.Passport) { PassportWindow(v, vm); return }
+    if (o is Overlay.PurchaseOffer) { PurchaseOfferWindow(v, vm); return }
+    if (o is Overlay.UnlockCeremony) { UnlockCeremonyWindow(v, vm); return }
     val (title, lines) = when (o) {
         Overlay.About -> Strings.ui("ABOUT") to listOf(
             "Where in the World is", "Clara San Diego?  (Enhanced)", "MS-DOS Version 2.1",
@@ -171,6 +184,8 @@ fun OverlayHost(v: Virtual, vm: ClaraViewModel) {
         Overlay.Commendations -> "" to emptyList()// handled by CommendationsWindow above
         Overlay.Almanac -> "" to emptyList()      // handled by AlmanacWindow above
         Overlay.Passport -> "" to emptyList()     // handled by PassportWindow above
+        is Overlay.PurchaseOffer -> "" to emptyList() // handled by PurchaseOfferWindow above
+        Overlay.UnlockCeremony -> "" to emptyList() // handled by UnlockCeremonyWindow above
         is Overlay.Info -> o.title to o.lines
     }
 
@@ -230,6 +245,7 @@ private fun QuitButton(v: Virtual, label: String, onClick: () -> Unit) {
 /** Options > Language — pick the interface language; each row is shown in its own language. */
 @Composable
 private fun LanguageWindow(v: Virtual, vm: ClaraViewModel) {
+    val scope = rememberCoroutineScope()
     Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
         contentAlignment = Alignment.Center) {
         Column(
@@ -244,7 +260,12 @@ private fun LanguageWindow(v: Virtual, vm: ClaraViewModel) {
                     val sel = code == com.acme.clara.i18n.Strings.language
                     Box(Modifier.fillMaxWidth().padding(vertical = v.w(0.8f))
                         .then(if (sel) Modifier.background(Vga.White) else Modifier)
-                        .clickable { com.acme.clara.i18n.Strings.setLanguage(code); vm.dismissOverlay() }
+                        .clickable {
+                            // setLanguage() parses a per-language catalog (up to ~336KB) off the
+                            // main thread — the same reasoning as the cold-start Humor/save loads.
+                            scope.launch(kotlinx.coroutines.Dispatchers.IO) { com.acme.clara.i18n.Strings.setLanguage(code) }
+                            vm.dismissOverlay()
+                        }
                         .padding(vertical = v.w(2)),
                         contentAlignment = Alignment.Center) {
                         Text(name, style = v.text(9, color = if (sel) Vga.Black else Vga.White, bold = sel))
@@ -459,8 +480,14 @@ private fun StatRow(v: Virtual, label: String, value: String) {
  * loyalty-card effect that lifts first-promotion completion. */
 @Composable
 internal fun RankProgress(v: Virtual, s: com.acme.clara.game.GameState) {
-    val thresholds = listOf(1, 5, 9, 13)
     val solved = s.casesSolved
+    // International grades (paid) keep counting past the free thresholds — one promotion every
+    // 8 cases from storyStartCase on (see ClaraViewModel.win()'s `intlThreshold`, kept in sync
+    // here; storyStartCase rather than the fixed Case 14, so a late purchase's cadence matches).
+    val freeThresholds = listOf(1, 5, 9, 13)
+    val thresholds = if (s.expansionUnlocked)
+        freeThresholds + (s.storyStartCase..200 step 8)
+    else freeThresholds
     val next = thresholds.firstOrNull { it > solved }
     val label: String
     val frac: Float
@@ -476,8 +503,24 @@ internal fun RankProgress(v: Virtual, s: com.acme.clara.game.GameState) {
         val nextRank = GameData.ranks.getOrElse(s.rankIndex + 1) { GameData.ranks.last() }
         label = Strings.ui("Toward {0} — {1} of {2}", Strings.label("rank", nextRank), inBand + head, band + head)
     }
+    // Mastermind caption: names which family/role this promotion actually captures, once the
+    // International track is running. Reuses the counter above as-is — no separate meter to build.
+    val arc = if (s.expansionUnlocked && solved >= s.storyStartCase &&
+        s.rankIndex < GameData.ranks.lastIndex) {
+        val progressed = solved - s.storyStartCase
+        com.acme.clara.data.Masterminds.arcForTrigger(
+            (progressed / 8 + 1).coerceAtMost(com.acme.clara.data.Masterminds.arcs.size)
+        )
+    } else null
     Column(Modifier.fillMaxWidth()) {
         Text(label, style = v.text(6.5f, color = Vga.LightCyan))
+        if (arc != null) {
+            Text(
+                Strings.ui("Case target: {0} — {1}",
+                    Strings.label("mastermind.family", arc.family), Strings.label("mastermind.role", arc.role)),
+                style = v.text(6f, color = Vga.Yellow),
+            )
+        }
         Spacer(Modifier.height(v.w(1)))
         Box(Modifier.fillMaxWidth().height(v.w(4)).background(Vga.DarkGray)
             .border(BorderStroke(v.w(0.6f), Vga.LightGray))) {
@@ -586,7 +629,10 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                         }
                         Text(Strings.place(name), style = v.text(7, color = color, bold = unlocked),
                             modifier = Modifier
-                                .clickable(enabled = unlocked) { selected = name }
+                                .clickable(enabled = unlocked || com.acme.clara.billing.BillingManager.SALES_ENABLED) {
+                                    if (unlocked) selected = name
+                                    else vm.openOverlay(Overlay.PurchaseOffer("Database locked entry"))
+                                }
                                 .labelled(if (unlocked) Strings.place(name) else Strings.ui("{0}, locked", Strings.place(name)))
                                 .padding(vertical = v.w(1.2f), horizontal = v.w(1)))
                     }
@@ -760,8 +806,114 @@ private fun PassportSealed(v: Virtual, vm: ClaraViewModel) {
                     modifier = Modifier.fillMaxWidth())
             }
             Spacer(Modifier.height(v.w(5)))
+            if (com.acme.clara.billing.BillingManager.SALES_ENABLED) {
+                DosButton(Strings.ui("Unlock World Campaign"), fill = Vga.LightGreen, textColor = Vga.Black,
+                    style = v.text(8.5f, bold = true)) { vm.openOverlay(Overlay.PurchaseOffer("Passport locked map")) }
+                Spacer(Modifier.height(v.w(2)))
+            }
             DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
                 style = v.text(9, bold = true)) { vm.dismissOverlay() }
+        }
+    }
+}
+
+/* The World Campaign purchase dialog — the one purchase this app sells, reachable from the
+ * persistent Campaign menu entry, the locked Passport, and a locked World Database entry, plus
+ * the prompt right after Case 14. Every entry point opens the exact same dialog; [Overlay
+ * .PurchaseOffer.source] only tags which one for analytics. */
+@Composable
+private fun PurchaseOfferWindow(v: Virtual, vm: ClaraViewModel) {
+    val activity = LocalContext.current as? android.app.Activity
+    var details by remember { mutableStateOf<com.android.billingclient.api.ProductDetails?>(null) }
+    var checked by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        com.acme.clara.billing.BillingManager.queryProductDetails { d -> details = d; checked = true }
+    }
+    val price = details?.oneTimePurchaseOfferDetailsList?.firstOrNull()?.formattedPrice
+    Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
+        contentAlignment = Alignment.Center) {
+        Column(
+            Modifier.fillMaxWidth(0.9f).background(Vga.Black).border(BorderStroke(v.w(1), Vga.White))
+                .padding(v.w(6)),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(Strings.ui("OPTIONAL ONE-TIME PURCHASE"), style = v.text(5.5f, color = Vga.Black, bold = true),
+                modifier = Modifier.background(Vga.Yellow).padding(horizontal = v.w(3), vertical = v.w(1)))
+            Spacer(Modifier.height(v.w(3)))
+            Text(Strings.ui("INTERNATIONAL CAMPAIGN"), style = v.text(10, color = Vga.Yellow, bold = true))
+            Spacer(Modifier.height(v.w(2)))
+            Text(
+                Strings.ui("Dismantle Clara's five crime families, one wave at a time — and finally catch her."),
+                style = v.text(7, color = Vga.LightCyan), textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(v.w(4)))
+            listOf(
+                Strings.ui("Finish the story: five crime families, then Clara herself"),
+                Strings.ui("201 new places to explore, unlocked wave by wave"),
+                Strings.ui("Extra comforts: +8h buffer, a hint, trip planner"),
+                Strings.ui("Buy once: no subscription — progress always saved"),
+            ).forEach { line ->
+                Row(Modifier.fillMaxWidth().padding(vertical = v.w(0.7f))) {
+                    Text("◆ ", style = v.text(7, color = Vga.Yellow, bold = true))
+                    Text(line, style = v.text(7, color = Vga.White))
+                }
+            }
+            Spacer(Modifier.height(v.w(4)))
+            when {
+                !checked -> Text(Strings.ui("Checking Google Play..."), style = v.text(7, color = Vga.LightGray))
+                details == null -> Text(Strings.ui("Not available yet — check back soon."), style = v.text(7, color = Vga.LightGray))
+                else -> DosButton(
+                    Strings.ui("Unlock World Campaign — {0}", price ?: ""), fill = Vga.Yellow, textColor = Vga.Black,
+                    style = v.text(8, bold = true),
+                ) {
+                    val a = activity; val d = details
+                    if (a != null && d != null) com.acme.clara.billing.BillingManager.launchPurchase(a, d)
+                }
+            }
+            Spacer(Modifier.height(v.w(2)))
+            DosButton(Strings.ui("NOT NOW"), fill = Vga.LightGray, textColor = Vga.Black,
+                style = v.text(8, bold = true)) { vm.dismissOverlay() }
+            Spacer(Modifier.height(v.w(2)))
+            Text(
+                Strings.ui("Restore purchase"), style = v.text(6.5f, color = Vga.LightCyan),
+                modifier = Modifier.clickable { com.acme.clara.billing.BillingManager.queryExistingPurchases() }
+                    .padding(v.w(1)),
+            )
+        }
+    }
+}
+
+/* Confirms the purchase before the receipt-only silence sets in (Luton's "show the payoff
+ * first"). Deliberately doesn't claim a specific wave/rank is unlocked — at the moment this
+ * fires the player may not have reached Case 14 yet, so only what's true right now is listed. */
+@Composable
+private fun UnlockCeremonyWindow(v: Virtual, vm: ClaraViewModel) {
+    Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.7f)), contentAlignment = Alignment.Center) {
+        Column(
+            Modifier.fillMaxWidth(0.88f).background(Vga.Black).border(BorderStroke(v.w(1.5f), Vga.Yellow))
+                .padding(v.w(7)),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(Strings.ui("YOU'RE IN"), style = v.text(6, color = Vga.Black, bold = true),
+                modifier = Modifier.background(Vga.Yellow).padding(horizontal = v.w(3), vertical = v.w(1)))
+            Spacer(Modifier.height(v.w(3)))
+            Text(Strings.ui("International Campaign unlocked"), style = v.text(9.5f, color = Vga.Yellow, bold = true),
+                textAlign = TextAlign.Center)
+            Spacer(Modifier.height(v.w(4)))
+            listOf(
+                Strings.ui("Passport and World Database open up immediately"),
+                Strings.ui("Comfort perks are active now: +8h buffer, a Bureau hint, Case Planner"),
+                Strings.ui("The manhunt begins the moment you reach — or clear — Case 14"),
+            ).forEach { line ->
+                Row(Modifier.fillMaxWidth().padding(vertical = v.w(0.7f))) {
+                    Text("◆ ", style = v.text(7, color = Vga.Yellow, bold = true))
+                    Text(line, style = v.text(7, color = Vga.White))
+                }
+            }
+            Spacer(Modifier.height(v.w(4)))
+            DosButton(Strings.ui("CONTINUE"), fill = Vga.Yellow, textColor = Vga.Black,
+                style = v.text(8.5f, bold = true)) { vm.dismissOverlay() }
         }
     }
 }

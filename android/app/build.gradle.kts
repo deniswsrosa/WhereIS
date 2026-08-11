@@ -82,6 +82,9 @@ dependencies {
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material:material")
     implementation("androidx.work:work-runtime:2.7.0")
+    // World Campaign one-time unlock — see billing/BillingManager.kt and
+    // docs/06-play-console-iap-setup.md (the product it queries doesn't exist in Play Console yet).
+    implementation("com.android.billingclient:billing-ktx:8.0.0")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation(composeBom)
