@@ -81,6 +81,12 @@ for k, vs in re.findall(r'"((?:[^"\\]|\\.)*)" to listOf\(([^)]*)\)', m.group(1))
 for r in ["Europe", "Asia", "Africa", "South America", "North America", "Oceania", "the Middle East"]:
     out[f"region.name.{r}"] = r
 
+# mastermind arc families/roles (Masterminds.kt) — Strings.label("mastermind.family"/"mastermind.role", ...)
+for r in ["Europe", "the Americas", "Asia", "Africa", "Oceania & the Frontiers"]:
+    out[f"mastermind.family.{r}"] = r
+for r in ["Boss", "Successor", "Finale"]:
+    out[f"mastermind.role.{r}"] = r
+
 # treasures / nemesis teases (ClaraViewModel data)
 vm = read("com/acme/clara/game/ClaraViewModel.kt")
 m = re.search(r'object Treasures \{.*?listOf\((.*?)\n    \)', vm, re.S)

@@ -9,6 +9,7 @@ import com.acme.clara.data.CityMeta
 import com.acme.clara.data.Expansion
 import com.acme.clara.data.Expansion2
 import com.acme.clara.data.GameData
+import com.acme.clara.data.Masterminds
 import com.acme.clara.data.Progression
 import com.acme.clara.data.Suspect
 import com.acme.clara.data.WorldMap
@@ -43,6 +44,13 @@ sealed interface Overlay {
     data object ConfirmQuit : Overlay
     /** Options > Language — pick the interface language. */
     data object Language : Overlay
+    /** The World Campaign purchase dialog. [source] is an analytics tag only (which CTA opened
+     *  it — menu bar, Passport, Database, Case 14...), not behavior-affecting. */
+    data class PurchaseOffer(val source: String) : Overlay
+    /** Shown exactly once, right after [ClaraViewModel.unlockExpansion] first grants entitlement
+     *  — confirms the purchase before the receipt-only silence sets in. Never reappears: the
+     *  method it's opened from is itself idempotent (guarded by `expansionUnlocked`). */
+    data object UnlockCeremony : Overlay
     /** One suspect's dossier — the white typed-on window from the original's Dossiers menu. */
     data class Dossier(val suspect: Suspect) : Overlay
     data class Info(val title: String, val lines: List<String>) : Overlay
@@ -151,6 +159,8 @@ data class GameState(
     // per-case tallies (reset every newCase) — feed stats, achievements, the share card
     val wrongFlights: Int = 0,
     val hintsUsed: Int = 0,
+    // paid-tier Bureau tip: one concrete lead per case (see requestHint()), reset every newCase
+    val bureauTipUsed: Boolean = false,
     // the running case journal: leads and traits as they're uncovered (reset per case)
     val journal: List<JournalEntry> = emptyList(),
     // career record — persists across cases within a saved profile
@@ -176,13 +186,21 @@ data class GameState(
     // decoys, the map and flight times. Free play stays on the original 30. (Persisted with the
     // save until a global entitlement store exists.)
     val expansionUnlocked: Boolean = false,
+    // The case count the mastermind story arcs start counting 8-case triggers from — set once, in
+    // unlockExpansion(), to whichever is later: Case 14 (buying at/before the enrollment beat, the
+    // original cadence) or however many cases were already solved (buying after free-playing on
+    // past 14). Without this, a late purchase would measure triggers from the fixed case 14 instead
+    // of from the purchase, so every arc whose absolute case number had already passed unpaid would
+    // be skipped forever, and the sequential rank granted by resolvePromotion() would desync from
+    // the arc's documented patentRank. Defaults to CAREER_CASES for saves from before this field
+    // existed, matching their only possible purchase timing (there was no "buy late" path yet).
+    val storyStartCase: Int = GameState.CAREER_CASES,
     val hintFreeSolves: Int = 0,
     val hadCleanCase: Boolean = false,
-    // free hints banked from returning after time away (spend without losing the hint-free badge)
+    // free hints banked from returning after time away (spend without losing the hint-free badge).
+    // Capped at 1 in resume() — a paid player's per-case bureauTipUsed perk stacks on top, so the
+    // combined ceiling in any one case is 2, never more.
     val freeHints: Int = 0,
-    // paid-tier perk: one free hint per case. Resets every newCase() rather than banking, so
-    // it's spent before freeHints — an unused per-case hint would otherwise just be lost.
-    val paidHintUsed: Boolean = false,
     // The guided first case is a set of contextual, teach-once lessons rather than a linear step
     // counter: each lesson fires the first time its game state is true and clears when the player
     // does the action. [tutorialActive] = the tour is running now; [tutorialDone] = it has run once
@@ -203,9 +221,10 @@ data class GameState(
     val atHideout: Boolean get() = currentCity == hideout && onTrack
     companion object {
         const val DEADLINE_HOURS = 152     // Mon 9am -> Sun 5pm
-        // Career length: promotions at 1, 5, 9, 13 solved (4 cases per middle rank); the
-        // first case as Ace Detective is always Clara San Diego herself — jail her and the
-        // career ends in the Hall of Fame (1990 revised rules).
+        // Career length: promotions at 1, 5, 9, 13 solved (4 cases per middle rank); the first
+        // case as Ace Detective is always Clara San Diego herself, but she escapes there — the
+        // free career's inciting incident, not its end (see Masterminds.kt / win()'s
+        // isCase14Clara). The career only truly ends at the paid campaign's finale.
         const val CAREER_CASES = 14
     }
 }
@@ -236,6 +255,14 @@ class ClaraViewModel : ViewModel() {
         repo = repository; clock = now
     }
 
+    /** Block until any save queued so far has actually landed on disk. Call this from onStop(),
+     *  not from any per-action path — autosave()'s whole point is that ordinary callers don't
+     *  wait. A real backgrounding (home button, task switch) reaches onStop() before the OS could
+     *  ever kill the process, so a bounded flush here — one small pending write, if any — closes
+     *  the data-loss window an abrupt kill could otherwise catch mid-write, without reintroducing
+     *  a stall on every action. */
+    fun flushPendingSaves() { (repo as? com.acme.clara.save.SaveStore)?.awaitPendingWrites() }
+
     private fun newProfileId(): String = "career-" + java.util.UUID.randomUUID().toString().take(8)
 
     /** Existing saved careers, newest first (empty when no repository is bound). */
@@ -246,8 +273,10 @@ class ClaraViewModel : ViewModel() {
         profileId = data.meta.id
         var st = data.state
         val backAfterGap = WelcomeBack.grantsHint(data.meta.lastPlayed, clock())
-        // H3: after a long absence, bank a free hint and queue a kinder warm-up next case.
-        if (backAfterGap) st = st.copy(freeHints = st.freeHints + 1, warmUpNextCase = true)
+        // H3: after a long absence, bank a free hint (capped at 1 — this is a "welcome back"
+        // nudge, not a resource to stockpile across repeated unplayed gaps) and queue a kinder
+        // warm-up next case.
+        if (backAfterGap) st = st.copy(freeHints = minOf(1, st.freeHints + 1), warmUpNextCase = true)
         // P5 recap card: the game already logs the whole trail + traits (CaseJournal); draw it
         // on return so a case survives the break, folding in the welcome-back hint if any.
         val recap = CaseJournal.recap(st)
@@ -277,6 +306,11 @@ class ClaraViewModel : ViewModel() {
     fun resumeById(id: String) { repo?.load(id)?.let { resume(it) } }
 
     /** Delete a saved career from the picker. */
+    // Left synchronous on purpose: ChooseGameScreen bumps its `remember(refresh)` key in the same
+    // click handler right after calling this, so the picker's re-read of the save list must see
+    // the delete already applied — an async delete would let the just-deleted save flash back into
+    // the list until the write actually lands. A single rare, deliberate tap; not autosave's
+    // every-action frequency, so the ANR risk here was never the real one.
     fun deleteGame(id: String) { repo?.delete(id) }
 
     /** Snapshot the current state as a save (transient UI/animation fields cleared). */
@@ -289,15 +323,20 @@ class ClaraViewModel : ViewModel() {
     /** Load a saved career into this ViewModel (launch continue / picker). */
     fun loadCareer(data: SaveData) { profileId = data.meta.id; s = data.state }
 
-    /** Persist the current state to the active profile — the state on disk always equals the screen. */
+    /** Persist the current state to the active profile — the state on disk always equals the
+     *  screen. [SaveRepository.save] itself is responsible for not blocking the caller (see
+     *  SaveStore's off-main-thread write) — kept a plain synchronous call here, not dispatched
+     *  through a coroutine, so tests using the instant in-memory repository stay deterministic:
+     *  a repo.load() right after an action must already see this write, with no coroutine
+     *  scheduling in between to race against. */
     private fun autosave() {
         val r = repo ?: return
         val id = profileId ?: return
         r.save(snapshot(id, clock()))
     }
 
-    fun toggleHaptics() { s = s.copy(hapticsOn = !s.hapticsOn, overlay = null) }
-    fun toggleCaptions() { s = s.copy(captionsOn = !s.captionsOn, overlay = null) }
+    fun toggleHaptics() { s = s.copy(hapticsOn = !s.hapticsOn, overlay = null); autosave() }
+    fun toggleCaptions() { s = s.copy(captionsOn = !s.captionsOn, overlay = null); autosave() }
 
     // ---------- tutorial ----------
     /** Advance the guided tutorial when the player performs the step's taught action. */
@@ -310,28 +349,46 @@ class ClaraViewModel : ViewModel() {
     fun dismissTip(id: String) { teach(id) }
     fun skipTutorial() { s = s.copy(tutorialActive = false, tutorialDone = true); autosave() }
 
-    /** Ask for a layered hint. Paid players spend their per-case free hint first (it doesn't
-     *  carry over to the next case); then a banked free hint if there is one; otherwise it
-     *  costs the case's hint-free badge. The hint is shown as an Info overlay. */
+    /** Bureau ▸ Hint. A welcome-back free hint (banked by [resume]) always honors its promise
+     *  first, paid or not — badge-safe. Otherwise, while sales are live, Hint is a paid-tier perk
+     *  (advertised on the purchase card as "a hint"): an unpaid tap offers the purchase instead of
+     *  any hint text, and a paid career gets exactly one concrete Bureau tip per case, also
+     *  badge-safe, so an absent paid player can stack up to 2 free hints in a case (the banked one
+     *  plus this case's tip) — a second ask past that is told there's nothing left to give, rather
+     *  than repeating or vaguing out the same lead. While sales are disabled for this release
+     *  ([com.acme.clara.billing.BillingManager.SALES_ENABLED] false), Hint stays exactly as it
+     *  always was: unlimited, and non-banked hints still cost the hint-free badge — nothing here
+     *  should change what today's players already have. */
     fun requestHint() {
-        val hint = hintText()
-        val paidFree = s.expansionUnlocked && !s.paidHintUsed
-        val bankedFree = !paidFree && s.freeHints > 0
-        s = when {
-            paidFree -> s.copy(paidHintUsed = true)
-            bankedFree -> s.copy(freeHints = s.freeHints - 1)
-            else -> s.copy(hintsUsed = s.hintsUsed + 1)
-        }
-        val free = paidFree || bankedFree
         val i18n = com.acme.clara.i18n.Strings
-        val note = if (free) i18n.ui("(free hint — your hint-free record is safe)")
-                   else i18n.ui("(this case is no longer a hint-free solve)")
-        s = s.copy(overlay = Overlay.Info(i18n.ui("HINT"), listOf(hint, "", note)))
+        if (s.freeHints > 0) {
+            val hint = hintText()
+            s = s.copy(freeHints = s.freeHints - 1, overlay = Overlay.Info(i18n.ui("HINT"),
+                listOf(hint, "", i18n.ui("(free hint — your hint-free record is safe)"))))
+            autosave()
+            return
+        }
+        if (!com.acme.clara.billing.BillingManager.SALES_ENABLED) {
+            val hint = hintText()
+            s = s.copy(hintsUsed = s.hintsUsed + 1, overlay = Overlay.Info(i18n.ui("HINT"),
+                listOf(hint, "", i18n.ui("(this case is no longer a hint-free solve)"))))
+            autosave()
+            return
+        }
+        if (!s.expansionUnlocked) { s = s.copy(overlay = Overlay.PurchaseOffer("Bureau hint")); return }
+        if (s.bureauTipUsed) {
+            s = s.copy(overlay = Overlay.Info(i18n.ui("HINT"),
+                listOf(i18n.ui("The Bureau has no additional tips for this case."))))
+            return
+        }
+        s = s.copy(bureauTipUsed = true, overlay = Overlay.Info(i18n.ui("HINT"),
+            listOf(hintText(), "", i18n.ui("(free hint — your hint-free record is safe)"))))
         autosave()
     }
 
-    /** A tiered hint: a computer nudge, a directional (region-only) lead, or an arrest prompt —
-     *  never the next city outright, so it helps without solving the case. */
+    /** A tiered hint: a computer nudge, a directional lead, or an arrest prompt. The directional
+     *  lead names the region the trail points to (never the exact city — the player still has to
+     *  find it), styled as a tip radioed in from the Bureau. */
     private fun hintText(): String {
         val next = s.route.getOrNull(s.progress + 1)
         val i18n = com.acme.clara.i18n.Strings
@@ -345,7 +402,7 @@ class ClaraViewModel : ViewModel() {
             s.warrantFor == null ->
                 i18n.ui("Question more witnesses; the crime computer still lists several suspects.")
             next != null ->
-                i18n.ui("The trail leads toward {0}. Find a lead pointing that way.",
+                i18n.ui("The Bureau received word — the suspect is flying toward {0}.",
                     CityMeta.of(next).region.let { i18n.label("region.name", it) })
             else ->
                 i18n.ui("Follow your last lead to the thief's hideout.")
@@ -399,8 +456,28 @@ class ClaraViewModel : ViewModel() {
     fun menuNewCase() { s = s.copy(overlay = null, phase = Phase.BRIEFING); newCase(); cue(SoundCue.BRIEFING); autosave() }
 
     /** Grant the paid-tier entitlement: the 68 expansion destinations + new venues enter the pool
-     *  from the next case on. Called by the paywall after a successful purchase. Idempotent. */
-    fun unlockExpansion() { if (!s.expansionUnlocked) { s = s.copy(expansionUnlocked = true); autosave() } }
+     *  from the next case on. Called by [com.acme.clara.billing.BillingManager] after a successful
+     *  purchase or a restore. Idempotent — safe to call repeatedly (e.g. on every app start once
+     *  BillingClient reconnects and reports the existing purchase). */
+    fun unlockExpansion() {
+        if (s.expansionUnlocked) return
+        var next = s.copy(
+            expansionUnlocked = true, overlay = Overlay.UnlockCeremony,
+            // Start the 8-case arc cadence from whichever is later: Case 14, or right now — a
+            // player who free-played on past 14 before buying must not have their story measured
+            // from the fixed case 14, or every arc whose case number already passed unpaid would
+            // be skipped forever (see the storyStartCase kdoc on GameState).
+            storyStartCase = maxOf(GameState.CAREER_CASES, s.casesSolved),
+        )
+        // Case 14's escape earns no promotion while unpaid (see win()) — if that already happened
+        // before this purchase, grant the pending Special Agent promotion now rather than making
+        // the player solve one more case first to see it.
+        if (next.casesSolved >= GameState.CAREER_CASES && next.rankIndex < GameData.ranks.lastIndex) {
+            next = next.copy(pendingPromotion = true)
+        }
+        s = next
+        autosave()
+    }
 
     fun menuQuitToTitle() { profileId = null; s = GameState(phase = Phase.TITLE) }
     /** Game ▸ New Game — start a fresh career (a new saved profile). Names it on the sign-on screen. */
@@ -409,7 +486,7 @@ class ClaraViewModel : ViewModel() {
     fun toChooseGame() { s = s.copy(overlay = null, phase = Phase.CHOOSE_GAME) }
     // Options > Sound is a silent checkmark toggle in the original (the √ beside the item
     // reflects the state); the actual mute is applied by the audio engine in the UI layer.
-    fun toggleSound() { s = s.copy(soundOn = !s.soundOn, overlay = null) }
+    fun toggleSound() { s = s.copy(soundOn = !s.soundOn, overlay = null); autosave() }
     /** Debug-only: flip the paid entitlement both ways to test free vs. paid behavior
      *  (the real purchase path only ever grants it — see [unlockExpansion]). */
     fun devTogglePaid() { s = s.copy(expansionUnlocked = !s.expansionUnlocked); autosave() }
@@ -418,10 +495,22 @@ class ClaraViewModel : ViewModel() {
     private fun newCase() {
         val carmen = GameData.suspects.first { it.name == "Clara San Diego" }
         val pool = GameData.suspects.filter { it.name != "Clara San Diego" }
-        // Clara is the culprit on the final case of the free career (case 14). Catching her retires
-        // free players; paid players are promoted into the International track and keep going — so she
-        // is forced only on that one case, not on every case after it.
-        val culprit = if (s.casesSolved == GameState.CAREER_CASES - 1) carmen else pool.random()
+        // The case about to be generated is a mastermind capture iff solving it will land on an
+        // International promotion past storyStartCase (see `intlThreshold` in win() — kept in sync
+        // here; storyStartCase, not the fixed Case 14, so a late purchase can't skip an arc).
+        val nextCases = s.casesSolved + 1
+        val triggerIndex = if (s.expansionUnlocked && nextCases > s.storyStartCase &&
+            (nextCases - s.storyStartCase) % 8 == 0) (nextCases - s.storyStartCase) / 8 else null
+        val arc = triggerIndex?.let { Masterminds.arcForTrigger(it) }
+        // Clara is the culprit on the final case of the free career (case 14, the enrollment beat —
+        // she escapes there, see win()) and again on the campaign finale (she's truly caught there).
+        // Every other mastermind case forces that arc's suspect; ordinary cases stay random.
+        val culprit = when {
+            s.casesSolved == GameState.CAREER_CASES - 1 -> carmen
+            arc?.role == "Finale" -> carmen
+            arc != null -> pool.firstOrNull { it.name == arc.suspectName } ?: pool.random()
+            else -> pool.random()
+        }
 
         val order = discriminatingOrder(culprit)
         // Route length per rank from the level rules (free 5..9, International 9..12); the H3
@@ -431,9 +520,21 @@ class ClaraViewModel : ViewModel() {
 
         // L4: pick the route on a spaced-repetition curve so geography recurs for review, then cap
         // brand-new (never-seen) countries to this rank's allowance so the world stays learnable.
-        val cityPool = activeCities()
+        // A mastermind case restricts the whole route to that arc's home wave — "every destination
+        // belongs to the mastermind's region" — falling back to the normal pool if a wave is ever
+        // too small to fill a route (the smallest, Oceania marquee, has 5 cities; routes run 9-12
+        // hops, so this deliberately allows the spaced-repetition picker to revisit within it).
+        val fullPool = activeCities()
+        val cityPool = arc?.waveForRoute?.let { wave ->
+            fullPool.filter { Progression.wave[it] == wave }.takeIf { it.isNotEmpty() }
+        } ?: fullPool
         val picked = SpacedRepetition.pickRoute(cityPool, s.cityLastSeen, s.casesSolved, routeLen)
-        val cities = capNewPerCase(picked, s.cityLastSeen.keys, Progression.newPerCase(s.rankIndex), cityPool)
+        // A mastermind finale is exempt from the new-per-case cap: it's a deliberate deep dive
+        // into one region, and forcing that AND capping fresh introductions is unsatisfiable the
+        // first time a player reaches a wave (there's no already-seen pool within it yet to pad
+        // the route with instead). Ordinary cases keep the normal fairness cap untouched.
+        val cities = if (arc != null) picked
+            else capNewPerCase(picked, s.cityLastSeen.keys, Progression.newPerCase(s.rankIndex), cityPool)
         // Deadline = a simulation of an efficient run's clock (a couple of witness opens per city +
         // the real flights, with the same overnight rolls) plus this rank's slack. Simulating rather
         // than approximating means slack stays a true margin whatever the flight lengths — the linear
@@ -462,7 +563,7 @@ class ClaraViewModel : ViewModel() {
             visitedPlaces = s.visitedPlaces + cities.first(),
             // L4: mark the briefing city as seen this case.
             cityLastSeen = s.cityLastSeen + (cities.first() to s.casesSolved),
-            wrongFlights = 0, hintsUsed = 0, paidHintUsed = false, journal = emptyList(),
+            wrongFlights = 0, hintsUsed = 0, bureauTipUsed = false, journal = emptyList(),
             tutorialActive = isTutorial, tutorialDone = s.tutorialDone || isTutorial,
             tutorialSeen = emptySet(), sawTraitClue = false, sawTrailClue = false,
             openClue = null,
@@ -1050,21 +1151,46 @@ class ClaraViewModel : ViewModel() {
         val crimeCity = s.route.firstOrNull() ?: s.currentCity
         val i18n = com.acme.clara.i18n.Strings
         val crimeCityL = i18n.place(crimeCity)
+        val newCases = s.casesSolved + 1
+        val paid = s.expansionUnlocked
+        // Case 14 is the story's inciting incident, not an ordinary capture: Clara always gets
+        // away, whether or not the International track is already unlocked (see Masterminds.kt).
+        val isCase14Clara = c.name == "Clara San Diego" && newCases == GameState.CAREER_CASES
+        val triggerIndex = if (paid && newCases > s.storyStartCase &&
+            (newCases - s.storyStartCase) % 8 == 0) (newCases - s.storyStartCase) / 8 else null
+        val arc = triggerIndex?.let { Masterminds.arcForTrigger(it) }
+        val isFinale = arc?.role == "Finale"
         val lines = mutableListOf<String>()
-        if (c.name == "Clara San Diego") {
-            lines += GameData.CLARA_JAILED
-            lines += i18n.ui("Congratulations - Interpol's most-wanted list is one name shorter tonight!")
-        } else {
-            // faithful phrasing: the CRIME city's police make the arrest and get the loot back
-            lines += GameData.APPREHENDED.replaceFirst("%s", crimeCityL).replaceFirst("%s", c.name)
-            lines += GameData.LOOT.replaceFirst("%s", c.name)
-                .replaceFirst("%s", Treasures.localized(s.treasure)).replaceFirst("%s", crimeCityL)
+        when {
+            isCase14Clara -> {
+                lines += GameData.GOT_AWAY
+                lines += i18n.ui("She left behind proof this wasn't a lone operation — a coded warrant naming the leader of a crime family in Europe.")
+            }
+            isFinale -> {
+                lines += GameData.CLARA_JAILED
+                lines += i18n.ui("Congratulations - Interpol's most-wanted list is one name shorter tonight!")
+                lines += i18n.ui("{0} was taken in the same raid, closing out the last of the five families.", arc!!.suspectName)
+            }
+            arc != null -> {
+                lines += i18n.ui("{0}'s network in {1} is dismantled — {2} is in custody.",
+                    i18n.label("mastermind.role", arc.role), i18n.label("mastermind.family", arc.family), c.name)
+                lines += GameData.LOOT.replaceFirst("%s", c.name)
+                    .replaceFirst("%s", Treasures.localized(s.treasure)).replaceFirst("%s", crimeCityL)
+                if (arc.claraFlavor) lines += i18n.ui("Clara was seen fleeing the scene — she got away again.")
+            }
+            else -> {
+                // faithful phrasing: the CRIME city's police make the arrest and get the loot back
+                lines += GameData.APPREHENDED.replaceFirst("%s", crimeCityL).replaceFirst("%s", c.name)
+                lines += GameData.LOOT.replaceFirst("%s", c.name)
+                    .replaceFirst("%s", Treasures.localized(s.treasure)).replaceFirst("%s", crimeCityL)
+            }
         }
         // R1 peak-end: sign off warm and personal, not on a cold Interpol form line.
-        lines += if (c.name == "Clara San Diego")
-            i18n.ui("Take a bow, {0}. You began as a rookie — and you brought in the one who slipped past everyone else.", s.detectiveName)
-        else
-            i18n.ui("Get some rest, {0}. Thanks to you, {1} sleeps easier tonight.", s.detectiveName, crimeCityL)
+        lines += when {
+            isFinale -> i18n.ui("Take a bow, {0}. You began as a rookie — and you brought in the one who slipped past everyone else.", s.detectiveName)
+            isCase14Clara -> i18n.ui("Not this time, {0}. But you're closer than anyone's ever been — and now you know her network's name.", s.detectiveName)
+            else -> i18n.ui("Get some rest, {0}. Thanks to you, {1} sleeps easier tonight.", s.detectiveName, crimeCityL)
+        }
         // H4 streak: fold today's solve into the case-a-day streak (a weekly freeze absorbs
         // one missed day). clock() is 0 in tests, which harmlessly keeps the streak at 1.
         val today = (clock() / 86_400_000L).toInt()
@@ -1079,29 +1205,32 @@ class ClaraViewModel : ViewModel() {
         }
         if (streak > 0 && streak % 7 == 0 && freezes < 1) freezes = 1        // earn a weekly freeze
         if (streak >= 2) lines += i18n.ui("🔥 {0}-day case streak!", streak)
-        val newCases = s.casesSolved + 1
-        val paid = s.expansionUnlocked
-        // Jailing Clara ends the free career (retire to the Hall of Fame). If the paid International
-        // track is unlocked, catching her instead promotes you into it — the world still needs you.
-        val careerOver = c.name == "Clara San Diego" && !paid
+        // Only the true finale (Clara's real capture, Chief Director) ends the career now — Case 14
+        // never does, paid or not, since she's always an escape there (see Masterminds.kt header).
+        val careerOver = isFinale
         // Free promotion cadence (1990 rules): cases 1, 5, 9, 13 -> Sleuth..Ace. International grades
-        // then promote once every 8 cases past the free arc (cases 14, 22, 30, ...).
+        // then promote once every 8 cases past the free arc (cases 14, 22, 30, ...). Case 14 itself
+        // is the "enrollment" promotion to Special Agent when already paid — see Masterminds.kt.
         val freeThreshold = newCases in setOf(1, 5, 9, 13)
-        val intlThreshold = paid && newCases >= GameState.CAREER_CASES &&
-            (newCases - GameState.CAREER_CASES) % 8 == 0
-        val promote = !careerOver && s.rankIndex < GameData.ranks.lastIndex && (freeThreshold || intlThreshold)
+        val intlThreshold = paid && newCases >= s.storyStartCase &&
+            (newCases - s.storyStartCase) % 8 == 0
+        // The finale awards Chief Director directly — no quiz, per the design doc ("automatic").
+        val promote = !careerOver && !isFinale && s.rankIndex < GameData.ranks.lastIndex && (freeThreshold || intlThreshold)
         if (promote) {
             lines += GameData.PROMOTION.replace("%s", s.detectiveName)
             lines += i18n.ui("One last puzzle stands between you and the promotion.")
         }
         // update the career record: capture the villain, tally clean / hint-free solves,
         // then unlock any newly-earned commendations from the resulting record
-        val captured = s.capturedVillains + c.name
+        // An escape at Case 14 must not mark Clara "captured" in the Most Wanted gallery — she
+        // isn't, until the true finale (isFinale) actually jails her.
+        val captured = if (isCase14Clara) s.capturedVillains else s.capturedVillains + c.name
         val cleanSweep = s.hadCleanCase || s.wrongFlights == 0
         val hintFree = if (s.hintsUsed == 0) s.hintFreeSolves + 1 else s.hintFreeSolves
         var next = s.copy(
             phase = Phase.RESULT, won = true, casesSolved = newCases,
             resultLines = lines, pendingPromotion = promote, careerOver = careerOver,
+            rankIndex = if (isFinale) GameData.ranks.lastIndex else s.rankIndex,
             capturedVillains = captured, hadCleanCase = cleanSweep, hintFreeSolves = hintFree,
             streakDays = streak, streakFreezes = freezes, lastSolveEpochDay = today,
         )
@@ -1174,6 +1303,9 @@ class ClaraViewModel : ViewModel() {
         return next - s.casesSolved
     }
 
+    /** The mastermind arc the player is currently working toward — a caption for RankProgress
+     *  ("Toward Field Inspector — 3 of 8 · the Americas, Boss"). Null before Case 14 or once the
+     *  campaign is finished (rank already at Chief Director). */
     private fun escaped(reason: String) {
         val c = s.culprit!!
         // R2 near-miss: only when the loss was genuinely close — on the right trail and at (or

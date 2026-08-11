@@ -993,7 +993,21 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     // description panel (top-right, partly covered by the map below)
     v.At(149, 13, 167, 145) {
         Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(4))) {
-            Text(CityMeta.of(s.currentCity).description, style = v.text(8.5f, color = Vga.White))
+            Column {
+                Text(CityMeta.of(s.currentCity).description, style = v.text(8.5f, color = Vga.White))
+                // Soft nudge, last 2 free cases only: flows right under the description, in the
+                // panel's own safe (map-uncovered) top region — no button, no popup, easy to miss
+                // on purpose. See ui/GameMenuBar.kt's Campaign entry for the actual CTA.
+                val toCase14 = com.acme.clara.game.GameState.CAREER_CASES - s.casesSolved
+                if (!s.expansionUnlocked && toCase14 in 1..2) {
+                    Spacer(Modifier.height(v.w(4)))
+                    Text(
+                        if (toCase14 == 1) Strings.ui("1 case until the international manhunt")
+                        else Strings.ui("{0} cases until the international manhunt", toCase14),
+                        style = v.text(7f, color = Vga.LightCyan, bold = true),
+                    )
+                }
+            }
         }
     }
     // world map (bottom) — DOS draws a clean map every time: only the current city (white)
@@ -1417,6 +1431,11 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     val s = vm.s
     val shareCtx = androidx.compose.ui.platform.LocalContext.current
     val reduce = reducedMotion()
+    // Case 14's escape is a win (s.won) but nobody's actually caught — see ClaraViewModel.win()'s
+    // isCase14Clara branch, the only win that doesn't end in a capture. The arrest-slam and jail
+    // art below both need to skip it; the true finale (also culprit == Clara) is excluded via
+    // careerOver, which only that case sets.
+    val claraEscaped = s.won && s.culprit?.name == "Clara San Diego" && !s.careerOver
     val printed = remember { mutableStateListOf<String>() }
     var typing by remember { mutableStateOf("") }
     // 0 typing report · 1 typing quiz · 2 quiz input · 3 typing verdict/ready · 4 Yes/No
@@ -1434,7 +1453,7 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     // S1: the captured mugshot slams in and is "filed" in the gallery before the report starts
     // printing — it used to play at the same time as the printer, so its own tap-to-continue and
     // the printer's competed for the same tap and neither was clearly the thing being responded to.
-    var slamActive by remember { mutableStateOf(s.won && !s.careerOver && !reduce && s.culprit?.name != null) }
+    var slamActive by remember { mutableStateOf(s.won && !s.careerOver && !claraEscaped && !reduce && s.culprit?.name != null) }
     // The paper only shows its last ~12 lines, so a long report used to just scroll continuously
     // past the reader. Pause once a page's worth has printed and wait for a tap before continuing.
     var waitingForTap by remember { mutableStateOf(false) }
@@ -1587,10 +1606,11 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
             }
         }
     }
-    // right: the JAIL (win) or black panel (loss)
+    // right: the JAIL (win) or black panel (loss / Clara's Case-14 escape — nobody's behind
+    // bars there, so the jail art would contradict "she got away"; claraEscaped above).
     v.At(150, 26, 168, 146) {
         Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White))) {
-            if (s.won) {
+            if (s.won && !claraEscaped) {
                 PixelImage("jail_cell", Modifier.fillMaxSize())
                 // the suspect's eyes blink behind the bars on a slow loop (dos_jail_eyes_a/b)
                 var blink by remember { mutableStateOf(false) }
@@ -1607,6 +1627,18 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     if (s.won && !s.careerOver) {
         v.At(266, 14, 50, 10) {
             YellowButton(v, Strings.ui("SHARE")) { com.acme.clara.ui.shareResult(shareCtx, vm) }
+        }
+    }
+    // The primary CTA: right after Case 14's escape (see ClaraViewModel.win()'s isCase14Clara
+    // branch), unpaid, in the same header strip as SHARE — the moment the free career's highest
+    // investment meets the offer. Never shown on any other result (`s.casesSolved` only ever
+    // equals CAREER_CASES on this exact screen, win or lose, and this only fires on a win).
+    if (s.won && !s.careerOver && s.casesSolved == com.acme.clara.game.GameState.CAREER_CASES &&
+        !s.expansionUnlocked && com.acme.clara.billing.BillingManager.SALES_ENABLED) {
+        v.At(150, 14, 112, 10) {
+            YellowButton(v, Strings.ui("Unlock World Campaign")) {
+                vm.openOverlay(Overlay.PurchaseOffer("Case 14 Clara escape"))
+            }
         }
     }
     // A single gray status strip for every "the game is waiting on you" moment on this screen —

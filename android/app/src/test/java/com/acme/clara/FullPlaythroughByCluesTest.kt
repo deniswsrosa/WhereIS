@@ -118,12 +118,16 @@ class FullPlaythroughByCluesTest {
     }
 
     @Test fun theFreeCareerIsBeatableByAnEfficientPlayer() {
+        // Case 14 is the story's inciting incident, not a clean capture: an unpaid player always
+        // sees Clara get away there (see Masterminds.kt), and the free career keeps looping after
+        // it rather than ending — so "finished" now means "reached and solved case 14", checked by
+        // case count, not by the career-over flag (which an unpaid career never sets anymore).
         val r = Report()
         val careers = 40
         repeat(careers) { n ->
             val vm = ClaraViewModel().apply { signOn("Gumshoe$n") }
             var guard = 0
-            while (!vm.s.careerOver && guard++ < 30) {
+            while (vm.s.casesSolved < 14 && guard++ < 30) {
                 val rank = vm.s.rankIndex
                 if (playCase(vm, r)) {
                     r.casesWon++
@@ -133,10 +137,10 @@ class FullPlaythroughByCluesTest {
                 } else { r.failures.add("career $n LOST case ${vm.s.casesSolved + 1} (rank $rank): " +
                     vm.s.resultLines.joinToString(" ").take(70)); break }
                 if (vm.s.pendingPromotion) vm.resolvePromotion(true)
-                if (vm.s.careerOver) break
+                if (vm.s.casesSolved >= 14) break
                 vm.nextCase()
             }
-            if (vm.s.careerOver) r.careersFinished++
+            if (vm.s.casesSolved >= 14) r.careersFinished++
         }
 
         println("=============== EFFICIENT FREE-CAREER PLAYTHROUGH (x$careers) ===============")
