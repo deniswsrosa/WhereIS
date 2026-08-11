@@ -3,6 +3,9 @@
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Required for Play Billing (billing/BillingManager.kt). Without this, BillingClient calls
+         fail on real installs from Play — see docs/06-play-console-iap-setup.md. -->
+    <uses-permission android:name="com.android.vending.BILLING" />
 
     <application
         android:allowBackup="true"

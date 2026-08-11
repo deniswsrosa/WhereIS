@@ -90,7 +90,10 @@ class OverlaysTest {
     }
 
     @Test fun hintOverlayShowsAHint() {
-        val vm = ClaraViewModel().apply { signOn("Ada") }
+        // unlockExpansion() so this renders the same "HINT" overlay whether or not
+        // BillingManager.SALES_ENABLED is live — unpaid would otherwise offer the purchase instead
+        // (see ClaraViewModel.requestHint()), which isn't what this test is checking.
+        val vm = ClaraViewModel().apply { signOn("Ada"); unlockExpansion() }
         vm.requestHint()
         host(vm)
         compose.onNodeWithText("HINT").assertIsDisplayed()

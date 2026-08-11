@@ -183,12 +183,28 @@ class ProgressionTest {
             seen.any { it in Progression.wave.keys })
     }
 
-    @Test fun freeCareerNeverLeavesTheOriginalsAndRetiresAtClara() {
+    @Test fun freeCareerNeverLeavesTheOriginalsAndClaraAlwaysEscapesUnpaid() {
+        // Case 14 is the story's inciting incident, not a clean capture: Clara always gets away
+        // there, paid or not (see Masterminds.kt) — so an unpaid career no longer ends at Clara.
+        // It simply keeps looping on the free 30 forever, which is the CTA's whole reason to exist.
         val vm = ClaraViewModel().apply { signOn("Purist") }   // no unlock
         var guard = 0
         val seen = mutableSetOf<String>()
-        while (!vm.s.careerOver && guard++ < 30) { seen += vm.s.route; if (!vm.advanceOneCase()) break }
-        assertTrue("the free career ends (Clara jailed)", vm.s.careerOver)
+        var sawCase14Escape = false
+        while (guard++ < 30) {
+            seen += vm.s.route
+            val wasCase14 = vm.s.casesSolved == GameState_CAREER_CASES() - 1 && vm.s.culprit?.name == "Clara San Diego"
+            vm.solveCurrentCase()
+            if (wasCase14) {
+                assertTrue("Case 14 is still a win (mechanically solved)", vm.s.won)
+                assertFalse("Case 14 never retires an unpaid player — she escapes instead", vm.s.careerOver)
+                sawCase14Escape = true
+            }
+            if (vm.s.pendingPromotion) vm.resolvePromotion(true)
+            assertFalse("an unpaid career never ends", vm.s.careerOver)
+            vm.nextCase()
+        }
+        assertTrue("the loop actually reached Case 14 within the guard", sawCase14Escape)
         assertTrue("only original cities ever appear for a free player", seen.all { it in base })
         assertEquals("free career tops out at Ace Detective", "Ace Detective", GameData.ranks[vm.s.rankIndex])
     }
@@ -203,10 +219,15 @@ class ProgressionTest {
             if (vm.s.pendingPromotion) vm.resolvePromotion(true)
             // cityLastSeen right before the next case is exactly what the route-picker's cap consults
             val seenBefore = vm.s.cityLastSeen.keys.toSet()
+            val nextCases = vm.s.casesSolved + 1
+            // A mastermind finale is deliberately exempt from the cap — see ClaraViewModel.newCase().
+            val isFinale = nextCases > GameState_CAREER_CASES() && (nextCases - GameState_CAREER_CASES()) % 8 == 0
             vm.nextCase()
-            val cap = Progression.newPerCase(vm.s.rankIndex)
-            val fresh = vm.s.route.count { it !in seenBefore }
-            assertTrue("case at rank ${vm.s.rankIndex} introduces <= $cap new (saw $fresh)", fresh <= cap)
+            if (!isFinale) {
+                val cap = Progression.newPerCase(vm.s.rankIndex)
+                val fresh = vm.s.route.count { it !in seenBefore }
+                assertTrue("case at rank ${vm.s.rankIndex} introduces <= $cap new (saw $fresh)", fresh <= cap)
+            }
         }
     }
 

@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import com.acme.clara.notify.Reminders
 import com.acme.clara.notify.WelcomeBackNotifier
 import androidx.compose.foundation.background
@@ -29,8 +30,16 @@ import com.acme.clara.save.SaveStore
 import com.acme.clara.save.decideLaunch
 import com.acme.clara.ui.screens.*
 import com.acme.clara.ui.theme.Vga
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
+    // Same ViewModelStoreOwner (this Activity) as the ClaraApp() composable's own viewModel()
+    // call below, so this always resolves to the identical instance — a second handle used only
+    // to reach flushPendingSaves() from the Activity lifecycle, which Compose's LaunchedEffect
+    // scoping doesn't observe directly.
+    private val vm: ClaraViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Draw edge-to-edge so the soft keyboard is reported as an inset instead of
@@ -53,6 +62,12 @@ class MainActivity : ComponentActivity() {
         super.onStop()
         GameSound.pauseTheme()
         if (Reminders.enabled(this)) WelcomeBackNotifier.schedule(this)   // on by default
+        // autosave() writes off the main thread now (see ClaraViewModel/SaveStore) so gameplay
+        // never blocks on disk I/O — but that leaves a small window where the most recent write
+        // is still in flight if the process dies right after. A real backgrounding always reaches
+        // onStop() first, so flushing here (bounded: at most one small pending write) closes that
+        // window for the actual "app goes away" path, without reintroducing a stall during play.
+        vm.flushPendingSaves()
     }
 }
 
@@ -62,20 +77,42 @@ fun ClaraApp() {
     val context = LocalContext.current
     // Bind persistence and decide the launch: 0 saves → sign-on, 1 → continue, 2+ → picker.
     LaunchedEffect(Unit) {
-        com.acme.clara.game.Humor.init(context)
+        // Humor.init() parses a several-hundred-KB JSON asset (up to ~680KB for the largest
+        // language) — off the main thread for the same reason as the save list/load below.
+        withContext(Dispatchers.IO) { com.acme.clara.game.Humor.init(context) }
         val store = SaveStore(context)
         vm.bindRepository(store)
-        when (val outcome = decideLaunch(store.list())) {
+        // list()/load() are synchronous file reads (SaveStore) — off the main thread so a cold
+        // start with several saved careers can't stall the first frame.
+        val outcome = withContext(Dispatchers.IO) { decideLaunch(store.list()) }
+        when (outcome) {
             // Debug builds skip sign-on on a fresh install (no save yet) and land straight at
             // the hideout doorstep — chase/result testing shouldn't need playing through
             // name-entry and the whole clue-gathering loop on every reinstall.
             is LaunchOutcome.SignOn -> if (BuildConfig.DEBUG) vm.devAutoStart()
-            is LaunchOutcome.Continue -> store.load(outcome.id)?.let { vm.resume(it) }
+            is LaunchOutcome.Continue -> {
+                val data = withContext(Dispatchers.IO) { store.load(outcome.id) }
+                data?.let { vm.resume(it) }
+            }
             is LaunchOutcome.Choose -> vm.toChooseGame()
         }
     }
-    // Reload the (per-language) humor corpus whenever the language changes.
-    LaunchedEffect(com.acme.clara.i18n.Strings.revision) { com.acme.clara.game.Humor.reload(context) }
+    // Reload the (per-language) humor corpus whenever the language changes — off the main
+    // thread, same reasoning as the cold-start Humor.init() above.
+    LaunchedEffect(com.acme.clara.i18n.Strings.revision) {
+        withContext(Dispatchers.IO) { com.acme.clara.game.Humor.reload(context) }
+    }
+    // World Campaign entitlement: connect once, grant on any resolved purchase — a fresh buy, an
+    // explicit restore, or (silently, no "Restore" tap needed) Play already showing it owned on
+    // reconnect, which covers a reinstall or a new device. Gated on SALES_ENABLED too, not just
+    // the purchase-CTA UI: without this, queryExistingPurchases() could silently grant entitlement
+    // to a Play Console license-test account the moment the product is created for testing, even
+    // in a build that's supposed to be fully dark until the switch flips.
+    LaunchedEffect(Unit) {
+        if (com.acme.clara.billing.BillingManager.SALES_ENABLED) {
+            com.acme.clara.billing.BillingManager.connect(context, onGranted = { vm.unlockExpansion() })
+        }
+    }
     // Keep the audio engine's mute state in sync with the Options > Sound toggle.
     LaunchedEffect(vm.s.soundOn) { GameSound.setEnabled(context, vm.s.soundOn) }
     // The title theme plays over the intro and title only; it stops the moment you sit down at
