@@ -1236,7 +1236,7 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
             if (printing) {
                 var ledOn by remember { mutableStateOf(true) }
                 LaunchedEffect(Unit) { while (true) { delay(350); ledOn = !ledOn } }
-                if (ledOn) v.At(60, 97, 44, 6) {
+                if (ledOn) v.At(60, 97, 52, 12) {
                     PixelImage("crime_computer_leds", Modifier.fillMaxSize())
                 }
             }
