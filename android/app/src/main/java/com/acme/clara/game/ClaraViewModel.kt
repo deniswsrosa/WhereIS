@@ -68,6 +68,23 @@ object Treasures {
         "an ancient golden mask", "a rare Stradivarius violin", "the original Magna Carta",
         "a jewel-encrusted scepter", "a set of Fabergé eggs", "a stolen Rembrandt",
         "the sacred temple ruby", "a 2,000-year-old mummy", "the national flag",
+        "the Hope Diamond", "a solid-gold Buddha statue", "an emerald the size of a fist",
+        "the world's largest pearl", "a suit of gilded samurai armor", "an Egyptian sarcophagus",
+        "a jade burial mask", "the last unicorn tapestry", "a meteorite fragment from outer space",
+        "the blueprint of a legendary lost city", "a Viking longship's golden prow",
+        "an ivory chess set carved for royalty", "the world's oldest surviving map",
+        "a diamond-studded pocket watch", "the ashes of a mythical phoenix",
+        "a solid-platinum championship trophy", "the world's rarest postage stamp",
+        "a pirate's buried treasure chest", "a jewel-encrusted ceremonial sword",
+        "the skeleton of a prehistoric dinosaur", "a silk tapestry woven with real gold thread",
+        "the world's largest uncut sapphire", "a first-edition manuscript by a legendary author",
+        "a solid-gold llama figurine", "the world's most valuable violin bow",
+        "an antique globe painted with forgotten kingdoms", "the crown of a lost kingdom",
+        "a bronze statue said to grant wishes", "the world's largest cut ruby",
+        "a stuffed specimen of an extinct bird", "the original score of a legendary symphony",
+        "a solid-silver ceremonial mask", "the world's finest hand-woven rug",
+        "a fossilized dinosaur egg", "a trident said to belong to a sea god",
+        "a jewel-encrusted royal orb",
     )
 
     /** The saved/state value stays the English string; localize only at render time. */
@@ -163,6 +180,9 @@ data class GameState(
     val hadCleanCase: Boolean = false,
     // free hints banked from returning after time away (spend without losing the hint-free badge)
     val freeHints: Int = 0,
+    // paid-tier perk: one free hint per case. Resets every newCase() rather than banking, so
+    // it's spent before freeHints — an unused per-case hint would otherwise just be lost.
+    val paidHintUsed: Boolean = false,
     // The guided first case is a set of contextual, teach-once lessons rather than a linear step
     // counter: each lesson fires the first time its game state is true and clears when the player
     // does the action. [tutorialActive] = the tour is running now; [tutorialDone] = it has run once
@@ -290,12 +310,19 @@ class ClaraViewModel : ViewModel() {
     fun dismissTip(id: String) { teach(id) }
     fun skipTutorial() { s = s.copy(tutorialActive = false, tutorialDone = true); autosave() }
 
-    /** Ask for a layered hint. Spends a banked free hint if there is one; otherwise it costs the
-     *  case's hint-free badge. The hint is shown as an Info overlay. */
+    /** Ask for a layered hint. Paid players spend their per-case free hint first (it doesn't
+     *  carry over to the next case); then a banked free hint if there is one; otherwise it
+     *  costs the case's hint-free badge. The hint is shown as an Info overlay. */
     fun requestHint() {
         val hint = hintText()
-        val free = s.freeHints > 0
-        s = if (free) s.copy(freeHints = s.freeHints - 1) else s.copy(hintsUsed = s.hintsUsed + 1)
+        val paidFree = s.expansionUnlocked && !s.paidHintUsed
+        val bankedFree = !paidFree && s.freeHints > 0
+        s = when {
+            paidFree -> s.copy(paidHintUsed = true)
+            bankedFree -> s.copy(freeHints = s.freeHints - 1)
+            else -> s.copy(hintsUsed = s.hintsUsed + 1)
+        }
+        val free = paidFree || bankedFree
         val i18n = com.acme.clara.i18n.Strings
         val note = if (free) i18n.ui("(free hint — your hint-free record is safe)")
                    else i18n.ui("(this case is no longer a hint-free solve)")
@@ -435,7 +462,7 @@ class ClaraViewModel : ViewModel() {
             visitedPlaces = s.visitedPlaces + cities.first(),
             // L4: mark the briefing city as seen this case.
             cityLastSeen = s.cityLastSeen + (cities.first() to s.casesSolved),
-            wrongFlights = 0, hintsUsed = 0, journal = emptyList(),
+            wrongFlights = 0, hintsUsed = 0, paidHintUsed = false, journal = emptyList(),
             tutorialActive = isTutorial, tutorialDone = s.tutorialDone || isTutorial,
             tutorialSeen = emptySet(), sawTraitClue = false, sawTrailClue = false,
             openClue = null,

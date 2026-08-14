@@ -51,26 +51,35 @@ object GameData {
         "mt. climbing",
         "skydiving",
         "swimming",
-        "croquet"
+        "croquet",
+        "cooking",
+        "board games",
+        "collecting",
+        "dating"
     )
     val hairColors = listOf(
         "brown",
         "blond",
         "red",
-        "black"
+        "black",
+        "gray"
     )
     val features = listOf(
         "limps",
         "ring",
         "tattoo",
         "scar",
-        "jewelry"
+        "jewelry",
+        "trinket",
+        "gadget"
     )
     val vehicles = listOf(
         "convertible",
         "limousine",
         "race car",
-        "motorcycle"
+        "motorcycle",
+        "car",
+        "yacht"
     )
     val sexes = listOf("female", "male")
 
@@ -215,6 +224,15 @@ object GameData {
         "vehicle:convertible" to listOf("{S} arrived in a convertible", "{S} had a nice convertible", "{S} offered me a ride in {p} convertible"),
         "vehicle:limousine" to listOf("{S} arrived in a private limo", "{S} was driving a limo", "{S} had {p} driver along"),
         "vehicle:motorcycle" to listOf("{S} arrived on a motorcycle", "{S} was riding a motorbike", "{S} was carrying a helmet"),
+        "hair:gray" to listOf("{S} had gray hair"),
+        "feature:trinket" to listOf("{S} carried a small trinket", "{S} kept fidgeting with a little trinket", "{S} was never without a favorite trinket"),
+        "feature:gadget" to listOf("{S} was fiddling with a gadget", "{S} showed off {p} favorite gadget", "{S} wouldn't put {p} gadget down"),
+        "vehicle:car" to listOf("{S} arrived in a fancy car", "{S} pulled up in a shiny car", "{S} parked a sleek car outside"),
+        "vehicle:yacht" to listOf("{S} arrived by private yacht", "{S} had a yacht docked nearby", "{S} invited me aboard {p} yacht"),
+        "hobby:cooking" to listOf("{S} talked about a favorite recipe", "{S} mentioned loving to cook", "{S} asked about the best shops for cooking supplies"),
+        "hobby:board games" to listOf("{S} mentioned a love of board games", "{S} asked if I played board games", "{S} talked about {p} favorite board game"),
+        "hobby:collecting" to listOf("{S} mentioned {p} collection", "{S} was proud of {p} collection", "{S} talked about adding to {p} collection"),
+        "hobby:dating" to listOf("{S} mentioned being between dates", "{S} talked about a recent date", "{S} asked if I knew any good spots for a date"),
     )
     val dossierMenuNames = listOf(
         "Clara San Diego",
@@ -226,7 +244,16 @@ object GameData {
         "Nick Brunch",
         "Fast Eddie B",
         "Ihor Ihorovich",
-        "Katherine Drib"
+        "Katherine Drib",
+        "Natasha Zhuravleva",
+        "Black Denix",
+        "Julia Macaronni",
+        "Cesar Rosa",
+        "Fabian Sanchez",
+        "Romeo Jacomelli",
+        "Carlos Escarlate",
+        "Sylvia Fansworth",
+        "Otto Clockwell"
     )
 
     val suspects = listOf(
@@ -309,6 +336,78 @@ object GameData {
             feature1 = "An eagle tattoo spreads across her left bicep.", feature2 = "Cooks gourmet seafood; devoted to health and fitness.",
             tSex = "female", tHobby = "mt. climbing", tHair = "brown",
             tFeature = "tattoo", tVehicle = "motorcycle",
+        ),
+        Suspect(
+            name = "Natasha Zhuravleva", sex = "Female",
+            occupation = "Geography teacher who uses classroom maps to plan international jewel heists",
+            hobby = "Cooking", hair = "Sandy blond/light brown", auto = "Pearl-white Citroën DS",
+            feature1 = "Always wears a silver necklace with a single diamond.", feature2 = "She loves cooking but is never hungry.",
+            tSex = "female", tHobby = "cooking", tHair = "blond",
+            tFeature = "jewelry", tVehicle = "car",
+        ),
+        Suspect(
+            name = "Black Denix", sex = "Male",
+            occupation = "Cybersecurity consultant by day, notorious data thief by night",
+            hobby = "Chess", hair = "Black", auto = "Matte-black electric motorcycle",
+            feature1 = "Always carries a floppy disk containing his latest stolen secrets.", feature2 = "Survives on black coffee and refuses to eat anything he cannot order anonymously.",
+            tSex = "male", tHobby = "board games", tHair = "black",
+            tFeature = "gadget", tVehicle = "motorcycle",
+        ),
+        Suspect(
+            name = "Julia Macaronni", sex = "Female",
+            occupation = "Former diplomatic interpreter turned multilingual international spy",
+            hobby = "Collecting rare perfumes", hair = "Blond", auto = "Luxury yacht",
+            feature1 = "Always wears a crimson silk scarf.", feature2 = "Speaks twelve languages fluently and can lie convincingly in every one.",
+            tSex = "female", tHobby = "collecting", tHair = "blond",
+            tFeature = "trinket", tVehicle = "yacht",
+        ),
+        Suspect(
+            name = "Cesar Rosa", sex = "Male",
+            occupation = "Bank records manager who alters account histories for international fugitives",
+            hobby = "Mountain climbing", hair = "Dark brown", auto = "Gray Land Rover SUV",
+            feature1 = "Always carries a piece of rose quartz, claiming it channels the energy of the mountains.", feature2 = "Loves bureaucracy and refuses to commit a crime without completing the proper forms in triplicate.",
+            tSex = "male", tHobby = "mt. climbing", tHair = "brown",
+            tFeature = "trinket", tVehicle = "car",
+        ),
+        Suspect(
+            name = "Fabian Sanchez", sex = "Male",
+            occupation = "Fake lawyer who represents international fugitives using forged credentials",
+            hobby = "Cooking — he only ever makes rice and minced meat, and insists it's the finest dish in the world", hair = "Blond", auto = "Midnight-blue luxury sedan",
+            feature1 = "Always wears a gold brooch engraved with the scales of justice.", feature2 = "Quotes imaginary laws whenever anyone questions his authority.",
+            tSex = "male", tHobby = "cooking", tHair = "blond",
+            tFeature = "jewelry", tVehicle = "car",
+        ),
+        Suspect(
+            name = "Romeo Jacomelli", sex = "Male",
+            occupation = "Former dating-app consultant who steals the identities of his wealthiest clients",
+            hobby = "Dating", hair = "Black", auto = "Cherry-red convertible",
+            feature1 = "Always carries the newest and most expensive mobile phone.", feature2 = "Orders the most expensive sushi on every first date but always disappears before the bill arrives.",
+            tSex = "male", tHobby = "dating", tHair = "black",
+            tFeature = "gadget", tVehicle = "convertible",
+        ),
+        Suspect(
+            name = "Carlos Escarlate", sex = "Male",
+            occupation = "Self-proclaimed royal adviser who sells counterfeit titles of nobility",
+            hobby = "Mountain climbing—mostly so he can be photographed at the summit", hair = "Black", auto = "Crimson luxury limousine",
+            feature1 = "Wears a gold crown everywhere and insists on being addressed as \"Your Majesty.\"", feature2 = "Claims to have summited the world's most treacherous peaks, but has never been seen climbing anything steeper than his hotel's grand staircase.",
+            tSex = "male", tHobby = "mt. climbing", tHair = "black",
+            tFeature = "jewelry", tVehicle = "limousine",
+        ),
+        Suspect(
+            name = "Sylvia Fansworth", sex = "Female",
+            occupation = "Former museum conservator who replaces priceless manuscripts with flawless forgeries",
+            hobby = "Competitive mahjong", hair = "Silver-gray", auto = "Jade-green vintage Vespa with a matching sidecar",
+            feature1 = "Carries a black-and-teal folding fan concealing a compartment for stolen documents.", feature2 = "Drinks only jasmine tea and refuses anything served outside fine porcelain.",
+            tSex = "female", tHobby = "board games", tHair = "gray",
+            tFeature = "trinket", tVehicle = "motorcycle",
+        ),
+        Suspect(
+            name = "Otto Clockwell", sex = "Male",
+            occupation = "Former railway timetable inspector who manufactures airtight alibis for international fugitives",
+            hobby = "Birdwatching", hair = "White", auto = "Burgundy three-wheeled roadster",
+            feature1 = "Constantly checks a gold pocket watch engraved with dozens of false identities.", feature2 = "Eats breakfast precisely at midnight and refuses any egg that is not perfectly circular.",
+            tSex = "male", tHobby = "collecting", tHair = "gray",
+            tFeature = "jewelry", tVehicle = "convertible",
         ),
     )
 
