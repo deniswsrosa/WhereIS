@@ -253,7 +253,9 @@ object GameData {
         "Romeo Jacomelli",
         "Carlos Escarlate",
         "Sylvia Fansworth",
-        "Otto Clockwell"
+        "Otto Clockwell",
+        "Mr. Jojoba",
+        "Darniel Storki"
     )
 
     val suspects = listOf(
@@ -408,6 +410,22 @@ object GameData {
             feature1 = "Constantly checks a gold pocket watch engraved with dozens of false identities.", feature2 = "Eats breakfast precisely at midnight and refuses any egg that is not perfectly circular.",
             tSex = "male", tHobby = "collecting", tHair = "gray",
             tFeature = "jewelry", tVehicle = "convertible",
+        ),
+        Suspect(
+            name = "Mr. Jojoba", sex = "Male",
+            occupation = "Former arcade repair technician",
+            hobby = "Collecting rare, vintage game cartridges", hair = "Dark", auto = "Black arcade-service van",
+            feature1 = "Always carries a gold game cartridge whose label and serial number change every week.", feature2 = "Can identify any console by its startup sound and insists every technical problem can be solved by blowing into the cartridge.",
+            tSex = "male", tHobby = "collecting", tHair = "black",
+            tFeature = "trinket", tVehicle = "car",
+        ),
+        Suspect(
+            name = "Darniel Storki", sex = "Male",
+            occupation = "Software Development Manager in Game Development",
+            hobby = "Collecting first-edition novels", hair = "Dark brown", auto = "Volkswagen T-Cross",
+            feature1 = "Builds suspiciously tiny electronic gadgets for extremely specific problems.", feature2 = "Can turn any conversation into a discussion about Unity, Murakami, Nietzsche, or avocado toast.",
+            tSex = "male", tHobby = "collecting", tHair = "brown",
+            tFeature = "gadget", tVehicle = "car",
         ),
     )
 
