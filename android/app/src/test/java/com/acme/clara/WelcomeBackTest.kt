@@ -58,6 +58,27 @@ class WelcomeBackTest {
         }
     }
 
+    @Test fun repeatedUnplayedGapsDontStackPastOneBankedHint() {
+        val repo = InMemorySaveRepository()
+        val vm = ClaraViewModel().apply { signOn("Ada") }
+        vm.attachSave(repo, "p1") { 0L }
+        vm.openVenue(0)
+        var saved = repo.load("p1")!!
+
+        val reopened = ClaraViewModel()
+        reopened.bindRepository(repo) { 5 * DAY }
+        reopened.resume(saved)                       // first gap: banks 1
+        assertEquals(1, reopened.s.freeHints)
+        reopened.attachSave(repo, "p1") { 5 * DAY }
+        reopened.openVenue(0)
+        saved = repo.load("p1")!!
+
+        val reopenedAgain = ClaraViewModel()
+        reopenedAgain.bindRepository(repo) { 10 * DAY }
+        reopenedAgain.resume(saved)                   // second gap without ever spending the hint
+        assertEquals("capped at 1 even across repeated unplayed gaps", 1, reopenedAgain.s.freeHints)
+    }
+
     @Test fun returningPromptlyBanksNothing() {
         val repo = InMemorySaveRepository()
         val vm = ClaraViewModel().apply { signOn("Ada") }

@@ -12,8 +12,8 @@ import org.junit.Test
 /** Integrity of the extracted game data (GameData.kt is generated from the corpus). */
 class GameDataTest {
 
-    @Test fun tenSuspectsIncludingCarmen() {
-        assertEquals(10, GameData.suspects.size)
+    @Test fun nineteenSuspectsIncludingCarmen() {
+        assertEquals(19, GameData.suspects.size)
         assertTrue(GameData.suspects.any { it.name == "Clara San Diego" })
     }
 

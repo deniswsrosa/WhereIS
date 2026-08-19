@@ -47,11 +47,11 @@ class BureauHintTest {
         vm.requestHint()
         assertTrue("first paid ask is granted", vm.s.overlay is Overlay.Info)
         assertTrue("the tip is spent", vm.s.bureauTipUsed)
-        assertEquals(1, vm.s.hintsUsed)
+        assertEquals("the paid tip is free, same as the banked welcome-back hint", 0, vm.s.hintsUsed)
         vm.dismissOverlay()
 
         vm.requestHint()   // second ask, same case
-        assertEquals("no second tip is spent", 1, vm.s.hintsUsed)
+        assertEquals("no second tip is spent", 0, vm.s.hintsUsed)
         val lines = (vm.s.overlay as Overlay.Info).lines
         assertTrue("told there's nothing left, not repeated or vagued out",
             lines.any { it.contains("no additional tips") })
