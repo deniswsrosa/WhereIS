@@ -73,8 +73,8 @@ class SaveTest {
     }
 
     @Test fun codecLoadsAPreExpansionSaveMissingThisSessionsNewFields() {
-        // Simulates a save written before expansionUnlocked/bureauTipUsed existed on disk: strip
-        // those keys out of an otherwise-real, valid save and confirm decode() still succeeds with
+        // Simulates a save written before the paid fields existed on disk: strip those keys out
+        // of an otherwise-real, valid save and confirm decode() still succeeds with
         // safe defaults rather than crashing or silently corrupting the rest of the state — the
         // exact scenario an existing player's save hits on the first launch after this update.
         val vm = ClaraViewModel().apply { signOn("Ada Lovelace") }
@@ -85,6 +85,7 @@ class SaveTest {
                 val state = (root["state"] as Map<*, *>).toMutableMap()
                 state.remove("expansionUnlocked")
                 state.remove("bureauTipUsed")
+                state.remove("travelBufferEnabled")
                 linkedMapOf("v" to root["v"], "meta" to root["meta"], "state" to state)
             }
         )
@@ -95,6 +96,8 @@ class SaveTest {
             back!!.state.expansionUnlocked)
         assertFalse("missing bureauTipUsed defaults to not-yet-spent",
             back.state.bureauTipUsed)
+        assertTrue("missing travelBufferEnabled uses the paid comfort default",
+            back.state.travelBufferEnabled)
         // everything else that WAS present still round-trips untouched
         assertEquals("the rest of the career is unaffected",
             snap.state.copy(expansionUnlocked = false, bureauTipUsed = false), back.state)

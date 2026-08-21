@@ -1,5 +1,8 @@
 # Overnight QA pass — 2026-08-10
 
+> Historical QA record. Its fixed eight-case/nine-arc and late-purchase notes were superseded by
+> the ten-wave mockup implementation on 2026-08-21; see `05-game-design-and-progression.md`.
+
 Everything below happened in one unattended session on `deniswsrosa/Paid_CTA`, picking up
 right after the full live-emulator playthrough (Case 1 → Case 86) confirmed the mastermind
 campaign works end to end. **Nothing in this branch is committed yet** — it's all working-tree

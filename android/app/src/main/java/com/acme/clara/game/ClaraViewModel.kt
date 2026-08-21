@@ -51,6 +51,8 @@ sealed interface Overlay {
      *  — confirms the purchase before the receipt-only silence sets in. Never reappears: the
      *  method it's opened from is itself idempotent (guarded by `expansionUnlocked`). */
     data object UnlockCeremony : Overlay
+    /** Paid, answer-safe comparison of the current departure choices. */
+    data object CasePlanner : Overlay
     /** One suspect's dossier — the white typed-on window from the original's Dossiers menu. */
     data class Dossier(val suspect: Suspect) : Overlay
     data class Info(val title: String, val lines: List<String>) : Overlay
@@ -182,19 +184,12 @@ data class GameState(
     // L4 spaced repetition: the case index (casesSolved) each place was last seen, so route
     // picking can resurface geography on an expanding schedule and the almanac can flag it.
     val cityLastSeen: Map<String, Int> = emptyMap(),
-    // paid-tier entitlement: unlocks the 68 expansion destinations + new venues for case routes,
-    // decoys, the map and flight times. Free play stays on the original 30. (Persisted with the
-    // save until a global entitlement store exists.)
+    // paid-tier entitlement: unlocks the 201 campaign destinations wave by wave, plus the paid
+    // world tools and comforts. Free play stays on the original 30.
     val expansionUnlocked: Boolean = false,
-    // The case count the mastermind story arcs start counting 8-case triggers from — set once, in
-    // unlockExpansion(), to whichever is later: Case 14 (buying at/before the enrollment beat, the
-    // original cadence) or however many cases were already solved (buying after free-playing on
-    // past 14). Without this, a late purchase would measure triggers from the fixed case 14 instead
-    // of from the purchase, so every arc whose absolute case number had already passed unpaid would
-    // be skipped forever, and the sequential rank granted by resolvePromotion() would desync from
-    // the arc's documented patentRank. Defaults to CAREER_CASES for saves from before this field
-    // existed, matching their only possible purchase timing (there was no "buy late" path yet).
-    val storyStartCase: Int = GameState.CAREER_CASES,
+    // Optional paid comfort perk. It adds eight hours to a freshly generated case deadline and
+    // can be disabled from Options without affecting campaign progression.
+    val travelBufferEnabled: Boolean = true,
     val hintFreeSolves: Int = 0,
     val hadCleanCase: Boolean = false,
     // free hints banked from returning after time away (spend without losing the hint-free badge).
@@ -337,6 +332,7 @@ class ClaraViewModel : ViewModel() {
 
     fun toggleHaptics() { s = s.copy(hapticsOn = !s.hapticsOn, overlay = null); autosave() }
     fun toggleCaptions() { s = s.copy(captionsOn = !s.captionsOn, overlay = null); autosave() }
+    fun toggleTravelBuffer() { s = s.copy(travelBufferEnabled = !s.travelBufferEnabled, overlay = null); autosave() }
 
     // ---------- tutorial ----------
     /** Advance the guided tutorial when the player performs the step's taught action. */
@@ -453,29 +449,25 @@ class ClaraViewModel : ViewModel() {
     // ---------- menu bar ----------
     fun openOverlay(o: Overlay) { s = s.copy(overlay = o) }
     fun dismissOverlay() { s = s.copy(overlay = null) }
-    fun menuNewCase() { s = s.copy(overlay = null, phase = Phase.BRIEFING); newCase(); cue(SoundCue.BRIEFING); autosave() }
+    fun menuNewCase() {
+        if (s.casesSolved >= GameState.CAREER_CASES && !s.expansionUnlocked) {
+            val selling = com.acme.clara.billing.BillingManager.SALES_ENABLED
+            s = s.copy(
+                overlay = if (selling) Overlay.PurchaseOffer("New case") else null,
+                phase = if (selling) s.phase else Phase.TITLE,
+            )
+            return
+        }
+        s = s.copy(overlay = null, phase = Phase.BRIEFING); newCase(); cue(SoundCue.BRIEFING); autosave()
+    }
 
-    /** Grant the paid-tier entitlement: the 68 expansion destinations + new venues enter the pool
-     *  from the next case on. Called by [com.acme.clara.billing.BillingManager] after a successful
+    /** Grant the paid-tier entitlement: Wave 1 and the comfort perks are immediate; later waves
+     *  enter the pool as their preceding finale is cleared. Called after a successful
      *  purchase or a restore. Idempotent — safe to call repeatedly (e.g. on every app start once
      *  BillingClient reconnects and reports the existing purchase). */
     fun unlockExpansion() {
         if (s.expansionUnlocked) return
-        var next = s.copy(
-            expansionUnlocked = true, overlay = Overlay.UnlockCeremony,
-            // Start the 8-case arc cadence from whichever is later: Case 14, or right now — a
-            // player who free-played on past 14 before buying must not have their story measured
-            // from the fixed case 14, or every arc whose case number already passed unpaid would
-            // be skipped forever (see the storyStartCase kdoc on GameState).
-            storyStartCase = maxOf(GameState.CAREER_CASES, s.casesSolved),
-        )
-        // Case 14's escape earns no promotion while unpaid (see win()) — if that already happened
-        // before this purchase, grant the pending Special Agent promotion now rather than making
-        // the player solve one more case first to see it.
-        if (next.casesSolved >= GameState.CAREER_CASES && next.rankIndex < GameData.ranks.lastIndex) {
-            next = next.copy(pendingPromotion = true)
-        }
-        s = next
+        s = s.copy(expansionUnlocked = true, overlay = Overlay.UnlockCeremony)
         autosave()
     }
 
@@ -495,19 +487,14 @@ class ClaraViewModel : ViewModel() {
     private fun newCase() {
         val carmen = GameData.suspects.first { it.name == "Clara San Diego" }
         val pool = GameData.suspects.filter { it.name != "Clara San Diego" }
-        // The case about to be generated is a mastermind capture iff solving it will land on an
-        // International promotion past storyStartCase (see `intlThreshold` in win() — kept in sync
-        // here; storyStartCase, not the fixed Case 14, so a late purchase can't skip an arc).
         val nextCases = s.casesSolved + 1
-        val triggerIndex = if (s.expansionUnlocked && nextCases > s.storyStartCase &&
-            (nextCases - s.storyStartCase) % 8 == 0) (nextCases - s.storyStartCase) / 8 else null
-        val arc = triggerIndex?.let { Masterminds.arcForTrigger(it) }
-        // Clara is the culprit on the final case of the free career (case 14, the enrollment beat —
-        // she escapes there, see win()) and again on the campaign finale (she's truly caught there).
-        // Every other mastermind case forces that arc's suspect; ordinary cases stay random.
+        val campaignCase = nextCases - GameState.CAREER_CASES
+        val arc = if (s.expansionUnlocked && campaignCase > 0)
+            Masterminds.arcForCampaignCase(campaignCase) else null
+        // Clara is forced for the free-career inciting incident. Campaign finales force their
+        // boss/successor, including Wave 10 where Clara is captured in the same raid.
         val culprit = when {
             s.casesSolved == GameState.CAREER_CASES - 1 -> carmen
-            arc?.role == "Finale" -> carmen
             arc != null -> pool.firstOrNull { it.name == arc.suspectName } ?: pool.random()
             else -> pool.random()
         }
@@ -525,7 +512,7 @@ class ClaraViewModel : ViewModel() {
         // too small to fill a route (the smallest, Oceania marquee, has 5 cities; routes run 9-12
         // hops, so this deliberately allows the spaced-repetition picker to revisit within it).
         val fullPool = activeCities()
-        val cityPool = arc?.waveForRoute?.let { wave ->
+        val cityPool = arc?.waveIndex?.let { wave ->
             fullPool.filter { Progression.wave[it] == wave }.takeIf { it.isNotEmpty() }
         } ?: fullPool
         val picked = SpacedRepetition.pickRoute(cityPool, s.cityLastSeen, s.casesSolved, routeLen)
@@ -540,7 +527,8 @@ class ClaraViewModel : ViewModel() {
         // than approximating means slack stays a true margin whatever the flight lengths — the linear
         // formula was tuned on the free career's short hops and left the long-flight paid grades
         // unwinnable.
-        val caseDeadline = estimateEfficientClock(cities) + Progression.slackHours(s.rankIndex)
+        val caseDeadline = estimateEfficientClock(cities) + Progression.slackHours(s.rankIndex) +
+            if (s.expansionUnlocked && s.travelBufferEnabled) 8 else 0
         // the guided first case runs once, on a brand-new career's opening Rookie case
         val isTutorial = !s.tutorialDone && s.casesSolved == 0 && s.rankIndex == 0
         android.util.Log.d("Carmen", "case: culprit=${culprit.name} route=$cities")
@@ -765,7 +753,7 @@ class ClaraViewModel : ViewModel() {
      *  unlocked at the current rank (International grades 5..14 reveal waves 0..9, famous first). */
     private fun activeCities(): List<String> {
         if (!s.expansionUnlocked) return GameData.cities
-        val extra = Progression.citiesUpToWave(Progression.unlockedMaxWave(s.rankIndex))
+        val extra = Progression.citiesUpToWave(Masterminds.unlockedMaxWave(s.rankIndex, true))
         return GameData.cities + extra
     }
 
@@ -1156,10 +1144,9 @@ class ClaraViewModel : ViewModel() {
         // Case 14 is the story's inciting incident, not an ordinary capture: Clara always gets
         // away, whether or not the International track is already unlocked (see Masterminds.kt).
         val isCase14Clara = c.name == "Clara San Diego" && newCases == GameState.CAREER_CASES
-        val triggerIndex = if (paid && newCases > s.storyStartCase &&
-            (newCases - s.storyStartCase) % 8 == 0) (newCases - s.storyStartCase) / 8 else null
-        val arc = triggerIndex?.let { Masterminds.arcForTrigger(it) }
-        val isFinale = arc?.role == "Finale"
+        val campaignCases = newCases - GameState.CAREER_CASES
+        val arc = if (paid && campaignCases > 0) Masterminds.arcForCampaignCase(campaignCases) else null
+        val isFinale = arc?.final == true
         val lines = mutableListOf<String>()
         when {
             isCase14Clara -> {
@@ -1169,7 +1156,7 @@ class ClaraViewModel : ViewModel() {
             isFinale -> {
                 lines += GameData.CLARA_JAILED
                 lines += i18n.ui("Congratulations - Interpol's most-wanted list is one name shorter tonight!")
-                lines += i18n.ui("{0} was taken in the same raid, closing out the last of the five families.", arc!!.suspectName)
+                lines += i18n.ui("{0} was taken in the same raid, closing out the last of the five families.", c.name)
             }
             arc != null -> {
                 lines += i18n.ui("{0}'s network in {1} is dismantled — {2} is in custody.",
@@ -1208,14 +1195,11 @@ class ClaraViewModel : ViewModel() {
         // Only the true finale (Clara's real capture, Chief Director) ends the career now — Case 14
         // never does, paid or not, since she's always an escape there (see Masterminds.kt header).
         val careerOver = isFinale
-        // Free promotion cadence (1990 rules): cases 1, 5, 9, 13 -> Sleuth..Ace. International grades
-        // then promote once every 8 cases past the free arc (cases 14, 22, 30, ...). Case 14 itself
-        // is the "enrollment" promotion to Special Agent when already paid — see Masterminds.kt.
+        // Free ranks retain the 1990 cadence. Each paid wave finale awards exactly one new grade;
+        // Wave 10 awards Chief Director directly, without a quiz.
         val freeThreshold = newCases in setOf(1, 5, 9, 13)
-        val intlThreshold = paid && newCases >= s.storyStartCase &&
-            (newCases - s.storyStartCase) % 8 == 0
-        // The finale awards Chief Director directly — no quiz, per the design doc ("automatic").
-        val promote = !careerOver && !isFinale && s.rankIndex < GameData.ranks.lastIndex && (freeThreshold || intlThreshold)
+        val promote = !careerOver && !isFinale && s.rankIndex < GameData.ranks.lastIndex &&
+            (freeThreshold || arc != null)
         if (promote) {
             lines += GameData.PROMOTION.replace("%s", s.detectiveName)
             lines += i18n.ui("One last puzzle stands between you and the promotion.")
@@ -1224,7 +1208,11 @@ class ClaraViewModel : ViewModel() {
         // then unlock any newly-earned commendations from the resulting record
         // An escape at Case 14 must not mark Clara "captured" in the Most Wanted gallery — she
         // isn't, until the true finale (isFinale) actually jails her.
-        val captured = if (isCase14Clara) s.capturedVillains else s.capturedVillains + c.name
+        val captured = when {
+            isCase14Clara -> s.capturedVillains
+            isFinale -> s.capturedVillains + c.name + "Clara San Diego"
+            else -> s.capturedVillains + c.name
+        }
         val cleanSweep = s.hadCleanCase || s.wrongFlights == 0
         val hintFree = if (s.hintsUsed == 0) s.hintFreeSolves + 1 else s.hintFreeSolves
         var next = s.copy(
@@ -1295,12 +1283,23 @@ class ClaraViewModel : ViewModel() {
         autosave()
     }
 
-    /** Cases remaining until the next promotion threshold (1, 5, 9, 13). */
+    /** Cases remaining until the next free promotion or explicit campaign-wave finale. */
     fun casesToNextPromotion(): Int {
         val thresholds = if (s.expansionUnlocked)
-            listOf(1, 5, 9, 13) + (GameState.CAREER_CASES..200 step 8) else listOf(1, 5, 9, 13)
+            listOf(1, 5, 9, 13) + Masterminds.waveEndCases.map { it + GameState.CAREER_CASES }
+            else listOf(1, 5, 9, 13)
         val next = thresholds.firstOrNull { it > s.casesSolved } ?: return 0
         return next - s.casesSolved
+    }
+
+    fun completedCampaignArc() = Masterminds.arcForCampaignCase(s.casesSolved - GameState.CAREER_CASES)
+
+    fun openCasePlanner() {
+        s = when {
+            s.expansionUnlocked -> s.copy(overlay = Overlay.CasePlanner)
+            com.acme.clara.billing.BillingManager.SALES_ENABLED -> s.copy(overlay = Overlay.PurchaseOffer("Case Planner"))
+            else -> s
+        }
     }
 
     /** The mastermind arc the player is currently working toward — a caption for RankProgress
@@ -1330,8 +1329,8 @@ class ClaraViewModel : ViewModel() {
         cue(SoundCue.OUT_OF_TIME)
     }
 
-    fun nextCase() { newCase() }
-    fun toBriefingForNext() { s = s.copy(phase = Phase.BRIEFING); newCase(); cue(SoundCue.BRIEFING) }
+    fun nextCase() { menuNewCase() }
+    fun toBriefingForNext() { menuNewCase() }
 
     // ---------- time formatting ----------
     fun clockLabel(offsetHours: Int = 0): String {

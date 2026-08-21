@@ -141,23 +141,24 @@ class ExpansionTest {
         }
     }
 
-    @Test fun unlockDuringFreeRanksStaysOnOriginals() {
-        // Wave model: unlocking grants the *ability* to earn countries, but during the free career
-        // (ranks 0..4) only the original 30 appear — waves reveal at the International grades.
+    @Test fun unlockDuringFreeRanksOpensWaveOneImmediately() {
         val vm = ClaraViewModel().apply { signOn("Rookie"); unlockExpansion() }
         assertTrue(vm.s.expansionUnlocked)
-        assertEquals("no wave unlocked in the free ranks", -1, Progression.unlockedMaxWave(vm.s.rankIndex))
+        assertEquals("purchase opens wave 0 immediately", 0, Progression.unlockedMaxWave(vm.s.rankIndex))
         val seen = mutableSetOf<String>()
         repeat(60) { vm.menuNewCase(); seen += vm.s.route }
         assertTrue("free cities appear", seen.any { it in base })
-        assertTrue("no expansion city while still in the free ranks", seen.none { it in Expansion.names })
+        assertTrue("wave-one expansion cities appear before Case 14", seen.any { Progression.wave[it] == 0 })
+        assertTrue("later waves remain gated", seen.none { (Progression.wave[it] ?: 0) > 0 })
     }
 
     @Test fun entitlementRoundTripsThroughSave() {
         val vm = ClaraViewModel().apply { signOn("Ace"); unlockExpansion() }
+        vm.toggleTravelBuffer()
         val snap = vm.snapshot("p1", 7L)
         val back = SaveCodec.decode(SaveCodec.encode(snap.meta, snap.state))
         assertNotNull(back)
         assertTrue("unlock persists", back!!.state.expansionUnlocked)
+        assertFalse("travel-buffer preference persists", back.state.travelBufferEnabled)
     }
 }

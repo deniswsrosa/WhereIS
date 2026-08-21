@@ -1,6 +1,6 @@
 # 05 — Game design & progression
 
-_How WhereIS plays: the destination roster, the free/paid split, and the recognition-wave difficulty ladder. Generated 2026-08-03. Sections are tagged **[Current]** (in the shipped code) or **[Proposed]** (the expansion design, not yet implemented)._
+_How WhereIS plays: the destination roster, the free/paid split, and the implemented recognition-wave difficulty ladder. Updated 2026-08-21._
 
 > Companion docs: per-country clue content lives in [`welcome_cards_state.md`](../welcome_cards_state.md); art pipeline in [`03-city-art-pipeline.md`](03-city-art-pipeline.md).
 
@@ -12,7 +12,7 @@ Key code: `game/ClaraViewModel.kt` — `newCase()` (route build), `arrive()` (la
 
 ## 2. The roster
 
-**231 destinations** total. **[Proposed]** the 133 new countries are not wired into the game yet, and 0 still lack postcard art:
+**231 destinations** total. All destination sets and postcard assets are wired into the game:
 
 | Set | Count | Where | Postcard art |
 |-----|------:|-------|-------------|
@@ -23,12 +23,12 @@ Key code: `game/ClaraViewModel.kt` — `newCase()` (route build), `arrive()` (la
 
 Together these cover nearly every country on Earth.
 
-## 3. Free vs paid  [Current gate, Proposed model]
+## 3. Free vs paid  [Current]
 
 - **Free** = the 30 original cities and the whole ~14-case career. All famous places, so the free game is the gentle on-ramp. Visited places are recorded for the passport from day one.
-- **Paid** = the other 201 destinations. **[Current]** they sit behind a single boolean `GameState.expansionUnlocked` (flipped only by `unlockExpansion()`; no store/IAP is wired yet). **[Proposed]** replace that all-or-nothing switch with a **rank-earned reveal**: buying the pack unlocks the *ability to earn* countries, which then arrive wave by wave as you rank up.
+- **Paid** = the other 201 destinations and the ten-wave World Campaign. Play Billing grants `GameState.expansionUnlocked`. Purchase opens Wave 1 immediately; each wave-final capture and promotion opens the next wave.
 
-## 4. Recognition waves = tiers  [Proposed]
+## 4. Recognition waves = tiers  [Current]
 
 Paid content unlocks in **10 recognition waves**, famous regions first, obscurity climbing. **The wave is the difficulty tier** — there is no separate fame scale. Each promotion recognizes you across one region ("you are now recognized as an agent by N more nations") and makes that wave's countries available; they then recur across future cases via spaced repetition.
 
@@ -46,9 +46,9 @@ Paid content unlocks in **10 recognition waves**, famous regions first, obscurit
 | W10 | Islands & frontiers | 10 | lesser-known | Antarctica, Tuvalu, Kiribati, Marshall Islands |
 | | **Total paid** | **201** | | |
 
-## 5. Patents (ranks) & difficulty  [Proposed]
+## 5. Patents (ranks) & difficulty  [Current]
 
-The **free career keeps its 5 ranks** (Rookie → Ace Detective; ~14 cases; reach Ace after ~12 wins). **[Current]** promotions fire at cases solved 1·5·9·13 and are gated by a quiz (`resolvePromotion`). Paid play then opens an **endless "International" track** — one new grade (patent) per wave, past Ace Detective.
+The **free career keeps its 5 ranks** (Rookie → Ace Detective; 14 cases). Promotions fire at cases solved 1·5·9·13 and are gated by a quiz (`resolvePromotion`). Paid play is a finite ten-wave campaign: Wave 1 is available on purchase, each finale awards the patent shown below and opens the following wave, and Wave 10 ends with Chief Director and Clara's capture.
 
 Difficulty rises through levers that **take turns** (never all at once): more **hops**, more **brand-new countries per case**, and a tighter **clock**. `Cases` = wins to the next promotion (not how many of a wave's countries you must visit).
 
@@ -70,12 +70,14 @@ Difficulty rises through levers that **take turns** (never all at once): more **
 | ✦ Director | W9 Africa — lesser-known (+33) | 12 | 12 | 3 | 16% (15h) | 111h | Tense |
 | ✦ Chief Director | W10 Islands & frontiers (+10) | 12 | 12 | 3 | 16% (15h) | 111h | Tense |
 
-## 6. The clock  [Current mechanic, Proposed slack]
+Campaign wave lengths are **8, 8, 8, 8, 10, 10, 10, 12, 12, 12** cases. Only a wave's last case is region-restricted. Clara appears six times: Case 14 and the Wave 6–10 finales.
+
+## 6. The clock  [Current]
 
 The deadline is a **travel-time budget**, not a wall-clock timer:
 
 - **[Current]** `DEADLINE_HOURS = 152` (Mon 9am → Sun 5pm). Each flight costs `flightHoursTo = (2 + distance·6)` clamped to **2–14h** (measured average **~5h**). Landing between 10pm and 8am **rolls the clock to 8am** (a lost night). Investigating venues is free; a wrong flight wastes a flight's worth of hours. Net cost of a hop ≈ **8 clock-hours**.
-- **[Proposed]** express the difficulty as **slack** — a percentage buffer over the flight-time a route *must* burn, floored at **15h** — instead of an absolute deadline. So `deadline = hops·8h + slack`, always covering the route; slack runs **~75% → ~16%** across the ladder. This is what makes late cases tense without ever being impossible.
+- The generated deadline uses a simulated efficient run plus rank slack, so it always covers the authored route. Paid players can optionally enable an additional **+8-hour Travel Buffer**.
 
 ## 7. Difficulty is fair — the check  [Proposed]
 
@@ -89,7 +91,7 @@ margin                   M = B − E             (must stay > 0)
 
 Across all patents the margin glides **+3.25 → +0.53** (Tutorial → Tense), always positive. Two rules fall out of it: **new/case is capped at 3** (4 pushed the top into losing territory), and the **first case that introduces any new country gets a slack bump + an extra dossier hint**, so novelty is never punished by the tight clock. The constants (`0.05`, `0.30`, the `8h` wrong-flight cost) are the values to calibrate against playtests.
 
-## 8. Reveal cadence — new vs. familiar  [Proposed]
+## 8. Reveal cadence — new vs. familiar  [Current]
 
 A wave *unlocks* its countries but you don't meet them all at once. Per case, at most **`new/case`** destinations are first-sightings; the rest are countries you've already seen, chosen by the existing `SpacedRepetition.pickRoute` (never-seen 3.0, review-due 4.0, just-seen 0.4). So the world stays learnable and weak spots resurface.
 
@@ -99,15 +101,15 @@ Every destination shows a briefing postcard. **[Current]** `ui/screens/GameScree
 
 ## 10. Passport  [Current]
 
-`GameState.visitedPlaces` records every landing from day one (`data/CountryShapes.kt` maps place → country). The painted world map (`ui/GameMenuBar.kt` `PassportWindow`) is gated by the same `expansionUnlocked` flag. **[Proposed idea]** promote it from "visited" to "mastered" — a country fills in only after you've correctly routed through it a few times — to give the map real meaning.
+`GameState.visitedPlaces` records every landing from day one (`data/CountryShapes.kt` maps place → country). Free stamps stay visible on the painted map; the remaining passport is frosted and locked until purchase. The World Database similarly previews one real fact for a locked place, with the remaining facts gated by entitlement and earned wave.
 
-## 11. Implementation checklist  [Proposed]
+## 11. Implementation map  [Current]
 
-1. Generate the 133 into `Expansion2.kt` as `CityInfo` records; add `fameTier`/`wave` + `postcard` fields to `CityInfo`.
-2. Postcard resolver in `CityPhoto()`: `country_<slug>` → `city_*` → `VgaCityCard`; log art-misses to a manifest.
-3. Replace the `expansionUnlocked` boolean with a **wave unlock table** (wave = tier); extend `GameData.ranks` with the International grades.
-4. In `newCase()`: draw the arrest from the player's current wave; keep `SpacedRepetition` for hops; cap first-sightings at `new/case`; apply the slack% + intro-case bump.
-5. Persist highest unlocked wave; reuse `visitedPlaces` for the "recognized by N nations" dispatch.
+1. `Expansion2.kt` supplies the final 133 destinations; `Progression.wave` is the wave gate.
+2. `Masterminds.kt` owns the ten story finales and variable-length cadence.
+3. `ClaraViewModel.newCase()` mixes the currently earned waves into ordinary routes and restricts only finale routes.
+4. `GameState.expansionUnlocked` is the durable entitlement; the highest wave derives from rank so it cannot drift out of sync.
+5. `GameMenuBar.kt` owns the shared purchase surface, Passport/Database previews, Case Planner and ceremony.
 
 ## 12. Tunable knobs
 

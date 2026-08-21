@@ -87,8 +87,8 @@ class ProgressionTest {
     }
 
     @Test fun wavesGateByRankIndex() {
-        for (r in 0 until Progression.FREE_RANKS) assertEquals("free rank $r unlocks nothing", -1, Progression.unlockedMaxWave(r))
-        assertEquals("first International grade opens wave 0", 0, Progression.unlockedMaxWave(Progression.FREE_RANKS))
+        for (r in 0 until Progression.FREE_RANKS) assertEquals("an entitled free rank opens wave 0", 0, Progression.unlockedMaxWave(r))
+        assertEquals("first International grade opens wave 1", 1, Progression.unlockedMaxWave(Progression.FREE_RANKS))
         assertEquals("top grade opens the last wave", 9, Progression.unlockedMaxWave(Progression.LAST_RANK))
         assertEquals(9, Progression.unlockedMaxWave(999))
     }

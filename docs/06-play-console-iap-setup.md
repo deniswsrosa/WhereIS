@@ -65,8 +65,8 @@ Play Billing will not process real charges against license testers, so this is s
    the real price instead of "Not available yet," and tapping **Unlock World Campaign** should
    open Play's native purchase sheet. A license tester's "purchase" is free and instantly
    refunded/reversible from Play Console if you need to test the flow repeatedly.
-5. Confirm the purchase actually grants the unlock in-app (Passport/Database open, Campaign menu
-   entry disappears) and that force-quitting and reopening the app keeps it unlocked.
+5. Confirm the purchase actually grants the unlock in-app (Wave 1 Passport/Database entries open,
+   the Campaign menu reports ownership) and that force-quitting and reopening keeps it unlocked.
 6. Confirm **Restore purchase** works: uninstall and reinstall (or sign into a fresh device with
    the same Google account) — the app should silently re-grant the unlock on next launch without
    needing the Restore button at all (that's `BillingManager.queryExistingPurchases()`, called on
@@ -90,7 +90,6 @@ Play Billing will not process real charges against license testers, so this is s
 - **Acknowledgement**: every purchase is acknowledged automatically (`BillingManager
   .handlePurchase`) — an unacknowledged purchase auto-refunds after 3 days, so this matters and
   is already done for you.
-- **Late purchases**: if a player buys *after* already reaching Case 14 unpaid (where Clara's
-  escape earns no promotion — see `data/Masterminds.kt`), `unlockExpansion()` retroactively
-  queues the Special Agent promotion so they see it immediately rather than needing to solve one
-  more case first.
+- **Late purchases**: a player who buys after Case 14 keeps the same detective and begins Wave 1.
+  Purchase never grants a rank retroactively; the Wave 1 capture earns Special Agent, matching
+  the campaign story and the early-purchase path.

@@ -100,7 +100,7 @@ object SaveCodec {
         "hintFreeSolves" to s.hintFreeSolves,
         "hadCleanCase" to s.hadCleanCase,
         "expansionUnlocked" to s.expansionUnlocked,
-        "storyStartCase" to s.storyStartCase,
+        "travelBufferEnabled" to s.travelBufferEnabled,
         "freeHints" to s.freeHints,
         "tutorialDone" to s.tutorialDone,
         "tutorialActive" to s.tutorialActive,
@@ -167,7 +167,7 @@ object SaveCodec {
                 val p = e.split('\u001F'); if (p.size == 2) p[1].toIntOrNull()?.let { city(p[0]) to it } else null
             }.toMap(),
             expansionUnlocked = bool(m["expansionUnlocked"], false),
-            storyStartCase = int(m["storyStartCase"], GameState.CAREER_CASES),
+            travelBufferEnabled = bool(m["travelBufferEnabled"], true),
             hintFreeSolves = int(m["hintFreeSolves"]),
             hadCleanCase = bool(m["hadCleanCase"], false),
             freeHints = int(m["freeHints"]),

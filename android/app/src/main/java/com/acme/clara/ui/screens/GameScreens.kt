@@ -999,7 +999,8 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                 // panel's own safe (map-uncovered) top region — no button, no popup, easy to miss
                 // on purpose. See ui/GameMenuBar.kt's Campaign entry for the actual CTA.
                 val toCase14 = com.acme.clara.game.GameState.CAREER_CASES - s.casesSolved
-                if (!s.expansionUnlocked && toCase14 in 1..2) {
+                if (com.acme.clara.billing.BillingManager.SALES_ENABLED &&
+                    !s.expansionUnlocked && toCase14 in 1..2) {
                     Spacer(Modifier.height(v.w(4)))
                     Text(
                         if (toCase14 == 1) Strings.ui("1 case until the international manhunt")
@@ -1435,7 +1436,10 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     // isCase14Clara branch, the only win that doesn't end in a capture. The arrest-slam and jail
     // art below both need to skip it; the true finale (also culprit == Clara) is excluded via
     // careerOver, which only that case sets.
-    val claraEscaped = s.won && s.culprit?.name == "Clara San Diego" && !s.careerOver
+    val case14Escape = s.won && s.casesSolved == com.acme.clara.game.GameState.CAREER_CASES &&
+        s.culprit?.name == "Clara San Diego"
+    val completedArc = vm.completedCampaignArc()
+    val claraEscaped = case14Escape || (s.won && completedArc?.claraFlavor == true && !completedArc.final)
     val printed = remember { mutableStateListOf<String>() }
     var typing by remember { mutableStateOf("") }
     // 0 typing report · 1 typing quiz · 2 quiz input · 3 typing verdict/ready · 4 Yes/No
@@ -1453,7 +1457,7 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     // S1: the captured mugshot slams in and is "filed" in the gallery before the report starts
     // printing — it used to play at the same time as the printer, so its own tap-to-continue and
     // the printer's competed for the same tap and neither was clearly the thing being responded to.
-    var slamActive by remember { mutableStateOf(s.won && !s.careerOver && !claraEscaped && !reduce && s.culprit?.name != null) }
+    var slamActive by remember { mutableStateOf(s.won && !case14Escape && !reduce && s.culprit?.name != null) }
     // The paper only shows its last ~12 lines, so a long report used to just scroll continuously
     // past the reader. Pause once a page's worth has printed and wait for a tap before continuing.
     var waitingForTap by remember { mutableStateOf(false) }
@@ -1618,6 +1622,29 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
                 if (blink) v.At(63, 71, 41, 29) {
                     PixelImage("jail_eyes_alt", Modifier.fillMaxSize())
                 }
+                if (s.careerOver) {
+                    Column(Modifier.align(Alignment.Center).fillMaxWidth(0.82f),
+                        horizontalAlignment = Alignment.CenterHorizontally) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(v.w(5))) {
+                            listOf(s.culprit?.name, "Clara San Diego").filterNotNull().forEach { name ->
+                                Box(Modifier.size(v.w(46)).background(Vga.DarkGray)
+                                    .border(BorderStroke(v.w(1), Vga.Yellow))) {
+                                    PixelImage("suspect_${snake(name)}", Modifier.fillMaxSize())
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(v.w(4)))
+                        Text(Strings.ui("CLARA CAPTURED"),
+                            style = v.text(8, color = Vga.Yellow, bold = true),
+                            modifier = Modifier.background(Vga.Black.copy(alpha = 0.86f)).padding(v.w(2)))
+                    }
+                }
+            } else if (claraEscaped) {
+                PixelImage("suspect_clara_san_diego", Modifier.fillMaxSize())
+                Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Vga.Black.copy(alpha = 0.82f))
+                    .padding(v.w(3)), contentAlignment = Alignment.Center) {
+                    Text(Strings.ui("CLARA ESCAPED"), style = v.text(8, color = Vga.Yellow, bold = true))
+                }
             }
         }
     }
@@ -1633,7 +1660,7 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     // branch), unpaid, in the same header strip as SHARE — the moment the free career's highest
     // investment meets the offer. Never shown on any other result (`s.casesSolved` only ever
     // equals CAREER_CASES on this exact screen, win or lose, and this only fires on a win).
-    if (s.won && !s.careerOver && s.casesSolved == com.acme.clara.game.GameState.CAREER_CASES &&
+    if (s.won && s.casesSolved == com.acme.clara.game.GameState.CAREER_CASES &&
         !s.expansionUnlocked && com.acme.clara.billing.BillingManager.SALES_ENABLED) {
         v.At(150, 14, 112, 10) {
             YellowButton(v, Strings.ui("Unlock World Campaign")) {

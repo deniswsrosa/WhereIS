@@ -1412,7 +1412,7 @@
             <ul class="bullet-list">
               <li>One reusable Clara-escape template — used at Case 14 and every wave-6-through-10 finale</li>
               <li>One bespoke final-capture screen — wave 10 only</li>
-              <li><strong>5 base mastermind designs</strong>, each with a Boss and a Successor variant (recolor/reaccessory, not redraw) — 10 portraits total</li>
+              <li>10 existing dossier portraits assigned across the five Boss and five Successor captures — no new character art required</li>
               <li>5 route-piece stamps, one per family</li>
               <li>6 Clara clue reports (Case 14 + waves 6–10)</li>
               <li>10 mastermind briefings + 10 arrest reports — Boss and Successor each get their own</li>
@@ -1430,11 +1430,11 @@
     <section class="ship-check" aria-labelledby="ship-check-title">
       <p class="section-kicker">Before this ships</p>
       <h2 class="strategy-heading" id="ship-check-title">Engineering reality check</h2>
-      <p class="strategy-lead">Implemented in <code>android/</code> and merged into this checkout — real billing, real game logic, all 134 tests passing (131 existing + 3 new). One manual step remains outside the codebase.</p>
+      <p class="strategy-lead">Implemented in <code>android/</code> — Play Billing, the ten-wave campaign, wave-aware world tools, and the paid comfort perks. One manual step remains outside the codebase.</p>
       <div class="risk-grid">
         <article class="risk-card">
           <h3>One step left: create the real product</h3>
-          <p>Play Billing is fully wired (<code>billing/BillingManager.kt</code>), and <code>unlockExpansion()</code> now has real callers — the Campaign menu entry, Passport, Database, and a late-purchase path that retroactively grants Special Agent if you buy after an unpaid Case 14 escape. The one thing left is outside any codebase: create the actual in-app product in Play Console. Until then every buy button correctly shows "Not available yet" instead of crashing. Full steps: <code>docs/06-play-console-iap-setup.md</code>.</p>
+          <p>Play Billing is fully wired (<code>billing/BillingManager.kt</code>), and <code>unlockExpansion()</code> has real callers from the Campaign menu, Passport, Database, and Case 14. A late purchase preserves the detective and begins Wave 1; Special Agent is earned only at the Wave 1 capture. The remaining external step is to create the in-app product in Play Console and enable sales. Full steps: <code>docs/06-play-console-iap-setup.md</code>.</p>
         </article>
         <article class="risk-card solved">
           <h3>Reconciled with the wave model</h3>
@@ -1446,7 +1446,7 @@
         </article>
         <article class="risk-card solved">
           <h3>Zero new character art</h3>
-          <p>The 5 Bosses and 5 Successors (one region does double duty) are the 9 existing non-Clara dossier suspects — Lady Agatha Wayland, Merey LaRoc, Fast Eddie B. and the rest — all already shipping a portrait sprite. Result-screen flavor text and the RankProgress caption are written in English directly in code; translating that into the other 9 languages through the existing pipeline is the one content task still open.</p>
+          <p>The 5 Bosses and 5 Successors use 10 existing non-Clara dossier suspects — Lady Agatha Wayland, Merey LaRoc, Fast Eddie B. and the rest — all already shipping a portrait sprite.</p>
         </article>
       </div>
     </section>

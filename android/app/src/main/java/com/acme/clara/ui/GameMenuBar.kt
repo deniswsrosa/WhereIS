@@ -76,6 +76,9 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
             MenuItemDef(chk(s.soundOn, "Sound")) { vm.toggleSound() },
             MenuItemDef(chk(s.hapticsOn, "Haptics")) { vm.toggleHaptics() },
             MenuItemDef(chk(s.captionsOn, "Captions")) { vm.toggleCaptions() },
+            MenuItemDef(chk(s.travelBufferEnabled, "+8h travel buffer"), enabled = s.expansionUnlocked) {
+                vm.toggleTravelBuffer()
+            },
             MenuItemDef(chk(com.acme.clara.notify.Reminders.enabled(menuCtx), "Reminders")) {
                 com.acme.clara.notify.Reminders.setEnabled(menuCtx, !com.acme.clara.notify.Reminders.enabled(menuCtx))
             },
@@ -83,6 +86,7 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
         ))
         MenuTitle(v, Strings.ui("Bureau"), listOf(
             MenuItemDef(Strings.ui("Hint")) { vm.requestHint() },
+            MenuItemDef(Strings.ui("Case Planner")) { vm.openCasePlanner() },
             MenuItemDef(Strings.ui("Detective Roster")) { vm.openOverlay(Overlay.Roster) },
             MenuItemDef(Strings.ui("World Database")) { vm.openOverlay(Overlay.Almanac) },
             MenuItemDef(Strings.ui("Passport")) { vm.openOverlay(Overlay.Passport) },
@@ -95,13 +99,21 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
                 vm.openOverlay(Overlay.Dossier(su))
             }
         })
-        // Persistent, always-reachable purchase entry — styled as a real menu title like every
-        // other one here, not a banner. Hidden once already owned; there's nothing left to sell.
-        // Also hidden while BillingManager.SALES_ENABLED is false (see its kdoc).
-        if (!s.expansionUnlocked && com.acme.clara.billing.BillingManager.SALES_ENABLED) {
+        // Persistent Campaign entry: it opens the shared offer while locked and wave status once
+        // owned. It remains hidden only in a sales-disabled free build.
+        if (com.acme.clara.billing.BillingManager.SALES_ENABLED || s.expansionUnlocked) {
             MenuTitle(v, Strings.ui("Campaign"), listOf(
-                MenuItemDef(Strings.ui("Unlock the World Campaign...")) {
-                    vm.openOverlay(Overlay.PurchaseOffer("Persistent menu bar"))
+                MenuItemDef(if (s.expansionUnlocked) Strings.ui("World Campaign unlocked")
+                    else Strings.ui("Unlock the World Campaign...")) {
+                    if (s.expansionUnlocked) {
+                        val campaignSolved = (s.casesSolved - com.acme.clara.game.GameState.CAREER_CASES).coerceAtLeast(0)
+                        val wave = com.acme.clara.data.Masterminds.waveForCampaignCasesSolved(campaignSolved)
+                        vm.openOverlay(Overlay.Info(Strings.ui("WORLD CAMPAIGN"), listOf(
+                            Strings.ui("Wave {0} of 10", wave + 1),
+                            Strings.ui("{0} cases until this wave's finale",
+                                com.acme.clara.data.Masterminds.casesToWaveFinale(campaignSolved)),
+                        )))
+                    } else vm.openOverlay(Overlay.PurchaseOffer("Persistent menu bar"))
                 },
             ))
         }
@@ -167,6 +179,7 @@ fun OverlayHost(v: Virtual, vm: ClaraViewModel) {
     if (o is Overlay.Passport) { PassportWindow(v, vm); return }
     if (o is Overlay.PurchaseOffer) { PurchaseOfferWindow(v, vm); return }
     if (o is Overlay.UnlockCeremony) { UnlockCeremonyWindow(v, vm); return }
+    if (o is Overlay.CasePlanner) { CasePlannerWindow(v, vm); return }
     val (title, lines) = when (o) {
         Overlay.About -> Strings.ui("ABOUT") to listOf(
             "Where in the World is", "Clara San Diego?  (Enhanced)", "MS-DOS Version 2.1",
@@ -186,6 +199,7 @@ fun OverlayHost(v: Virtual, vm: ClaraViewModel) {
         Overlay.Passport -> "" to emptyList()     // handled by PassportWindow above
         is Overlay.PurchaseOffer -> "" to emptyList() // handled by PurchaseOfferWindow above
         Overlay.UnlockCeremony -> "" to emptyList() // handled by UnlockCeremonyWindow above
+        Overlay.CasePlanner -> "" to emptyList() // handled by CasePlannerWindow above
         is Overlay.Info -> o.title to o.lines
     }
 
@@ -481,12 +495,11 @@ private fun StatRow(v: Virtual, label: String, value: String) {
 @Composable
 internal fun RankProgress(v: Virtual, s: com.acme.clara.game.GameState) {
     val solved = s.casesSolved
-    // International grades (paid) keep counting past the free thresholds — one promotion every
-    // 8 cases from storyStartCase on (see ClaraViewModel.win()'s `intlThreshold`, kept in sync
-    // here; storyStartCase rather than the fixed Case 14, so a late purchase's cadence matches).
     val freeThresholds = listOf(1, 5, 9, 13)
     val thresholds = if (s.expansionUnlocked)
-        freeThresholds + (s.storyStartCase..200 step 8)
+        freeThresholds + com.acme.clara.data.Masterminds.waveEndCases.map {
+            it + com.acme.clara.game.GameState.CAREER_CASES
+        }
     else freeThresholds
     val next = thresholds.firstOrNull { it > solved }
     val label: String
@@ -503,15 +516,11 @@ internal fun RankProgress(v: Virtual, s: com.acme.clara.game.GameState) {
         val nextRank = GameData.ranks.getOrElse(s.rankIndex + 1) { GameData.ranks.last() }
         label = Strings.ui("Toward {0} — {1} of {2}", Strings.label("rank", nextRank), inBand + head, band + head)
     }
-    // Mastermind caption: names which family/role this promotion actually captures, once the
-    // International track is running. Reuses the counter above as-is — no separate meter to build.
-    val arc = if (s.expansionUnlocked && solved >= s.storyStartCase &&
-        s.rankIndex < GameData.ranks.lastIndex) {
-        val progressed = solved - s.storyStartCase
-        com.acme.clara.data.Masterminds.arcForTrigger(
-            (progressed / 8 + 1).coerceAtMost(com.acme.clara.data.Masterminds.arcs.size)
-        )
-    } else null
+    val campaignSolved = (solved - com.acme.clara.game.GameState.CAREER_CASES).coerceAtLeast(0)
+    val arc = if (s.expansionUnlocked && !s.careerOver)
+        com.acme.clara.data.Masterminds.arcForWave(
+            com.acme.clara.data.Masterminds.waveForCampaignCasesSolved(campaignSolved)
+        ) else null
     Column(Modifier.fillMaxWidth()) {
         Text(label, style = v.text(6.5f, color = Vga.LightCyan))
         if (arc != null) {
@@ -520,6 +529,7 @@ internal fun RankProgress(v: Virtual, s: com.acme.clara.game.GameState) {
                     Strings.label("mastermind.family", arc.family), Strings.label("mastermind.role", arc.role)),
                 style = v.text(6f, color = Vga.Yellow),
             )
+            Text(Strings.ui("Wave {0} of 10", arc.waveIndex + 1), style = v.text(6f, color = Vga.LightCyan))
         }
         Spacer(Modifier.height(v.w(1)))
         Box(Modifier.fillMaxWidth().height(v.w(4)).background(Vga.DarkGray)
@@ -557,9 +567,14 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
             com.acme.clara.data.Expansion.byName.keys +
             com.acme.clara.data.Expansion2.byName.keys).toSortedSet().toList()
     }
+    val maxWave = com.acme.clara.data.Masterminds.unlockedMaxWave(vm.s.rankIndex, paid)
+    fun isUnlocked(name: String): Boolean =
+        AlmanacFlags.countryCode(name) in freeCountryCodes ||
+            (paid && (com.acme.clara.data.Progression.wave[name] ?: Int.MAX_VALUE) <= maxWave)
     // CityMeta.of resolves any known place (localized), so the detail view works for
     // expansion entries too — reachable only when unlocked, since locked rows don't tap.
     val entry = selected?.let { com.acme.clara.data.CityMeta.of(it) }
+    val entryUnlocked = selected?.let(::isUnlocked) ?: false
 
     Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
         contentAlignment = Alignment.Center) {
@@ -601,13 +616,9 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
             }
 
             if (entry == null) {
-                val unlockedCount = remember(paid) {
-                    if (paid) names.size
-                    else names.count { AlmanacFlags.countryCode(it) in freeCountryCodes }
-                }
+                val unlockedCount = names.count(::isUnlocked)
                 Text(
-                    if (paid) Strings.ui("{0} places on file", names.size)
-                    else Strings.ui("{0} of {1} places unlocked", unlockedCount, names.size),
+                    Strings.ui("{0} of {1} places unlocked", unlockedCount, names.size),
                     style = v.text(7, color = Vga.LightCyan))
                 // L4 legend: a name's color marks where it sits on the spaced-repetition curve.
                 Row(horizontalArrangement = Arrangement.spacedBy(v.w(5))) {
@@ -618,7 +629,7 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                 LazyVerticalGrid(columns = GridCells.Fixed(2),
                     modifier = Modifier.weight(1f).fillMaxWidth()) {
                     items(names) { name ->
-                        val unlocked = paid || AlmanacFlags.countryCode(name) in freeCountryCodes
+                        val unlocked = isUnlocked(name)
                         val fresh = unlocked && SpacedRepetition.isFresh(name, vm.s.cityLastSeen, vm.s.casesSolved)
                         val due = unlocked && SpacedRepetition.isDue(name, vm.s.cityLastSeen, vm.s.casesSolved)
                         val color = when {
@@ -629,10 +640,7 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                         }
                         Text(Strings.place(name), style = v.text(7, color = color, bold = unlocked),
                             modifier = Modifier
-                                .clickable(enabled = unlocked || com.acme.clara.billing.BillingManager.SALES_ENABLED) {
-                                    if (unlocked) selected = name
-                                    else vm.openOverlay(Overlay.PurchaseOffer("Database locked entry"))
-                                }
+                                .clickable { selected = name }
                                 .labelled(if (unlocked) Strings.place(name) else Strings.ui("{0}, locked", Strings.place(name)))
                                 .padding(vertical = v.w(1.2f), horizontal = v.w(1)))
                     }
@@ -680,13 +688,27 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                         // The structured attributes the clue engine draws on, surfaced as
                         // reference facts (all optional — the fallback CityInfo has none).
                         AlmanacFact(v, Strings.ui("Landmark"), entry.landmark)
-                        entry.flag?.let { AlmanacFact(v, Strings.ui("Flag"), it) }
-                        entry.currency?.let { AlmanacFact(v, Strings.ui("Currency"), it.removePrefix("the ")) }
-                        entry.greeting?.let {
-                            Text(it, style = v.text(6.5f, color = Vga.LightCyan))
+                        if (entryUnlocked) {
+                            entry.flag?.let { AlmanacFact(v, Strings.ui("Flag"), it) }
+                            entry.currency?.let { AlmanacFact(v, Strings.ui("Currency"), it.removePrefix("the ")) }
+                            entry.greeting?.let {
+                                Text(it, style = v.text(6.5f, color = Vga.LightCyan))
+                                Spacer(Modifier.height(v.w(3)))
+                            }
+                            Text(entry.description, style = v.text(7.5f, color = Vga.White))
+                        } else {
+                            Text("▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒", style = v.text(8, color = Vga.LightGray))
                             Spacer(Modifier.height(v.w(3)))
+                            Text(Strings.ui("One fact is on file. The rest unlocks with this campaign wave."),
+                                style = v.text(7, color = Vga.LightCyan))
+                            if (com.acme.clara.billing.BillingManager.SALES_ENABLED && !paid) {
+                                Spacer(Modifier.height(v.w(4)))
+                                DosButton(Strings.ui("Unlock World Campaign"), fill = Vga.Yellow,
+                                    textColor = Vga.Black, style = v.text(7.5f, bold = true)) {
+                                    vm.openOverlay(Overlay.PurchaseOffer("Database locked entry"))
+                                }
+                            }
                         }
-                        Text(entry.description, style = v.text(7.5f, color = Vga.White))
                     }
                 }
             }
@@ -704,9 +726,6 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
 private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
     val s = vm.s
     val paid = s.expansionUnlocked
-    // Free tier tracks silently but reveals nothing: the passport stays sealed until the
-    // paid unlock, which then paints in every country already visited (see PassportSealed).
-    if (!paid) { PassportSealed(v, vm); return }
     val placeCountry = CountryShapes.placeCountry
     val universe = placeCountry.values.toSet()
     val visitedPlaces = s.visitedPlaces.filter { it in placeCountry }
@@ -755,6 +774,18 @@ private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
                         }
                     }
                 }
+                if (!paid) {
+                    Box(Modifier.matchParentSize().background(Vga.Black.copy(alpha = 0.48f)),
+                        contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("🔒", style = v.text(18, color = Vga.Yellow))
+                            Text(Strings.ui("More passport pages unlock with the World Campaign"),
+                                style = v.text(6.5f, color = Vga.White, bold = true),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth(0.72f))
+                        }
+                    }
+                }
             }
             Spacer(Modifier.height(v.w(3)))
 
@@ -775,40 +806,11 @@ private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
                 }
             }
             Spacer(Modifier.height(v.w(3)))
-            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
-                style = v.text(9, bold = true)) { vm.dismissOverlay() }
-        }
-    }
-}
-
-/* Free tier: the passport is sealed. Visits are still recorded (GameState.visitedPlaces),
- * but nothing about the collection is shown — the paid unlock reveals and paints it all. */
-@Composable
-private fun PassportSealed(v: Virtual, vm: ClaraViewModel) {
-    Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
-        contentAlignment = Alignment.Center) {
-        Column(Modifier.fillMaxWidth(0.86f).background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(7)),
-            horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(Strings.ui("PASSPORT"), style = v.text(10, color = Vga.Yellow, bold = true))
-            Spacer(Modifier.height(v.w(4)))
-            Box(Modifier.size(v.w(44), v.w(30)).background(Vga.DarkGray)
-                .border(BorderStroke(v.w(1.5f), Vga.LightGray)), contentAlignment = Alignment.Center) {
-                Text("🔒", style = v.text(20, color = Vga.Yellow))
-            }
-            Spacer(Modifier.height(v.w(4)))
-            listOf(
-                Strings.ui("Your passport is sealed."),
-                Strings.ui("Every place you visit is quietly being recorded."),
-                "",
-                Strings.ui("Unlock the Expansion to reveal your painted map of the world."),
-            ).forEach {
-                Text(it, style = v.text(7.5f, color = Vga.White), textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth())
-            }
-            Spacer(Modifier.height(v.w(5)))
-            if (com.acme.clara.billing.BillingManager.SALES_ENABLED) {
-                DosButton(Strings.ui("Unlock World Campaign"), fill = Vga.LightGreen, textColor = Vga.Black,
-                    style = v.text(8.5f, bold = true)) { vm.openOverlay(Overlay.PurchaseOffer("Passport locked map")) }
+            if (!paid && com.acme.clara.billing.BillingManager.SALES_ENABLED) {
+                DosButton(Strings.ui("Unlock World Campaign"), fill = Vga.LightGreen,
+                    textColor = Vga.Black, style = v.text(8, bold = true)) {
+                    vm.openOverlay(Overlay.PurchaseOffer("Passport locked map"))
+                }
                 Spacer(Modifier.height(v.w(2)))
             }
             DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
@@ -884,11 +886,46 @@ private fun PurchaseOfferWindow(v: Virtual, vm: ClaraViewModel) {
     }
 }
 
-/* Confirms the purchase before the receipt-only silence sets in (Luton's "show the payoff
- * first"). Deliberately doesn't claim a specific wave/rank is unlocked — at the moment this
- * fires the player may not have reached Case 14 yet, so only what's true right now is listed. */
+/** Answer-safe paid comfort tool: compare time cost and arrival before committing to a flight. */
+@Composable
+private fun CasePlannerWindow(v: Virtual, vm: ClaraViewModel) {
+    Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.65f)).clickable { vm.dismissOverlay() },
+        contentAlignment = Alignment.Center) {
+        Column(Modifier.fillMaxWidth(0.86f).fillMaxHeight(0.82f).background(Vga.Black)
+            .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(6)),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(Strings.ui("CASE PLANNER"), style = v.text(10, color = Vga.Yellow, bold = true))
+            Text(Strings.ui("Compare the current routes. The correct lead is never revealed."),
+                style = v.text(6.5f, color = Vga.LightCyan), textAlign = TextAlign.Center)
+            Spacer(Modifier.height(v.w(4)))
+            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
+                vm.s.departOptions.forEach { city ->
+                    val hours = vm.flightHoursTo(city)
+                    Row(Modifier.fillMaxWidth().padding(vertical = v.w(1.5f)),
+                        horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(Strings.place(city), style = v.text(7.5f, color = Vga.White, bold = true))
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(Strings.ui("{0}h flight", hours), style = v.text(7, color = Vga.Yellow))
+                            Text(vm.clockLabel(hours), style = v.text(6, color = Vga.LightCyan))
+                        }
+                    }
+                }
+                if (vm.s.departOptions.isEmpty()) {
+                    Text(Strings.ui("Open the planner during an active investigation."),
+                        style = v.text(7, color = Vga.LightGray), textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth())
+                }
+            }
+            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
+                style = v.text(9, bold = true)) { vm.dismissOverlay() }
+        }
+    }
+}
+
+/* Confirms the purchase and the immediate Wave 1 value before receipt-only silence sets in. */
 @Composable
 private fun UnlockCeremonyWindow(v: Virtual, vm: ClaraViewModel) {
+    val waveOnePlaces = com.acme.clara.data.Progression.wave.values.count { it == 0 }
     Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.7f)), contentAlignment = Alignment.Center) {
         Column(
             Modifier.fillMaxWidth(0.88f).background(Vga.Black).border(BorderStroke(v.w(1.5f), Vga.Yellow))
@@ -902,9 +939,10 @@ private fun UnlockCeremonyWindow(v: Virtual, vm: ClaraViewModel) {
                 textAlign = TextAlign.Center)
             Spacer(Modifier.height(v.w(4)))
             listOf(
-                Strings.ui("Passport and World Database open up immediately"),
-                Strings.ui("Comfort perks are active now: +8h buffer, a Bureau hint, Case Planner"),
-                Strings.ui("The manhunt begins the moment you reach — or clear — Case 14"),
+                Strings.ui("Wave 1 is open now — {0} new destinations", waveOnePlaces),
+                Strings.ui("Passport stamps and Wave 1 Database files are ready"),
+                Strings.ui("Comfort perks are active: optional +8h buffer, one Bureau hint, Case Planner"),
+                Strings.ui("Clara's network story begins after Case 14"),
             ).forEach { line ->
                 Row(Modifier.fillMaxWidth().padding(vertical = v.w(0.7f))) {
                     Text("◆ ", style = v.text(7, color = Vga.Yellow, bold = true))
