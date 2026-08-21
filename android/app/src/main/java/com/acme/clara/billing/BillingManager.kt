@@ -31,12 +31,10 @@ import com.android.billingclient.api.QueryPurchasesParams
 object BillingManager {
     const val PRODUCT_ID = "world_campaign_unlock"
 
-    /** Kill-switch for this release: the uploaded build didn't request the BILLING permission
-     *  (now added — see AndroidManifest.xml), so this build's purchase CTAs stay hidden rather
-     *  than show a flow that would fail against Play. Flip to true in the release that follows
-     *  the manifest-only rollout, once that build (and the permission it requests) is live. UI
-     *  entry points already check this — see the `SALES_ENABLED` reads in GameMenuBar.kt. */
-    const val SALES_ENABLED = false
+    /** Release kill-switch. The billing-capable AAB is validated through Play's internal track,
+     *  so purchase entry points are enabled in the artifact that will later be promoted to
+     *  production. See docs/06-play-console-iap-setup.md for product activation and testing. */
+    const val SALES_ENABLED = true
 
     private var client: BillingClient? = null
     private var onGranted: (() -> Unit)? = null

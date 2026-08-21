@@ -17,7 +17,7 @@ import com.acme.clara.game.Venue
  * open clue, flight animation, sighting interstitial) are deliberately dropped.
  */
 object SaveCodec {
-    const val VERSION = 1
+    const val VERSION = 2
 
     fun encode(meta: SaveMeta, state: GameState): String =
         Json.encode(
@@ -31,10 +31,29 @@ object SaveCodec {
     fun decode(text: String): SaveData? = try {
         val root = Json.decode(text) as? Map<*, *> ?: return null
         val meta = readMeta(root["meta"] as? Map<*, *> ?: return null) ?: return null
-        val state = readState(root["state"] as? Map<*, *> ?: return null)
+        val version = int(root["v"], 1)
+        val state = migrate(version, readState(root["state"] as? Map<*, *> ?: return null))
         SaveData(meta, state)
     } catch (e: Exception) {
         null
+    }
+
+    /** Version 1 ended the original career by jailing Clara on Case 14. Version 2 turns that
+     *  result into the campaign's inciting escape. Repair only that exact legacy terminal state;
+     *  a genuine Wave-10 retirement occurs much later and must remain untouched. */
+    private fun migrate(version: Int, state: GameState): GameState {
+        if (version >= 2 || state.casesSolved != GameState.CAREER_CASES ||
+            (!state.careerOver && "Clara San Diego" !in state.capturedVillains)) return state
+        return state.copy(
+            careerOver = false,
+            pendingPromotion = false,
+            capturedVillains = state.capturedVillains - "Clara San Diego",
+            resultLines = listOf(
+                GameData.GOT_AWAY,
+                "She left behind proof this wasn't a lone operation — a coded warrant naming the leader of a crime family in Europe.",
+                "The pursuit continues. Clara escaped, but her worldwide network is finally exposed.",
+            ),
+        )
     }
 
     // ---------- meta ----------
@@ -120,6 +139,8 @@ object SaveCodec {
         // Never resume into a transient animation/front-of-house phase — clamp to CITY.
         val safePhase = when (phase) {
             Phase.CITY, Phase.CRIME, Phase.BRIEFING, Phase.RESULT -> phase
+            Phase.SIGN_ON -> Phase.BRIEFING
+            Phase.CHASE -> Phase.RESULT
             else -> Phase.CITY
         }
         return GameState(

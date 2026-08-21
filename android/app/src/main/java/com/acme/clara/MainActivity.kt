@@ -77,14 +77,18 @@ fun ClaraApp() {
     val context = LocalContext.current
     // Bind persistence and decide the launch: 0 saves → sign-on, 1 → continue, 2+ → picker.
     LaunchedEffect(Unit) {
+        // Bind storage before the heavier humor-corpus parse. Even an unusually fast player who
+        // skips the intro while that parse is running must get a durable sign-on draft marker.
+        val store = SaveStore(context)
+        vm.bindRepository(store)
         // Humor.init() parses a several-hundred-KB JSON asset (up to ~680KB for the largest
         // language) — off the main thread for the same reason as the save list/load below.
         withContext(Dispatchers.IO) { com.acme.clara.game.Humor.init(context) }
-        val store = SaveStore(context)
-        vm.bindRepository(store)
         // list()/load() are synchronous file reads (SaveStore) — off the main thread so a cold
         // start with several saved careers can't stall the first frame.
-        val outcome = withContext(Dispatchers.IO) { decideLaunch(store.list()) }
+        val outcome = withContext(Dispatchers.IO) {
+            decideLaunch(store.list(), pendingSignOn = store.hasPendingSignOn())
+        }
         when (outcome) {
             // Debug builds skip sign-on on a fresh install (no save yet) and land straight at
             // the hideout doorstep — chase/result testing shouldn't need playing through
@@ -95,6 +99,7 @@ fun ClaraApp() {
                 data?.let { vm.resume(it) }
             }
             is LaunchOutcome.Choose -> vm.toChooseGame()
+            is LaunchOutcome.PendingSignOn -> vm.restorePendingSignOn()
         }
     }
     // Reload the (per-language) humor corpus whenever the language changes — off the main

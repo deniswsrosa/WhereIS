@@ -38,4 +38,16 @@ class ChooseGameScreenTest {
         compose.onNodeWithText("+  NEW DETECTIVE").performClick()
         assertEquals("New Game routes to sign-on for a fresh career", Phase.SIGN_ON, vm.s.phase)
     }
+
+    @Test fun emptyPickerOffersSafeNewDetectivePath() {
+        val repo = InMemorySaveRepository()
+        val vm = ClaraViewModel().apply { bindRepository(repo); toChooseGame() }
+        compose.setContent { ChooseGameScreen(vm) }
+
+        compose.onNodeWithText("No saved games yet.").assertIsDisplayed()
+        compose.onNodeWithText("+  NEW DETECTIVE").performClick()
+
+        assertEquals(Phase.SIGN_ON, vm.s.phase)
+        assertEquals(true, repo.hasPendingSignOn())
+    }
 }

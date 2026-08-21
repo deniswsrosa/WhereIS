@@ -36,7 +36,7 @@ L.append(" * Second paid-tier expansion: 133 new country destinations (nearly ev
 L.append(" * Merged into the active pool by recognition wave (see [Progression]); each ships a")
 L.append(" * `country_<slug>` briefing postcard. Clues are the forward-looking, subject-less witness")
 L.append(" * leads (the game prepends the suspect pronoun + a lead-in, as with [Expansion]).")
-L.append(" * Map positions/flight coords are not yet supplied — these default to a neutral hop cost.")
+L.append(" * Map positions/flight coordinates come from CountryShapes' generated Natural Earth label points.")
 L.append(" */")
 L.append("object Expansion2 {")
 L.append("    val cities: List<CityInfo> = listOf(")

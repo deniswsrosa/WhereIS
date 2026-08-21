@@ -162,6 +162,7 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
     var typing by remember { mutableStateOf("") }
     var stage by remember { mutableStateOf(if (promptForName) ST_PROMPT else ST_FLASH) }
     var input by remember { mutableStateOf("") }
+    var pendingName by remember { mutableStateOf("") }
     val scroll = rememberScrollState()
     val focus = remember { FocusRequester() }
     val ctx = androidx.compose.ui.platform.LocalContext.current
@@ -283,7 +284,9 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
                     val nm = input.trim().ifBlank { "Gumshoe" }
                     printed.add(nm)
                     input = ""
-                    vm.signOnStart(nm)   // generate the case, stay on the printer
+                    // Do not create/save the career until Yes confirms this identity. In the old
+                    // flow, tapping No and backgrounding here could still resume the rejected name.
+                    pendingName = nm
                     stage = ST_NEW_Q
                 }),
                 modifier = Modifier.fillMaxWidth().focusRequester(focus)
@@ -306,11 +309,19 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
     if (stage == ST_YESNO) {
         v.At(152, 176, 76, 12) {
             // the paper echoes the pressed answer's initial, like the DOS "Y"/"N" keypress
-            YellowButton(v, Strings.ui("Yes")) { printed.add(Strings.ui("Yes").take(1).uppercase()); stage = ST_IDENT }
+            YellowButton(v, Strings.ui("Yes")) {
+                printed.add(Strings.ui("Yes").take(1).uppercase())
+                vm.signOnStart(pendingName)
+                stage = ST_IDENT
+            }
         }
         v.At(234, 176, 76, 12) {
             // "No" re-asks for the name, like the original
-            YellowButton(v, Strings.ui("No")) { printed.add(Strings.ui("No").take(1).uppercase()); printed.add(""); stage = ST_PROMPT }
+            YellowButton(v, Strings.ui("No")) {
+                printed.add(Strings.ui("No").take(1).uppercase()); printed.add("")
+                pendingName = ""
+                stage = ST_PROMPT
+            }
         }
     }
     // Menu bar, drawn last so it stays tappable above the gate stages' fullscreen
@@ -1487,9 +1498,8 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
         while (slamActive) delay(30)   // let the mugshot reveal finish (and be dismissed) first
         typeAll(s.resultLines)
         when {
-            // Carmen jailed on the final case: no next case — the detective is retired
-            // from the roster; any tap returns to the title
-            s.careerOver -> stage = 5
+            // Every campaign patent, including Chief Director at the true finale, uses the
+            // existing almanac quiz. Retirement happens only after that last quiz is resolved.
             s.pendingPromotion -> {
                 typeAll(listOf(
                     Strings.ui("Use the World Almanac and Book of Facts to help you find the missing word in the following sentence:"),
@@ -1497,6 +1507,9 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
                 ))
                 stage = 2
             }
+            // Carmen jailed on the final case: no next case — the detective is retired
+            // from the roster; any tap returns to the title
+            s.careerOver -> stage = 5
             else -> {
                 typeAll(listOf(Strings.ui("Ready for your next case, {0}?", s.detectiveName)))
                 stage = 4
@@ -1521,8 +1534,12 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
                     vm.casesToNextPromotion().takeIf { it > 0 }
                         ?.let { Strings.ui("{0} more cases until your next promotion.", it) },
                 ))
-                typeAll(listOf(Strings.ui("Ready for your next case, {0}?", s.detectiveName)))
-                stage = 4
+                if (vm.s.careerOver) {
+                    stage = 5
+                } else {
+                    typeAll(listOf(Strings.ui("Ready for your next case, {0}?", s.detectiveName)))
+                    stage = 4
+                }
             } else {
                 // DOS re-asks the same question until it's answered correctly
                 // (dos_quiz_incorrect_try_again.png) — the promotion stays attainable

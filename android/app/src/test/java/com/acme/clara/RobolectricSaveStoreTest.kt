@@ -3,6 +3,7 @@ package com.acme.clara
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.acme.clara.game.ClaraViewModel
+import com.acme.clara.game.Phase
 import com.acme.clara.save.SaveStore
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -44,6 +45,7 @@ class RobolectricSaveStoreTest {
      *  write lands: without it, reading the file back right after toggleSound() would be racing
      *  the background writer and could see the pre-toggle value. */
     @Test fun flushPendingSavesMakesTheLatestActionVisibleOnDiskImmediately() {
+        File(ctx.filesDir, "world-campaign-owned").delete()
         val store = SaveStore(ctx)
         val vm = ClaraViewModel().apply {
             bindRepository(store) { 700L }
@@ -71,5 +73,76 @@ class RobolectricSaveStoreTest {
         File(File(ctx.filesDir, "saves"), "save-broken.json").writeText("{ not valid json")
 
         assertEquals(listOf("new", "old"), store.list().map { it.id })
+    }
+
+    @Test fun expansionOwnershipSurvivesStoreInstancesAndCareerDeletion() {
+        File(ctx.filesDir, "world-campaign-owned").delete()
+        val store = SaveStore(ctx)
+        store.setExpansionOwned()
+        assertEquals(true, SaveStore(ctx).ownsExpansion())
+        store.delete("does-not-exist")
+        assertEquals(true, SaveStore(ctx).ownsExpansion())
+    }
+
+    @Test fun deleteCannotBeUndoneByAnOlderQueuedAutosave() {
+        val store = SaveStore(ctx)
+        val data = ClaraViewModel().apply { signOn("Retired") }.snapshot("retire-race", 1L)
+
+        store.save(data)
+        store.delete(data.meta.id)
+        store.awaitPendingWrites()
+
+        assertNull(SaveStore(ctx).load(data.meta.id))
+    }
+
+    @Test fun atomicBackupIsRecoveredAfterAnInterruptedReplacement() {
+        val id = "atomic-recovery"
+        val data = ClaraViewModel().apply { signOn("Safe") }.snapshot(id, 1L)
+        val saves = File(ctx.filesDir, "saves").apply { mkdirs() }
+        val base = File(saves, "save-$id.json")
+        val backup = File("${base.path}.bak")
+        base.delete()
+        backup.writeText(com.acme.clara.save.SaveCodec.encode(data.meta, data.state))
+
+        val recovered = SaveStore(ctx).load(id)
+
+        assertNotNull(recovered)
+        assertEquals("Safe", recovered!!.meta.name)
+        SaveStore(ctx).delete(id)
+    }
+
+    @Test fun pendingSignOnSurvivesStoreRecreationUntilFirstCareerIsDurable() {
+        val marker = File(ctx.filesDir, "new-career-pending")
+        marker.delete()
+        val store = SaveStore(ctx)
+        store.setPendingSignOn(true)
+        assertEquals(true, SaveStore(ctx).hasPendingSignOn())
+
+        val data = ClaraViewModel().apply { signOnStart("Confirmed") }
+            .snapshot("confirmed-draft", 2L)
+        store.saveNewCareer(data)
+
+        assertEquals(false, SaveStore(ctx).hasPendingSignOn())
+        assertEquals("Confirmed", SaveStore(ctx).load("confirmed-draft")!!.meta.name)
+        SaveStore(ctx).delete("confirmed-draft")
+    }
+
+    @Test fun openingLoadPickerMakesLatestActiveStateReadableBeforeSelection() {
+        val id = "load-picker-race"
+        val store = SaveStore(ctx)
+        store.delete(id)
+        val vm = ClaraViewModel().apply {
+            attachSave(store, id) { 77L }
+            signOn("Fast Loader")
+            beginInvestigation()
+            gotoCrime()
+        }
+
+        vm.toChooseGame()
+
+        val immediatelyRead = SaveStore(ctx).load(id)
+        assertNotNull(immediatelyRead)
+        assertEquals(Phase.CRIME, immediatelyRead!!.state.phase)
+        store.delete(immediatelyRead.meta.id)
     }
 }

@@ -21,6 +21,7 @@ import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 GEO = os.path.join(HERE, "geodata", "ne_110m_admin_0_countries.geojson")
+EXPANSION2_CARDS = os.path.join(HERE, "expansion_data", "all_cards_133.json")
 OUT = os.path.join(HERE, "..", "android", "app", "src", "main",
                    "java", "com", "acme", "clara", "data", "CountryShapes.kt")
 
@@ -45,7 +46,7 @@ PLACE_COUNTRY = {
     "Istanbul": "TUR", "Kathmandu": "NPL", "Kigali": "RWA", "Lima": "PER",
     "London": "GBR", "Mexico City": "MEX", "Montreal": "CAN", "Moroni": "COM",
     "Moscow": "RUS", "New Delhi": "IND", "New York": "USA", "Oslo": "NOR",
-    "Paris": "FRA", "Peking": "CHN", "Port Moresby": "PNG", "Reykjavik": "ISL",
+    "Paris": "FRA", "Beijing": "CHN", "Port Moresby": "PNG", "Reykjavik": "ISL",
     "Rio de Janeiro": "BRA", "Rome": "ITA", "San Marino": "SMR", "Singapore": "SGP",
     "Sydney": "AUS", "Tokyo": "JPN",
     # -- paid expansion (68) --
@@ -75,6 +76,29 @@ COUNTRY_NAME = {}
 # ADM0_A3 codes we never want a filled silhouette for, even if a polygon exists:
 # Antarctica clamps to an ugly full-width bottom band under Mercator -> dot fallback.
 FORCE_DOT = {"ATA"}
+
+# Natural Earth 1:110m omits these small island/micro states. Their standard alpha-3 codes keep
+# Passport identity stable; the representative lat/lon gives each one a real map/flight dot.
+MICRO_ALPHA3 = {
+    "AD": "AND", "AG": "ATG", "BB": "BRB", "BH": "BHR", "CV": "CPV",
+    "DM": "DMA", "FM": "FSM", "GD": "GRD", "KI": "KIR", "KN": "KNA",
+    "LC": "LCA", "LI": "LIE", "MH": "MHL", "MT": "MLT", "MV": "MDV",
+    "NR": "NRU", "SC": "SYC", "ST": "STP", "TO": "TON", "VC": "VCT",
+    "WS": "WSM",
+}
+MICRO_LAT_LON = {
+    "AD": (42.51, 1.60), "AG": (17.06, -61.80), "BB": (13.19, -59.54),
+    "BH": (26.07, 50.55), "CV": (15.12, -23.61), "DM": (15.42, -61.36),
+    "FM": (6.92, 158.19), "GD": (12.12, -61.68), "KI": (1.87, -157.36),
+    "KN": (17.36, -62.78), "LC": (13.91, -60.98), "LI": (47.14, 9.55),
+    "MH": (7.13, 171.18), "MT": (35.90, 14.45), "MV": (3.20, 73.22),
+    "NR": (-0.52, 166.93), "SC": (-4.68, 55.49), "ST": (0.19, 6.61),
+    "TO": (-21.18, -175.20), "VC": (13.25, -61.20), "WS": (-13.76, -172.10),
+}
+
+
+def emoji_alpha2(flag):
+    return "".join(chr(ord(ch) - 127397) for ch in flag)
 
 
 def douglas_peucker(pts, tol):
@@ -160,10 +184,34 @@ def encode(rings):
 def main():
     data = json.load(open(GEO))
     by_code = {}
+    by_alpha2 = {}
     for f in data["features"]:
         code = f["properties"].get("ADM0_A3")
         if code:
             by_code[code] = f
+        alpha2 = f["properties"].get("ISO_A2_EH")
+        if alpha2 and alpha2 != "-99":
+            by_alpha2[alpha2] = f
+
+    # Expansion2 is country-based, so Natural Earth's label points are the appropriate travel/map
+    # positions. This supplies all 133 destinations from the same geographic source as the shapes.
+    place_positions = {}
+    for card in json.load(open(EXPANSION2_CARDS)):
+        name = card["name"]
+        alpha2 = emoji_alpha2(card["emoji"])
+        feature = by_alpha2.get(alpha2)
+        if feature:
+            props = feature["properties"]
+            code = props["ADM0_A3"]
+            lat_lon = (props["LABEL_Y"], props["LABEL_X"])
+        else:
+            code = MICRO_ALPHA3.get(alpha2)
+            lat_lon = MICRO_LAT_LON.get(alpha2)
+        if not code or not lat_lon:
+            raise ValueError(f"No Passport/map identity for {name} ({alpha2})")
+        PLACE_COUNTRY[name] = code
+        COUNTRY_NAME[code] = name
+        place_positions[name] = project(*lat_lon)
 
     needed = sorted(set(PLACE_COUNTRY.values()))
     shapes = {}
@@ -216,6 +264,13 @@ def main():
         lines.append(f"        {kstr(place)} to {kstr(PLACE_COUNTRY[place])},")
     lines.append("    )")
     lines.append("")
+    lines.append("    /** Representative map position for every country destination in Expansion2. */")
+    lines.append("    val placePosition: Map<String, Offset> = mapOf(")
+    for place in sorted(place_positions):
+        x, y = place_positions[place]
+        lines.append(f"        {kstr(place)} to Offset({x:.4f}f, {y:.4f}f),")
+    lines.append("    )")
+    lines.append("")
     lines.append("    /** ADM0_A3 -> display name. */")
     lines.append("    val countryName: Map<String, String> = mapOf(")
     for code in sorted(COUNTRY_NAME):
@@ -225,6 +280,21 @@ def main():
     lines.append("    /** Countries with no silhouette — stamp the visited place's dot instead. */")
     lines.append("    val dotFallback: Set<String> = setOf(" +
                  ", ".join(kstr(c) for c in sorted(missing)) + ")")
+    lines.append("")
+    lines.append("    /** Whether this destination's Passport page is open at the current campaign rank. */")
+    lines.append("    fun isPlaceUnlocked(place: String, rankIndex: Int, entitled: Boolean): Boolean {")
+    lines.append("        val wave = Progression.wave[place] ?: return true")
+    lines.append("        return entitled && wave <= Progression.unlockedMaxWave(rankIndex)")
+    lines.append("    }")
+    lines.append("")
+    lines.append("    /** Countries still frosted in the Passport. A free/unlocked destination in a shared")
+    lines.append("     * country opens that silhouette even if another landmark there belongs to a later wave. */")
+    lines.append("    fun lockedCountryCodes(rankIndex: Int, entitled: Boolean): Set<String> {")
+    lines.append("        val unlocked = placeCountry.entries.filter {")
+    lines.append("            isPlaceUnlocked(it.key, rankIndex, entitled)")
+    lines.append("        }.mapTo(hashSetOf()) { it.value }")
+    lines.append("        return placeCountry.values.toSet() - unlocked")
+    lines.append("    }")
     lines.append("")
     lines.append("    // packed silhouettes: \"x,y x,y;...\" rings, decoded lazily into Offsets.")
     lines.append("    private val packed: Map<String, String> = mapOf(")

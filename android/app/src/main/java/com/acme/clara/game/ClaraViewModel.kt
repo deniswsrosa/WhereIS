@@ -243,11 +243,27 @@ class ClaraViewModel : ViewModel() {
     /** Wire continuous autosave to a repository + profile. A no-op until attached (e.g. in tests). */
     fun attachSave(repository: SaveRepository, id: String, now: () -> Long = { System.currentTimeMillis() }) {
         repo = repository; profileId = id; clock = now
+        mergeGlobalEntitlement()
     }
 
     /** Bind the repository without picking a profile yet (the launch flow chooses one). */
     fun bindRepository(repository: SaveRepository, now: () -> Long = { System.currentTimeMillis() }) {
         repo = repository; clock = now
+        mergeGlobalEntitlement()
+        // Binding normally happens before the intro can be advanced, but preserve correctness on
+        // a very slow cold start too: a player may already have reached or confirmed sign-on.
+        when {
+            profileId != null && s.detectiveName.isNotBlank() && s.route.isNotEmpty() ->
+                repository.saveNewCareer(snapshot(profileId!!, clock()))
+            s.phase == Phase.SIGN_ON && s.detectiveName.isBlank() ->
+                repository.setPendingSignOn(true)
+        }
+    }
+
+    private fun mergeGlobalEntitlement() {
+        val r = repo ?: return
+        if (s.expansionUnlocked) r.setExpansionOwned()
+        else if (r.ownsExpansion()) s = s.copy(expansionUnlocked = true)
     }
 
     /** Block until any save queued so far has actually landed on disk. Call this from onStop(),
@@ -256,17 +272,31 @@ class ClaraViewModel : ViewModel() {
      *  ever kill the process, so a bounded flush here — one small pending write, if any — closes
      *  the data-loss window an abrupt kill could otherwise catch mid-write, without reintroducing
      *  a stall on every action. */
-    fun flushPendingSaves() { (repo as? com.acme.clara.save.SaveStore)?.awaitPendingWrites() }
+    fun flushPendingSaves() {
+        // Several navigation transitions are intentionally cheap in memory and do not write on
+        // every tap. Leaving the foreground is the final persistence boundary: enqueue the exact
+        // current state first, then wait until every older/newer queued snapshot is durable.
+        autosave()
+        (repo as? com.acme.clara.save.SaveStore)?.awaitPendingWrites()
+    }
 
     private fun newProfileId(): String = "career-" + java.util.UUID.randomUUID().toString().take(8)
 
     /** Existing saved careers, newest first (empty when no repository is bound). */
     fun savedGames(): List<SaveMeta> = repo?.list().orEmpty()
 
+    /** Read-only half of picker resume; the UI performs this on Dispatchers.IO and calls
+     * [resume] back on the main thread. */
+    fun savedGame(id: String): SaveData? = repo?.load(id)
+
     /** Resume a saved career (launch continue / picker). Returning after time away banks a free hint. */
     fun resume(data: SaveData) {
         profileId = data.meta.id
-        var st = data.state
+        // Loading an existing detective explicitly abandons any unconfirmed new-career draft.
+        // Otherwise that stale marker would send the next cold launch back to the printer.
+        repo?.setPendingSignOn(false)
+        if (data.state.expansionUnlocked) repo?.setExpansionOwned()
+        var st = data.state.copy(expansionUnlocked = data.state.expansionUnlocked || repo?.ownsExpansion() == true)
         val backAfterGap = WelcomeBack.grantsHint(data.meta.lastPlayed, clock())
         // H3: after a long absence, bank a free hint (capped at 1 — this is a "welcome back"
         // nudge, not a resource to stockpile across repeated unplayed gaps) and queue a kinder
@@ -295,6 +325,9 @@ class ClaraViewModel : ViewModel() {
             )))
         } else st
         s = st
+        // Persist the welcome-back grant and refreshed lastPlayed immediately. Without this,
+        // repeatedly reopening an old save could replay resume-only benefits and stale ordering.
+        autosave()
     }
 
     /** Resume by id from the bound repository (used by the picker). */
@@ -311,12 +344,26 @@ class ClaraViewModel : ViewModel() {
     /** Snapshot the current state as a save (transient UI/animation fields cleared). */
     fun snapshot(id: String, at: Long): SaveData = SaveData(
         SaveMeta(id, s.detectiveName, s.rankIndex, s.casesSolved, at),
-        s.copy(overlay = null, openClue = null, flying = null, flightHours = 0,
+        s.copy(phase = when (s.phase) {
+                // A confirmed sign-on owns a complete generated case. Resume at the briefing,
+                // not at a fresh name prompt whose Compose-local printer stage no longer exists.
+                Phase.SIGN_ON -> Phase.BRIEFING
+                // An interrupted flight has not charged time or changed city yet.
+                Phase.TRAVEL -> Phase.CITY
+                // The confrontation already decided and stored the outcome before CHASE.
+                Phase.CHASE -> Phase.RESULT
+                else -> s.phase
+            }, overlay = null, openClue = null, flying = null, flightHours = 0,
             sightingLevel = 0, sleeping = false),
     )
 
     /** Load a saved career into this ViewModel (launch continue / picker). */
-    fun loadCareer(data: SaveData) { profileId = data.meta.id; s = data.state }
+    fun loadCareer(data: SaveData) {
+        profileId = data.meta.id
+        repo?.setPendingSignOn(false)
+        if (data.state.expansionUnlocked) repo?.setExpansionOwned()
+        s = data.state.copy(expansionUnlocked = data.state.expansionUnlocked || repo?.ownsExpansion() == true)
+    }
 
     /** Persist the current state to the active profile — the state on disk always equals the
      *  screen. [SaveRepository.save] itself is responsible for not blocking the caller (see
@@ -351,8 +398,8 @@ class ClaraViewModel : ViewModel() {
      *  any hint text, and a paid career gets exactly one concrete Bureau tip per case, also
      *  badge-safe, so an absent paid player can stack up to 2 free hints in a case (the banked one
      *  plus this case's tip) — a second ask past that is told there's nothing left to give, rather
-     *  than repeating or vaguing out the same lead. While sales are disabled for this release
-     *  ([com.acme.clara.billing.BillingManager.SALES_ENABLED] false), Hint stays exactly as it
+     *  than repeating or vaguing out the same lead. While sales are disabled via
+     *  [com.acme.clara.billing.BillingManager.SALES_ENABLED], Hint stays exactly as it
      *  always was: unlimited, and non-banked hints still cost the hint-free badge — nothing here
      *  should change what today's players already have. */
     fun requestHint() {
@@ -407,14 +454,18 @@ class ClaraViewModel : ViewModel() {
 
     // ---------- flow ----------
     fun introDone() { if (s.phase == Phase.INTRO) s = s.copy(phase = Phase.TITLE) }
-    fun start() { s = s.copy(phase = Phase.SIGN_ON) }
+    fun start() {
+        repo?.setPendingSignOn(true)
+        s = s.copy(phase = Phase.SIGN_ON)
+    }
 
     fun signOn(name: String) {
         val nm = name.trim().ifBlank { "Gumshoe" }
         if (profileId == null) profileId = newProfileId()
-        s = GameState(phase = Phase.BRIEFING, detectiveName = nm)
+        s = GameState(phase = Phase.BRIEFING, detectiveName = nm,
+            expansionUnlocked = repo?.ownsExpansion() == true || s.expansionUnlocked)
         newCase()
-        autosave()
+        repo?.let { r -> profileId?.let { r.saveNewCareer(snapshot(it, clock())) } }
     }
 
     /**
@@ -425,13 +476,14 @@ class ClaraViewModel : ViewModel() {
     fun signOnStart(name: String) {
         val nm = name.trim().ifBlank { "Gumshoe" }
         if (profileId == null) profileId = newProfileId()
-        s = GameState(phase = Phase.SIGN_ON, detectiveName = nm)
+        s = GameState(phase = Phase.SIGN_ON, detectiveName = nm,
+            expansionUnlocked = repo?.ownsExpansion() == true || s.expansionUnlocked)
         newCase()                          // newCase() flips phase to BRIEFING...
         s = s.copy(phase = Phase.SIGN_ON)  // ...keep the printer on-screen until "begin"
-        autosave()
+        repo?.let { r -> profileId?.let { r.saveNewCareer(snapshot(it, clock())) } }
     }
 
-    fun beginInvestigation() { s = s.copy(phase = Phase.CITY) }
+    fun beginInvestigation() { s = s.copy(phase = Phase.CITY); autosave() }
 
     // ---------- navigation ----------
     fun gotoCity() { s = s.copy(phase = Phase.CITY) }
@@ -450,8 +502,15 @@ class ClaraViewModel : ViewModel() {
     fun openOverlay(o: Overlay) { s = s.copy(overlay = o) }
     fun dismissOverlay() { s = s.copy(overlay = null) }
     fun menuNewCase() {
+        // The printer's unconfirmed identity is not a career yet. Letting its menu create a case
+        // produces a nameless, unsaved game and bypasses the whole sign-on contract.
+        if (s.phase == Phase.SIGN_ON) { s = s.copy(overlay = null); return }
+        // A case cannot replace the result that owns an unanswered patent quiz. In particular,
+        // skipping a wave quiz would leave rank-based wave gating permanently out of sync.
+        if (s.pendingPromotion || s.careerOver) { s = s.copy(overlay = null); return }
         if (s.casesSolved >= GameState.CAREER_CASES && !s.expansionUnlocked) {
             val selling = com.acme.clara.billing.BillingManager.SALES_ENABLED
+            if (!selling) profileId = null
             s = s.copy(
                 overlay = if (selling) Overlay.PurchaseOffer("New case") else null,
                 phase = if (selling) s.phase else Phase.TITLE,
@@ -466,16 +525,43 @@ class ClaraViewModel : ViewModel() {
      *  purchase or a restore. Idempotent — safe to call repeatedly (e.g. on every app start once
      *  BillingClient reconnects and reports the existing purchase). */
     fun unlockExpansion() {
+        repo?.setExpansionOwned()
         if (s.expansionUnlocked) return
         s = s.copy(expansionUnlocked = true, overlay = Overlay.UnlockCeremony)
         autosave()
     }
 
-    fun menuQuitToTitle() { profileId = null; s = GameState(phase = Phase.TITLE) }
+    fun menuQuitToTitle() {
+        flushPendingSaves()
+        repo?.setPendingSignOn(false)
+        profileId = null
+        s = GameState(phase = Phase.TITLE,
+            expansionUnlocked = repo?.ownsExpansion() == true || s.expansionUnlocked)
+    }
     /** Game ▸ New Game — start a fresh career (a new saved profile). Names it on the sign-on screen. */
-    fun newGameFlow() { profileId = null; s = GameState(phase = Phase.SIGN_ON) }
-    /** Show the "Choose a game" picker. */
-    fun toChooseGame() { s = s.copy(overlay = null, phase = Phase.CHOOSE_GAME) }
+    fun newGameFlow() {
+        flushPendingSaves() // protect the career being left before detaching from its profile
+        profileId = null
+        repo?.setPendingSignOn(true)
+        s = GameState(phase = Phase.SIGN_ON,
+            expansionUnlocked = repo?.ownsExpansion() == true || s.expansionUnlocked)
+    }
+
+    /** Restore only the unsaved sign-on screen; never manufacture a nameless picker entry. */
+    fun restorePendingSignOn() {
+        profileId = null
+        s = GameState(phase = Phase.SIGN_ON,
+            expansionUnlocked = repo?.ownsExpansion() == true || s.expansionUnlocked)
+    }
+    /** Show the saved-career picker. Snapshot the active career before detaching it: onStop()
+     * must not subsequently persist CHOOSE_GAME into that profile while the picker is open. */
+    fun toChooseGame() {
+        // Wait here rather than merely queueing autosave(): the player can immediately re-select
+        // this same file, and that read must not race the write and restore an older snapshot.
+        flushPendingSaves()
+        profileId = null
+        s = s.copy(overlay = null, phase = Phase.CHOOSE_GAME)
+    }
     // Options > Sound is a silent checkmark toggle in the original (the √ beside the item
     // reflects the state); the actual mute is applied by the audio engine in the UI layer.
     fun toggleSound() { s = s.copy(soundOn = !s.soundOn, overlay = null); autosave() }
@@ -486,7 +572,12 @@ class ClaraViewModel : ViewModel() {
     // ---------- case generation ----------
     private fun newCase() {
         val carmen = GameData.suspects.first { it.name == "Clara San Diego" }
-        val pool = GameData.suspects.filter { it.name != "Clara San Diego" }
+        // Campaign masterminds only enter a case at their authored finale. Keeping them out of
+        // ordinary random cases prevents a boss appearing in Most Wanted as captured years before
+        // the story raid that is meant to bring them in.
+        val mastermindNames = Masterminds.arcs.mapTo(hashSetOf()) { it.suspectName }
+        val pool = GameData.suspects.filter { it.name != "Clara San Diego" && it.name !in mastermindNames }
+        val allNonClara = GameData.suspects.filter { it.name != "Clara San Diego" }
         val nextCases = s.casesSolved + 1
         val campaignCase = nextCases - GameState.CAREER_CASES
         val arc = if (s.expansionUnlocked && campaignCase > 0)
@@ -495,7 +586,7 @@ class ClaraViewModel : ViewModel() {
         // boss/successor, including Wave 10 where Clara is captured in the same raid.
         val culprit = when {
             s.casesSolved == GameState.CAREER_CASES - 1 -> carmen
-            arc != null -> pool.firstOrNull { it.name == arc.suspectName } ?: pool.random()
+            arc != null -> allNonClara.firstOrNull { it.name == arc.suspectName } ?: pool.random()
             else -> pool.random()
         }
 
@@ -960,8 +1051,7 @@ class ClaraViewModel : ViewModel() {
         return chosen.shuffled()
     }
 
-    /** True if two cities sit so close on the world map that their dots/labels would overlap.
-     *  Unpositioned places (the new-country expansion) draw no dot, so they're never "too close". */
+    /** True if two destinations sit so close on the world map that their dots/labels overlap. */
     private fun mapTooClose(a: String, b: String): Boolean {
         val pa = WorldMap.of(a) ?: return false
         val pb = WorldMap.of(b) ?: return false
@@ -974,8 +1064,8 @@ class ClaraViewModel : ViewModel() {
      *  the DEPART preview shows exactly what the flight will cost. */
     fun flightHoursTo(city: String): Int = flightCost(s.currentCity, city)
 
-    /** Flight hours between any two places (distance-scaled 2..14h; 4h when either is unpositioned,
-     *  e.g. the new-country expansion). Basis for a case's travel need and its deadline. */
+    /** Flight hours between any two places (distance-scaled 2..14h; the 4h fallback is only for
+     *  malformed legacy/custom data because every shipped destination has a position). */
     private fun flightCost(from: String, to: String): Int {
         val a = WorldMap.of(from)
         val b = WorldMap.of(to)
@@ -1133,6 +1223,7 @@ class ClaraViewModel : ViewModel() {
         s = s.copy(phase = Phase.RESULT)
         // the report's outcome cue: triumphant on a win, the botched-arrest sting otherwise
         cue(if (s.won) SoundCue.WIN else SoundCue.WRONG_ARREST)
+        autosave()
     }
 
     private fun win(c: Suspect) {
@@ -1195,10 +1286,10 @@ class ClaraViewModel : ViewModel() {
         // Only the true finale (Clara's real capture, Chief Director) ends the career now — Case 14
         // never does, paid or not, since she's always an escape there (see Masterminds.kt header).
         val careerOver = isFinale
-        // Free ranks retain the 1990 cadence. Each paid wave finale awards exactly one new grade;
-        // Wave 10 awards Chief Director directly, without a quiz.
+        // Free ranks retain the 1990 cadence. Every paid wave finale, including Wave 10, awards
+        // its patent through the existing quiz.
         val freeThreshold = newCases in setOf(1, 5, 9, 13)
-        val promote = !careerOver && !isFinale && s.rankIndex < GameData.ranks.lastIndex &&
+        val promote = s.rankIndex < GameData.ranks.lastIndex &&
             (freeThreshold || arc != null)
         if (promote) {
             lines += GameData.PROMOTION.replace("%s", s.detectiveName)
@@ -1218,7 +1309,7 @@ class ClaraViewModel : ViewModel() {
         var next = s.copy(
             phase = Phase.RESULT, won = true, casesSolved = newCases,
             resultLines = lines, pendingPromotion = promote, careerOver = careerOver,
-            rankIndex = if (isFinale) GameData.ranks.lastIndex else s.rankIndex,
+            rankIndex = s.rankIndex,
             capturedVillains = captured, hadCleanCase = cleanSweep, hintFreeSolves = hintFree,
             streakDays = streak, streakFreezes = freezes, lastSolveEpochDay = today,
         )
@@ -1241,7 +1332,8 @@ class ClaraViewModel : ViewModel() {
         if (profileId == null) profileId = newProfileId()
         // tutorialDone = true: skip the Rookie tour too — its spotlight otherwise swallows taps
         // outside itself, which just gets in the way of jumping straight into the Debug menu.
-        s = GameState(detectiveName = "Tester", tutorialDone = true)
+        s = GameState(detectiveName = "Tester", tutorialDone = true,
+            expansionUnlocked = repo?.ownsExpansion() == true || s.expansionUnlocked)
         devJumpToHideoutDoorstep()
     }
 
@@ -1334,7 +1426,17 @@ class ClaraViewModel : ViewModel() {
 
     // ---------- time formatting ----------
     fun clockLabel(offsetHours: Int = 0): String {
-        val total = 9 + s.clock + offsetHours
+        return clockLabelAt(s.clock + offsetHours)
+    }
+
+    /** The planner's committed-arrival time, including the same 10 p.m.–8 a.m. sleep roll that
+     *  [arrive] applies. A simple clock offset can otherwise promise a late-night arrival that
+     *  gameplay immediately changes to 8 a.m. the next morning. */
+    fun arrivalClockHours(flightHours: Int): Int = rollClock(s.clock, flightHours)
+    fun arrivalClockLabel(flightHours: Int): String = clockLabelAt(arrivalClockHours(flightHours))
+
+    private fun clockLabelAt(clockHours: Int): String {
+        val total = 9 + clockHours
         val day = (total / 24).coerceIn(0, 6)
         val hour = total % 24
         val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")

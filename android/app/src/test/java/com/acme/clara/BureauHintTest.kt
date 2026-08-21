@@ -9,12 +9,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Bureau ▸ Hint (ClaraViewModel.requestHint()). While BillingManager.SALES_ENABLED is false (this
- * release), Hint must stay exactly as it always was — that's the branch every current player
- * actually exercises, so it's asserted unconditionally. The paid-gated behavior (unpaid -> offer
- * the purchase, paid -> one concrete tip per case) only exists on the other side of that switch;
- * it's asserted here too, but skips itself while the switch is off so it can't fail against dead
- * code, and starts holding the moment someone flips SALES_ENABLED for the real launch.
+ * Bureau ▸ Hint (ClaraViewModel.requestHint()). Covers both sides of the release kill-switch:
+ * the legacy unlimited behavior while sales are disabled and the live paid-gated behavior where
+ * unpaid players see the offer and owners receive one badge-safe concrete tip per case.
  */
 class BureauHintTest {
 
@@ -47,11 +44,11 @@ class BureauHintTest {
         vm.requestHint()
         assertTrue("first paid ask is granted", vm.s.overlay is Overlay.Info)
         assertTrue("the tip is spent", vm.s.bureauTipUsed)
-        assertEquals(1, vm.s.hintsUsed)
+        assertEquals("the paid tip is badge-safe", 0, vm.s.hintsUsed)
         vm.dismissOverlay()
 
         vm.requestHint()   // second ask, same case
-        assertEquals("no second tip is spent", 1, vm.s.hintsUsed)
+        assertEquals("no badge-costing hint is spent", 0, vm.s.hintsUsed)
         val lines = (vm.s.overlay as Overlay.Info).lines
         assertTrue("told there's nothing left, not repeated or vagued out",
             lines.any { it.contains("no additional tips") })

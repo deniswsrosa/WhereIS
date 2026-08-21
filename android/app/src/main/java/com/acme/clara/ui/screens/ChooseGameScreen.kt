@@ -20,9 +20,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -54,13 +54,16 @@ import kotlinx.coroutines.withContext
 @Composable
 fun ChooseGameScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     var refresh by remember { mutableStateOf(0) }
+    var loading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     // savedGames()/resumeById() read + JSON-decode every save file on disk (SaveStore.list()/
     // load()) — off the main thread here, same reasoning as MainActivity's cold-start read.
     // deleteGame() itself stays synchronous (see ClaraViewModel kdoc), so by the time a delete
     // bumps `refresh` the file is already gone and this re-fetch correctly won't see it.
-    val games by produceState(initialValue = emptyList<SaveMeta>(), refresh) {
-        value = withContext(Dispatchers.IO) { vm.savedGames() }
+    var games by remember { mutableStateOf(emptyList<SaveMeta>()) }
+    LaunchedEffect(refresh) {
+        games = withContext(Dispatchers.IO) { vm.savedGames() }
+        loading = false
     }
 
     // The bureau office, dimmed so the dossiers read over it (same scene the sign-on uses).
@@ -87,17 +90,38 @@ fun ChooseGameScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                 Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(v.w(5)),
             ) {
+                if (games.isEmpty()) {
+                    Box(Modifier.fillMaxWidth().height(v.w(48)), contentAlignment = Alignment.Center) {
+                        Text(Strings.ui("No saved games yet."), style = v.text(8, Vga.LightCyan))
+                    }
+                }
                 games.forEach { m ->
                     DossierCard(v, m,
-                        onResume = { scope.launch { withContext(Dispatchers.IO) { vm.resumeById(m.id) } } },
-                        onDelete = { vm.deleteGame(m.id); refresh++ })
+                        onResume = {
+                            if (!loading) {
+                                loading = true
+                                scope.launch {
+                                    val data = withContext(Dispatchers.IO) { vm.savedGame(m.id) }
+                                    if (data != null) vm.resume(data) else { loading = false; refresh++ }
+                                }
+                            }
+                        },
+                        onDelete = {
+                            if (!loading) {
+                                loading = true
+                                vm.deleteGame(m.id)
+                                refresh++
+                            }
+                        })
                 }
             }
 
             Spacer(Modifier.height(v.w(6)))
             Box(Modifier.fillMaxWidth().height(v.w(22)), contentAlignment = Alignment.Center) {
                 Box(Modifier.width(v.w(170)).height(v.w(22))) {
-                    DosButton(v, "+  " + Strings.ui("NEW DETECTIVE")) { vm.newGameFlow() }
+                    DosButton(v, "+  " + Strings.ui("NEW DETECTIVE")) {
+                        if (!loading) vm.newGameFlow()
+                    }
                 }
             }
         }

@@ -6,6 +6,7 @@ import com.acme.clara.data.Progression
 import com.acme.clara.data.Suspect
 import com.acme.clara.game.ClaraViewModel
 import com.acme.clara.game.Phase
+import com.acme.clara.save.InMemorySaveRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -92,7 +93,9 @@ class MastermindsTest {
         vm.nextCase()
         assertEquals("the free career does not generate ordinary cases past Clara's escape",
             14, vm.s.casesSolved)
-        assertEquals(Phase.TITLE, vm.s.phase)
+        assertEquals("with sales live the detective remains on the result while the offer opens",
+            Phase.RESULT, vm.s.phase)
+        assertEquals(com.acme.clara.game.Overlay.PurchaseOffer("New case"), vm.s.overlay)
         vm.unlockExpansion()
         assertFalse(vm.s.pendingPromotion)
         assertEquals(0, Masterminds.unlockedMaxWave(vm.s.rankIndex, vm.s.expansionUnlocked))
@@ -108,10 +111,52 @@ class MastermindsTest {
         assertTrue(vm.s.route.all { Progression.wave[it] == 9 })
         vm.solveCurrentCase()
         assertTrue(vm.s.careerOver)
+        assertTrue("Wave 10 still awards its patent through the promotion quiz", vm.s.pendingPromotion)
+        assertEquals("Director", GameData.ranks[vm.s.rankIndex])
+        vm.resolvePromotion(true)
         assertFalse(vm.s.pendingPromotion)
         assertEquals("Chief Director", GameData.ranks[vm.s.rankIndex])
         assertTrue(arc.suspectName in vm.s.capturedVillains)
         assertTrue("Clara San Diego" in vm.s.capturedVillains)
         assertTrue("kingpin" in vm.s.unlockedAchievements)
+    }
+
+    @Test fun mastermindsNeverAppearAsOrdinaryRandomCulprits() {
+        val mastermindNames = Masterminds.arcs.map { it.suspectName }.toSet()
+        val vm = ClaraViewModel().apply { signOn("Story Guard") }
+        repeat(13) {
+            assertFalse("Case ${vm.s.casesSolved + 1} dealt a future mastermind ${vm.s.culprit?.name}",
+                vm.s.culprit?.name in mastermindNames)
+            vm.advance()
+        }
+    }
+
+    @Test fun newCaseCannotSkipAPendingPatentQuiz() {
+        val vm = ClaraViewModel().apply { signOn("Quiz Guard"); unlockExpansion() }
+        repeat(21) { vm.advance() }
+        vm.solveCurrentCase()
+        assertTrue(vm.s.pendingPromotion)
+        val solved = vm.s.casesSolved
+        val culprit = vm.s.culprit
+        vm.menuNewCase()
+        assertEquals("case count is unchanged", solved, vm.s.casesSolved)
+        assertEquals("the finale result remains loaded", culprit, vm.s.culprit)
+        assertTrue(vm.s.pendingPromotion)
+        assertEquals(Phase.RESULT, vm.s.phase)
+    }
+
+    @Test fun salesDisabledCase14ExitDoesNotOverwriteTheFinishedCareer() {
+        if (com.acme.clara.billing.BillingManager.SALES_ENABLED) return
+        val repo = InMemorySaveRepository()
+        val vm = ClaraViewModel().apply { bindRepository(repo); signOn("First detective") }
+        repeat(14) { vm.advance() }
+        assertEquals(Phase.TITLE, vm.s.phase)
+        assertEquals(1, repo.list().size)
+
+        vm.start()
+        vm.signOn("Second detective")
+        assertEquals("a fresh profile is created instead of reusing the Case 14 save", 2, repo.list().size)
+        assertTrue(repo.list().any { it.name == "First detective" })
+        assertTrue(repo.list().any { it.name == "Second detective" })
     }
 }

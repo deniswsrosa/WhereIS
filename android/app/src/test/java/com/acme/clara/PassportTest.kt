@@ -3,6 +3,8 @@ package com.acme.clara
 import com.acme.clara.data.CityMeta
 import com.acme.clara.data.CountryShapes
 import com.acme.clara.data.Expansion
+import com.acme.clara.data.Expansion2
+import com.acme.clara.data.WorldMap
 import com.acme.clara.game.ClaraViewModel
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -13,11 +15,32 @@ import org.junit.Test
  *  visited-place log fills in from day one as the detective lands in cities. */
 class PassportTest {
 
-    private val allPlaces: Set<String> = CityMeta.all.keys + Expansion.names
+    private val allPlaces: Set<String> = CityMeta.all.keys + Expansion.names + Expansion2.names
 
     @Test fun everyGamePlaceMapsToACountry() {
         val missing = allPlaces.filter { it !in CountryShapes.placeCountry }
         assertTrue("places with no country mapping: $missing", missing.isEmpty())
+    }
+
+    @Test fun everyGamePlaceHasARealMapPosition() {
+        val missing = allPlaces.filter { WorldMap.of(it) == null }
+        assertTrue("places with no map position: $missing", missing.isEmpty())
+        allPlaces.forEach { place ->
+            val p = WorldMap.of(place)!!
+            assertTrue("$place x is normalized", p.x in 0f..1f)
+            assertTrue("$place y is normalized", p.y in 0f..1f)
+        }
+    }
+
+    @Test fun passportPagesUnlockWaveByWaveAfterPurchase() {
+        assertFalse(CountryShapes.isPlaceUnlocked("Amsterdam", rankIndex = 4, entitled = false))
+        assertTrue(CountryShapes.isPlaceUnlocked("Amsterdam", rankIndex = 4, entitled = true))
+        assertFalse(CountryShapes.isPlaceUnlocked("Kiribati", rankIndex = 4, entitled = true))
+        assertTrue(CountryShapes.isPlaceUnlocked("Kiribati", rankIndex = 14, entitled = true))
+        assertTrue("later pages remain frosted after purchase",
+            CountryShapes.lockedCountryCodes(rankIndex = 4, entitled = true).isNotEmpty())
+        assertTrue("top patent opens every Passport country",
+            CountryShapes.lockedCountryCodes(rankIndex = 14, entitled = true).isEmpty())
     }
 
     @Test fun everyCountryEitherPaintsASilhouetteOrFallsBackToADot() {

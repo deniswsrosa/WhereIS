@@ -22,14 +22,18 @@ sealed interface LaunchOutcome {
     data class Continue(val id: String) : LaunchOutcome
     /** Two or more — show the picker (metas sorted newest first). */
     data class Choose(val metas: List<SaveMeta>) : LaunchOutcome
+    /** A new-career sign-on was opened but no identity was confirmed yet. */
+    data object PendingSignOn : LaunchOutcome
 }
 
-/** The launch decision: 0 saves → sign-on, 1 → continue, 2+ → choose. */
-fun decideLaunch(saves: List<SaveMeta>): LaunchOutcome = when (saves.size) {
-    0 -> LaunchOutcome.SignOn
-    1 -> LaunchOutcome.Continue(saves.first().id)
-    else -> LaunchOutcome.Choose(saves.sortedByDescending { it.lastPlayed })
-}
+/** The launch decision: an interrupted new-career flow wins; otherwise 0 saves → sign-on,
+ * 1 → continue, 2+ → choose. */
+fun decideLaunch(saves: List<SaveMeta>, pendingSignOn: Boolean = false): LaunchOutcome =
+    if (pendingSignOn) LaunchOutcome.PendingSignOn else when (saves.size) {
+        0 -> LaunchOutcome.SignOn
+        1 -> LaunchOutcome.Continue(saves.first().id)
+        else -> LaunchOutcome.Choose(saves.sortedByDescending { it.lastPlayed })
+    }
 
 /** Storage for career saves. Implementations back onto disk (prod) or memory (tests). */
 interface SaveRepository {
@@ -38,11 +42,26 @@ interface SaveRepository {
     fun load(id: String): SaveData?
     fun save(data: SaveData)
     fun delete(id: String)
+
+    /** Durable draft marker for a sign-on that has not been confirmed yet. It is deliberately
+     * separate from the save list so the picker never shows a nameless detective. */
+    fun hasPendingSignOn(): Boolean
+    fun setPendingSignOn(pending: Boolean)
+
+    /** Persist the first confirmed state, then clear the pending marker. */
+    fun saveNewCareer(data: SaveData)
+
+    /** App-wide non-consumable ownership. Unlike campaign progress, this belongs to the player,
+     *  not to one career, so every existing and future profile inherits it. */
+    fun ownsExpansion(): Boolean
+    fun setExpansionOwned()
 }
 
 /** In-memory repository — the reference implementation used by unit tests. */
 class InMemorySaveRepository : SaveRepository {
     private val store = LinkedHashMap<String, SaveData>()
+    private var expansionOwned = false
+    private var pendingSignOn = false
 
     override fun list(): List<SaveMeta> =
         store.values.map { it.meta }.sortedByDescending { it.lastPlayed }
@@ -52,4 +71,17 @@ class InMemorySaveRepository : SaveRepository {
     override fun save(data: SaveData) { store[data.meta.id] = data }
 
     override fun delete(id: String) { store.remove(id) }
+
+    override fun hasPendingSignOn(): Boolean = pendingSignOn
+
+    override fun setPendingSignOn(pending: Boolean) { pendingSignOn = pending }
+
+    override fun saveNewCareer(data: SaveData) {
+        save(data)
+        pendingSignOn = false
+    }
+
+    override fun ownsExpansion(): Boolean = expansionOwned
+
+    override fun setExpansionOwned() { expansionOwned = true }
 }

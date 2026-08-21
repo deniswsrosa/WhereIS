@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import androidx.annotation.RequiresApi
 import com.acme.clara.game.HapticCue
 
 /**
@@ -33,6 +34,7 @@ object HapticEngine {
             context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
         }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun effect(cue: HapticCue): VibrationEffect = when (cue) {
         HapticCue.TICK -> VibrationEffect.createOneShot(12, 60)
         HapticCue.CLICK -> VibrationEffect.createOneShot(20, 120)

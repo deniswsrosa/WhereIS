@@ -76,6 +76,9 @@ dependencies {
     implementation(composeBom)
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.activity:activity-compose:1.9.2")
+    // Billing's Play Services graph still requests Fragment 1.1.0. Pin a modern runtime so
+    // ComponentActivity's Activity Result API is not paired with the pre-1.3 fragment bridge.
+    implementation("androidx.fragment:fragment:1.8.3")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")

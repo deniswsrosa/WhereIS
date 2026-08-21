@@ -2,6 +2,9 @@ package com.acme.clara
 
 import com.acme.clara.game.ClaraViewModel
 import com.acme.clara.game.ClueKind
+import com.acme.clara.game.GameState
+import com.acme.clara.game.Phase
+import com.acme.clara.data.GameData
 import com.acme.clara.save.InMemorySaveRepository
 import com.acme.clara.save.Json
 import com.acme.clara.save.LaunchOutcome
@@ -103,6 +106,28 @@ class SaveTest {
             snap.state.copy(expansionUnlocked = false, bureauTipUsed = false), back.state)
     }
 
+    @Test fun codecMigratesTheLegacyCase14ClaraCaptureIntoAnEscape() {
+        val vm = ClaraViewModel().apply { signOn("Veteran") }
+        val clara = GameData.suspects.first { it.name == "Clara San Diego" }
+        val snap = vm.snapshot("legacy", 42L)
+        val legacyState = snap.state.copy(
+            phase = Phase.RESULT,
+            casesSolved = GameState.CAREER_CASES,
+            culprit = clara,
+            won = true,
+            careerOver = true,
+            capturedVillains = snap.state.capturedVillains + clara.name,
+            resultLines = listOf(GameData.CLARA_JAILED),
+        )
+        val root = (Json.decode(SaveCodec.encode(snap.meta, legacyState)) as Map<*, *>).toMutableMap()
+        root["v"] = 1
+        val migrated = SaveCodec.decode(Json.encode(root))!!.state
+        assertFalse(migrated.careerOver)
+        assertFalse(clara.name in migrated.capturedVillains)
+        assertTrue(migrated.resultLines.any { it.contains("escaped", ignoreCase = true) ||
+            it == GameData.GOT_AWAY })
+    }
+
     @Test fun codecReturnsNullOnGarbage() {
         assertNull(SaveCodec.decode("not json"))
         assertNull(SaveCodec.decode("{}"))            // missing meta/state
@@ -125,6 +150,46 @@ class SaveTest {
         assertEquals(2, repo.list().size)
     }
 
+    @Test fun expansionOwnershipIsGlobalAcrossNewAndExistingCareers() {
+        val repo = InMemorySaveRepository()
+        val buyer = ClaraViewModel().apply {
+            bindRepository(repo)
+            signOn("Buyer")
+            unlockExpansion()
+        }
+        assertTrue(repo.ownsExpansion())
+
+        val oldFreeSave = ClaraViewModel().apply { signOn("Old profile") }.snapshot("old", 1L)
+        repo.save(oldFreeSave)
+        val reopened = ClaraViewModel().apply { bindRepository(repo); resumeById("old") }
+        assertTrue("an existing free save inherits ownership", reopened.s.expansionUnlocked)
+
+        buyer.newGameFlow()
+        buyer.signOn("New profile")
+        assertTrue("a new career inherits ownership", buyer.s.expansionUnlocked)
+    }
+
+    @Test fun restoreBeforeSignOnPersistsForTheCareerCreatedLater() {
+        val repo = InMemorySaveRepository()
+        val vm = ClaraViewModel().apply { bindRepository(repo); unlockExpansion() }
+        vm.newGameFlow()
+        vm.signOn("Restored")
+        assertTrue(repo.ownsExpansion())
+        assertTrue(vm.s.expansionUnlocked)
+    }
+
+    @Test fun aLegacyPaidCareerUpgradesOwnershipToGlobal() {
+        val repo = InMemorySaveRepository()
+        val paidSave = ClaraViewModel().apply { signOn("Early buyer"); unlockExpansion() }
+            .snapshot("paid", 1L)
+        repo.save(paidSave)
+        assertFalse(repo.ownsExpansion())
+
+        val vm = ClaraViewModel().apply { bindRepository(repo); resumeById("paid") }
+        assertTrue(vm.s.expansionUnlocked)
+        assertTrue("loading a paid save promotes its old per-career flag", repo.ownsExpansion())
+    }
+
     // ---------- launch decision ----------
 
     @Test fun launchDecisionMapsSaveCount() {
@@ -138,6 +203,66 @@ class SaveTest {
         )
         assertTrue(choose is LaunchOutcome.Choose)
         assertEquals(listOf("new", "old"), (choose as LaunchOutcome.Choose).metas.map { it.id })
+
+        assertEquals("an interrupted blank sign-on takes precedence over old careers",
+            LaunchOutcome.PendingSignOn,
+            decideLaunch(listOf(SaveMeta("old", "A", 0, 0, 10L)), pendingSignOn = true))
+    }
+
+    @Test fun unfinishedNewCareerIsDurableButNeverCreatesABlankPickerEntry() {
+        val repo = InMemorySaveRepository()
+        val old = ClaraViewModel().apply { signOn("Existing") }.snapshot("old", 1L)
+        repo.save(old)
+        val vm = ClaraViewModel().apply { bindRepository(repo); resumeById("old") }
+
+        vm.newGameFlow()
+
+        assertTrue(repo.hasPendingSignOn())
+        assertEquals("the existing career remains the only picker entry", listOf("Existing"),
+            repo.list().map { it.name })
+        assertEquals(LaunchOutcome.PendingSignOn,
+            decideLaunch(repo.list(), repo.hasPendingSignOn()))
+
+        vm.signOnStart("Confirmed")
+        assertFalse(repo.hasPendingSignOn())
+        assertEquals(setOf("Existing", "Confirmed"), repo.list().map { it.name }.toSet())
+        assertEquals("a confirmed printer flow resumes at briefing after process death",
+            Phase.BRIEFING, repo.list().first { it.name == "Confirmed" }.let { repo.load(it.id)!!.state.phase })
+    }
+
+    @Test fun printerCannotBypassIdentityWithNewCase() {
+        val repo = InMemorySaveRepository()
+        val vm = ClaraViewModel().apply { bindRepository(repo); newGameFlow() }
+
+        vm.menuNewCase()
+
+        assertEquals(Phase.SIGN_ON, vm.s.phase)
+        assertTrue(vm.s.route.isEmpty())
+        assertTrue(repo.list().isEmpty())
+        assertTrue(repo.hasPendingSignOn())
+    }
+
+    @Test fun lateRepositoryBindingStillCapturesAnAlreadyOpenedPrinter() {
+        val vm = ClaraViewModel().apply { introDone(); start() }
+        val repo = InMemorySaveRepository()
+
+        vm.bindRepository(repo)
+
+        assertTrue(repo.hasPendingSignOn())
+    }
+
+    @Test fun persistedTransientPhasesResumeAtSafeCompletedScreens() {
+        val vm = ClaraViewModel().apply { signOnStart("Printer") }
+        assertEquals(Phase.BRIEFING, vm.snapshot("p", 1L).state.phase)
+
+        vm.beginInvestigation()
+        vm.gotoTravel()
+        assertEquals(Phase.CITY, vm.snapshot("p", 1L).state.phase)
+
+        vm.devJumpToHideoutDoorstep()
+        vm.openVenue(vm.s.venues.indices.first { it !in vm.s.visited })
+        assertEquals(Phase.CHASE, vm.s.phase)
+        assertEquals(Phase.RESULT, vm.snapshot("p", 1L).state.phase)
     }
 
     // ---------- ViewModel autosave + restore ----------
@@ -186,6 +311,58 @@ class SaveTest {
         val reopened = ClaraViewModel()
         reopened.loadCareer(saved)
         assertEquals(saved.state, reopened.s)
+    }
+
+    @Test fun backgroundFlushSnapshotsNavigationThatDidNotAutosaveOnItsOwn() {
+        val repo = InMemorySaveRepository()
+        val vm = ClaraViewModel().apply { attachSave(repo, "p1") { 9L }; signOn("Grace") }
+        vm.gotoCrime()
+
+        vm.flushPendingSaves()
+
+        assertEquals(Phase.CRIME, repo.load("p1")!!.state.phase)
+    }
+
+    @Test fun openingLoadGameSavesActiveCareerAndPickerCannotOverwriteItsPhase() {
+        val repo = InMemorySaveRepository()
+        val vm = ClaraViewModel().apply { attachSave(repo, "p1") { 9L }; signOn("Grace") }
+        vm.gotoCrime()
+
+        vm.toChooseGame()
+        assertEquals(Phase.CHOOSE_GAME, vm.s.phase)
+        assertEquals("the career is saved before entering the picker", Phase.CRIME,
+            repo.load("p1")!!.state.phase)
+
+        vm.flushPendingSaves()
+        assertEquals("backgrounding on the picker does not overwrite the active career",
+            Phase.CRIME, repo.load("p1")!!.state.phase)
+    }
+
+    @Test fun loadingExistingCareerCancelsInterruptedNewDetectiveDraft() {
+        val repo = InMemorySaveRepository()
+        val saved = ClaraViewModel().apply { signOn("Existing") }.snapshot("old", 1L)
+        repo.save(saved)
+        val vm = ClaraViewModel().apply { bindRepository(repo); newGameFlow() }
+        assertTrue(repo.hasPendingSignOn())
+
+        vm.toChooseGame()
+        vm.resumeById("old")
+
+        assertFalse(repo.hasPendingSignOn())
+        assertEquals("Existing", vm.s.detectiveName)
+        assertEquals(Phase.BRIEFING, vm.s.phase)
+    }
+
+    @Test fun resumeImmediatelyPersistsWelcomeBackBenefitsAndFreshTimestamp() {
+        val repo = InMemorySaveRepository()
+        val original = ClaraViewModel().apply { signOn("Returner") }.snapshot("p1", 1L)
+        repo.save(original)
+        val now = 8L * 24 * 60 * 60 * 1000
+        val vm = ClaraViewModel().apply { bindRepository(repo) { now }; resumeById("p1") }
+
+        assertEquals(1, vm.s.freeHints)
+        assertEquals(1, repo.load("p1")!!.state.freeHints)
+        assertEquals(now, repo.load("p1")!!.meta.lastPlayed)
     }
 
     @Test fun aWrongFlightSurvivesReload_soItCannotBeUndone() {

@@ -28,6 +28,7 @@ object WorldMap {
         "Sydney" to Offset(0.9424f, 0.7918f), "Tokyo" to Offset(0.9081f, 0.3484f),
     )
 
-    /** Position for any city — base map first, then the paid expansion's projected dots. */
-    fun of(name: String): Offset? = pos[name] ?: Expansion.pos[name]
+    /** Position for every destination — base and landmark dots first, then Expansion2 country
+     *  label points generated from the same Natural Earth geography as the Passport shapes. */
+    fun of(name: String): Offset? = pos[name] ?: Expansion.pos[name] ?: CountryShapes.placePosition[name]
 }

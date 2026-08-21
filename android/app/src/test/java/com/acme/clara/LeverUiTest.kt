@@ -44,11 +44,23 @@ class LeverUiTest {
     }
 
     // ---------- P2 endowed rank meter ----------
-    @Test fun p2_rankMeterNamesTheNextRankWithAHeadStart() {
+    @Test fun p2_rankMeterUsesExactPromotionBand() {
         val state = GameState(casesSolved = 2, rankIndex = 1)
         host { v -> RankProgress(v, state) }
         rule.onNodeWithText("Toward", substring = true).assertExists()
-        rule.onNodeWithText("2 of 5", substring = true).assertExists()  // head-start offset applied
+        rule.onNodeWithText("1 of 4", substring = true).assertExists()
+    }
+
+    @Test fun campaignRankMeterStartsWaveOneAtZeroOfEight() {
+        val state = GameState(casesSolved = 14, rankIndex = 4, expansionUnlocked = true)
+        host { v -> RankProgress(v, state) }
+        rule.onNodeWithText("0 of 8", substring = true).assertExists()
+    }
+
+    @Test fun pendingPromotionShowsTheCompletedBandUntilTheQuizIsAnswered() {
+        val free = GameState(casesSolved = 1, rankIndex = 0, pendingPromotion = true)
+        host { v -> RankProgress(v, free) }
+        rule.onNodeWithText("1 of 1", substring = true).assertExists()
     }
 
     // ---------- S1 arrest slam ----------

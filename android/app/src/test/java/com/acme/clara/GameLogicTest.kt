@@ -14,6 +14,13 @@ import org.junit.Test
 
 class GameLogicTest {
 
+    @Test fun plannerArrivalIncludesTheOvernightSleepRoll() {
+        val vm = ClaraViewModel().apply { signOn("Planner") }
+        // Monday 9 a.m. + 14h would be 11 p.m.; actual travel sleeps and arrives Tuesday 8 a.m.
+        assertEquals(23, vm.arrivalClockHours(14))
+        assertTrue(vm.arrivalClockLabel(14).contains("8"))
+    }
+
     private fun fresh() = ClaraViewModel().apply { signOn("Tester") }
 
     // ---------- case generation ----------

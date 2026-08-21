@@ -1,6 +1,7 @@
 package com.acme.clara.save
 
 import android.content.Context
+import android.util.AtomicFile
 import java.io.File
 import java.util.concurrent.Executors
 
@@ -12,6 +13,8 @@ import java.util.concurrent.Executors
 class SaveStore(context: Context) : SaveRepository {
 
     private val dir = File(context.filesDir, "saves").apply { mkdirs() }
+    private val expansionEntitlement = File(context.filesDir, "world-campaign-owned")
+    private val pendingSignOn = File(context.filesDir, "new-career-pending")
 
     // autosave() (ClaraViewModel) calls save() synchronously on nearly every player action, and
     // a save now carries the full 231-city roster — encoding + writing that on the caller's own
@@ -28,22 +31,75 @@ class SaveStore(context: Context) : SaveRepository {
     private fun sanitize(id: String) = id.filter { it.isLetterOrDigit() || it == '-' || it == '_' }
     private fun fileFor(id: String) = File(dir, "save-${sanitize(id)}.json")
 
+    /** AtomicFile keeps the previous complete JSON if the process dies during replacement. */
+    private fun writeNow(data: SaveData) {
+        val atomic = AtomicFile(fileFor(data.meta.id))
+        var output: java.io.FileOutputStream? = null
+        try {
+            output = atomic.startWrite()
+            output.write(SaveCodec.encode(data.meta, data.state).toByteArray(Charsets.UTF_8))
+            atomic.finishWrite(output)
+        } catch (e: Exception) {
+            output?.let { atomic.failWrite(it) }
+            throw e
+        }
+    }
+
+    private fun readNow(file: File): SaveData? = runCatching {
+        AtomicFile(file).openRead().bufferedReader(Charsets.UTF_8).use { SaveCodec.decode(it.readText()) }
+    }.getOrNull()
+
     override fun list(): List<SaveMeta> =
-        (dir.listFiles { f -> f.extension == "json" } ?: emptyArray())
-            .mapNotNull { f -> runCatching { SaveCodec.decode(f.readText())?.meta }.getOrNull() }
+        (dir.listFiles() ?: emptyArray())
+            .mapNotNull { f ->
+                when {
+                    f.name.endsWith(".json") -> f
+                    // AtomicFile.openRead() restores this backup if the process died between
+                    // moving the old base aside and finishing its replacement.
+                    f.name.endsWith(".json.bak") -> File(dir, f.name.removeSuffix(".bak"))
+                    else -> null
+                }
+            }
+            .distinctBy { it.path }
+            .mapNotNull { f -> readNow(f)?.meta }
             .sortedByDescending { it.lastPlayed }
 
     override fun load(id: String): SaveData? =
-        fileFor(id).takeIf { it.exists() }
-            ?.let { runCatching { SaveCodec.decode(it.readText()) }.getOrNull() }
+        fileFor(id).takeIf { it.exists() || File("${it.path}.bak").exists() }
+            ?.let(::readNow)
 
     override fun save(data: SaveData) {
-        val file = fileFor(data.meta.id)
-        writer.execute { runCatching { file.writeText(SaveCodec.encode(data.meta, data.state)) } }
+        writer.execute { runCatching { writeNow(data) } }
     }
 
     override fun delete(id: String) {
-        runCatching { fileFor(id).delete() }
+        // Serialize behind older autosaves and wait: otherwise a queued write can recreate the
+        // career immediately after the picker has retired it.
+        runCatching { writer.submit { AtomicFile(fileFor(id)).delete() }.get() }
+    }
+
+    override fun hasPendingSignOn(): Boolean = pendingSignOn.exists()
+
+    override fun setPendingSignOn(pending: Boolean) {
+        runCatching { if (pending) pendingSignOn.writeText("pending") else pendingSignOn.delete() }
+    }
+
+    override fun saveNewCareer(data: SaveData) {
+        // This one small, one-time write is synchronous so a confirmed name cannot be followed by
+        // a process death that clears the draft marker before the career itself reaches disk.
+        runCatching {
+            awaitPendingWrites()
+            writeNow(data)
+            pendingSignOn.delete()
+        }
+    }
+
+    override fun ownsExpansion(): Boolean = expansionEntitlement.exists()
+
+    override fun setExpansionOwned() {
+        // A tiny monotonic marker is deliberately separate from career saves: deleting, replacing,
+        // or creating a profile must never revoke a Play-owned non-consumable purchase.
+        runCatching { if (!expansionEntitlement.exists()) expansionEntitlement.writeText("owned") }
     }
 
     /** Test-only: block until every write submitted so far has landed on disk. Production code

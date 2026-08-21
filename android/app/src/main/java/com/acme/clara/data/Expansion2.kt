@@ -7,7 +7,7 @@ package com.acme.clara.data
  * Merged into the active pool by recognition wave (see [Progression]); each ships a
  * `country_<slug>` briefing postcard. Clues are the forward-looking, subject-less witness
  * leads (the game prepends the suspect pronoun + a lead-in, as with [Expansion]).
- * Map positions/flight coords are not yet supplied — these default to a neutral hop cost.
+ * Map positions/flight coordinates come from CountryShapes' generated Natural Earth label points.
  */
 object Expansion2 {
     val cities: List<CityInfo> = listOf(

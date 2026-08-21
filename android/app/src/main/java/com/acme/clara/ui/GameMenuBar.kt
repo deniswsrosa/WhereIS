@@ -38,6 +38,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.aspectRatio
 import com.acme.clara.data.GameData
+import com.acme.clara.data.Masterminds
 import com.acme.clara.game.Achievements
 import com.acme.clara.game.ClaraViewModel
 import com.acme.clara.game.MostWanted
@@ -62,13 +63,16 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
     ) {
         // Menu contents follow the DOS EXE menu resources, adapted for the remake:
         // Game = About Clara... / New Case (the EXE's "New": re-deal the case in this career) /
-        // New Game (fresh career) / Quit (with the original confirm). The EXE's Joystick item
-        // was dropped — a touch game has no joystick to calibrate.
+        // Load Game (the saved-career picker) / New Game (fresh career) / Quit (with the original
+        // confirm). The EXE's Joystick item was dropped — a touch game has no joystick to calibrate.
         // A leading check/space marks Options toggle state; keep it out of the translated label.
         fun chk(on: Boolean, label: String) = (if (on) "√" else " ") + Strings.ui(label)
         MenuTitle(v, Strings.ui("Game"), listOf(
             MenuItemDef(Strings.ui("About Clara...")) { vm.openOverlay(Overlay.About) },
-            MenuItemDef(Strings.ui("New Case")) { vm.menuNewCase() },
+            MenuItemDef(Strings.ui("New Case"), enabled = s.phase != com.acme.clara.game.Phase.SIGN_ON) {
+                vm.menuNewCase()
+            },
+            MenuItemDef(Strings.ui("Load Game")) { vm.toChooseGame() },
             MenuItemDef(Strings.ui("New Game")) { vm.newGameFlow() },
             MenuItemDef(Strings.ui("Quit")) { vm.openOverlay(Overlay.ConfirmQuit) },
         ))
@@ -106,13 +110,25 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
                 MenuItemDef(if (s.expansionUnlocked) Strings.ui("World Campaign unlocked")
                     else Strings.ui("Unlock the World Campaign...")) {
                     if (s.expansionUnlocked) {
-                        val campaignSolved = (s.casesSolved - com.acme.clara.game.GameState.CAREER_CASES).coerceAtLeast(0)
-                        val wave = com.acme.clara.data.Masterminds.waveForCampaignCasesSolved(campaignSolved)
-                        vm.openOverlay(Overlay.Info(Strings.ui("WORLD CAMPAIGN"), listOf(
-                            Strings.ui("Wave {0} of 10", wave + 1),
-                            Strings.ui("{0} cases until this wave's finale",
-                                com.acme.clara.data.Masterminds.casesToWaveFinale(campaignSolved)),
-                        )))
+                        val freeRemaining = (com.acme.clara.game.GameState.CAREER_CASES - s.casesSolved).coerceAtLeast(0)
+                        if (freeRemaining > 0) {
+                            vm.openOverlay(Overlay.Info(Strings.ui("WORLD CAMPAIGN"), listOf(
+                                Strings.ui("Wave 1 is unlocked and ready."),
+                                Strings.ui("{0} free-career cases remain before the campaign story begins.", freeRemaining),
+                            )))
+                        } else {
+                            val campaignSolved = s.casesSolved - com.acme.clara.game.GameState.CAREER_CASES
+                            val wave = if (s.pendingPromotion)
+                                Masterminds.arcForCampaignCase(campaignSolved)?.waveIndex
+                                    ?: Masterminds.unlockedMaxWave(s.rankIndex, true)
+                                else Masterminds.unlockedMaxWave(s.rankIndex, true)
+                            vm.openOverlay(Overlay.Info(Strings.ui("WORLD CAMPAIGN"), listOf(
+                                Strings.ui("Wave {0} of 10", wave + 1),
+                                if (s.pendingPromotion) Strings.ui("Finale complete — promotion quiz pending.")
+                                else Strings.ui("{0} cases until this wave's finale",
+                                    Masterminds.waveCases[wave] - Masterminds.casesIntoCurrentWave(campaignSolved)),
+                            )))
+                        }
                     } else vm.openOverlay(Overlay.PurchaseOffer("Persistent menu bar"))
                 },
             ))
@@ -489,38 +505,62 @@ private fun StatRow(v: Virtual, label: String, value: String) {
     }
 }
 
-/* P2 endowed progress: a bar toward the next rank. The tutorial + guided first case are
- * credited as a one-case head start, so it opens partly filled (never a cold zero) — the
- * loyalty-card effect that lifts first-promotion completion. */
+/* Rank progress: exact free-promotion bands, followed by each authored campaign wave's own
+ * length. Case 14 is the boundary, so Wave 1 begins at a truthful 0 of 8. */
 @Composable
 internal fun RankProgress(v: Virtual, s: com.acme.clara.game.GameState) {
     val solved = s.casesSolved
     val freeThresholds = listOf(1, 5, 9, 13)
-    val thresholds = if (s.expansionUnlocked)
-        freeThresholds + com.acme.clara.data.Masterminds.waveEndCases.map {
-            it + com.acme.clara.game.GameState.CAREER_CASES
-        }
-    else freeThresholds
-    val next = thresholds.firstOrNull { it > solved }
     val label: String
     val frac: Float
-    if (next == null) {
+    if (s.pendingPromotion) {
+        if (solved <= com.acme.clara.game.GameState.CAREER_CASES) {
+            val previous = freeThresholds.lastOrNull { it < solved } ?: 0
+            val total = solved - previous
+            val nextRank = GameData.ranks.getOrElse(s.rankIndex + 1) { GameData.ranks.last() }
+            label = Strings.ui("Toward {0} — {1} of {2}", Strings.label("rank", nextRank), total, total)
+            frac = 1f
+        } else {
+            val campaignSolved = solved - com.acme.clara.game.GameState.CAREER_CASES
+            val wave = Masterminds.arcForCampaignCase(campaignSolved)?.waveIndex
+                ?: Masterminds.unlockedMaxWave(s.rankIndex, true)
+            val total = Masterminds.waveCases[wave]
+            val nextRank = GameData.ranks[Masterminds.arcs[wave].patentRank]
+            label = Strings.ui("Toward {0} — {1} of {2}", Strings.label("rank", nextRank), total, total)
+            frac = 1f
+        }
+    } else if (s.careerOver) {
         label = Strings.ui("{0} — top rank", Strings.label("rank", GameData.ranks.last()))
         frac = 1f
+    } else if (s.expansionUnlocked && solved >= com.acme.clara.game.GameState.CAREER_CASES) {
+        val campaignSolved = solved - com.acme.clara.game.GameState.CAREER_CASES
+        val wave = Masterminds.unlockedMaxWave(s.rankIndex, true)
+        val inWave = Masterminds.casesIntoCurrentWave(campaignSolved)
+        val total = Masterminds.waveCases[wave]
+        val nextRank = GameData.ranks[Masterminds.arcs[wave].patentRank]
+        label = Strings.ui("Toward {0} — {1} of {2}", Strings.label("rank", nextRank), inWave, total)
+        frac = inWave.toFloat() / total
     } else {
-        val prev = thresholds.lastOrNull { it <= solved } ?: 0
-        val band = next - prev
-        val inBand = solved - prev
-        val head = 1                                   // the credited head start
-        frac = ((inBand + head).toFloat() / (band + head)).coerceIn(0f, 1f)
-        val nextRank = GameData.ranks.getOrElse(s.rankIndex + 1) { GameData.ranks.last() }
-        label = Strings.ui("Toward {0} — {1} of {2}", Strings.label("rank", nextRank), inBand + head, band + head)
+        val next = freeThresholds.firstOrNull { it > solved }
+        if (next == null) {
+            label = Strings.ui("{0} — top rank", Strings.label("rank", GameData.ranks[s.rankIndex]))
+            frac = 1f
+        } else {
+            val prev = freeThresholds.lastOrNull { it <= solved } ?: 0
+            val band = next - prev
+            val inBand = solved - prev
+            frac = (inBand.toFloat() / band).coerceIn(0f, 1f)
+            val nextRank = GameData.ranks.getOrElse(s.rankIndex + 1) { GameData.ranks.last() }
+            label = Strings.ui("Toward {0} — {1} of {2}", Strings.label("rank", nextRank), inBand, band)
+        }
     }
     val campaignSolved = (solved - com.acme.clara.game.GameState.CAREER_CASES).coerceAtLeast(0)
+    val campaignWave = if (s.pendingPromotion)
+        Masterminds.arcForCampaignCase(campaignSolved)?.waveIndex
+            ?: Masterminds.unlockedMaxWave(s.rankIndex, true)
+        else Masterminds.unlockedMaxWave(s.rankIndex, true)
     val arc = if (s.expansionUnlocked && !s.careerOver)
-        com.acme.clara.data.Masterminds.arcForWave(
-            com.acme.clara.data.Masterminds.waveForCampaignCasesSolved(campaignSolved)
-        ) else null
+        Masterminds.arcForWave(campaignWave) else null
     Column(Modifier.fillMaxWidth()) {
         Text(label, style = v.text(6.5f, color = Vga.LightCyan))
         if (arc != null) {
@@ -720,15 +760,19 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
  * Country border silhouettes (data.CountryShapes, projected through the same Mercator
  * transform as the DEPART map) fill in green as you land in each place; micro-states with
  * no usable polygon are stamped as a dot. Visits are tracked from day one on the free tier
- * (GameState.visitedPlaces); the free Passport shows only the original 30 destinations —
- * the paid expansion adds its 68 to the world and paints in everything already visited. */
+ * (GameState.visitedPlaces). Paid countries are frosted individually until their campaign wave
+ * opens; buying reveals Wave 1 immediately while later pages remain visibly locked. */
 @Composable
 private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
     val s = vm.s
     val paid = s.expansionUnlocked
     val placeCountry = CountryShapes.placeCountry
     val universe = placeCountry.values.toSet()
-    val visitedPlaces = s.visitedPlaces.filter { it in placeCountry }
+    fun placeUnlocked(place: String): Boolean = CountryShapes.isPlaceUnlocked(place, s.rankIndex, paid)
+    val lockedCountries = CountryShapes.lockedCountryCodes(s.rankIndex, paid)
+    val lockedDotPlaces = placeCountry.keys.filter { !placeUnlocked(it) &&
+        CountryShapes.rings(placeCountry[it].orEmpty()).isEmpty() }
+    val visitedPlaces = s.visitedPlaces.filter { it in placeCountry && placeUnlocked(it) }
     val visitedCountries = visitedPlaces.mapNotNull { placeCountry[it] }.toSet()
 
     Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
@@ -741,11 +785,38 @@ private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
             Spacer(Modifier.height(v.w(3)))
 
             // the painted map — the raster DEPART interior with visited countries filled in
-            Box(Modifier.fillMaxWidth().aspectRatio(WorldMap.WV / WorldMap.HV)
-                .background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(1))) {
+            val mapModifier = Modifier.fillMaxWidth().aspectRatio(WorldMap.WV / WorldMap.HV)
+                .background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(1))
+                .then(if (!paid && com.acme.clara.billing.BillingManager.SALES_ENABLED)
+                    Modifier.clickable { vm.openOverlay(Overlay.PurchaseOffer("Passport locked map")) }
+                else Modifier)
+            Box(mapModifier) {
                 PixelImage("world_map_clean", Modifier.fillMaxSize())
                 Canvas(Modifier.fillMaxSize()) {
                     val w = size.width; val h = size.height
+                    // Frost only countries whose recognition wave has not been earned. This
+                    // remains after purchase for Waves 2-10 instead of revealing the whole map.
+                    lockedCountries.forEach { code ->
+                        val rings = CountryShapes.rings(code)
+                        if (rings.isNotEmpty()) {
+                            val path = Path()
+                            rings.forEach { ring ->
+                                ring.firstOrNull()?.let { p0 -> path.moveTo(p0.x * w, p0.y * h) }
+                                for (i in 1 until ring.size) path.lineTo(ring[i].x * w, ring[i].y * h)
+                                path.close()
+                            }
+                            drawPath(path, Vga.LightGray.copy(alpha = 0.55f))
+                            drawPath(path, Vga.White.copy(alpha = 0.55f), style = Stroke(width = h * 0.006f))
+                        }
+                    }
+                    val r = h * 0.03f
+                    lockedDotPlaces.forEach { place ->
+                        WorldMap.of(place)?.let { pos ->
+                            drawRect(Vga.LightGray.copy(alpha = 0.75f),
+                                Offset(pos.x * w - r * 0.55f, pos.y * h - r * 0.55f),
+                                Size(r * 1.1f, r * 1.1f))
+                        }
+                    }
                     // filled silhouettes for visited countries that have a polygon
                     visitedCountries.forEach { code ->
                         val rings = CountryShapes.rings(code)
@@ -761,7 +832,6 @@ private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
                         }
                     }
                     // micro-states / Antarctica: stamp the visited place's dot instead
-                    val r = h * 0.03f
                     visitedPlaces.forEach { place ->
                         val code = placeCountry[place] ?: return@forEach
                         if (CountryShapes.rings(code).isEmpty()) {
@@ -774,16 +844,15 @@ private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
                         }
                     }
                 }
-                if (!paid) {
-                    Box(Modifier.matchParentSize().background(Vga.Black.copy(alpha = 0.48f)),
-                        contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("🔒", style = v.text(18, color = Vga.Yellow))
-                            Text(Strings.ui("More passport pages unlock with the World Campaign"),
-                                style = v.text(6.5f, color = Vga.White, bold = true),
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth(0.72f))
-                        }
+                if (lockedCountries.isNotEmpty()) {
+                    Box(Modifier.align(Alignment.TopCenter).padding(top = v.w(3))
+                        .background(Vga.Black.copy(alpha = 0.84f)).border(BorderStroke(v.w(0.6f), Vga.LightGray))
+                        .padding(horizontal = v.w(4), vertical = v.w(1.5f))) {
+                        Text(
+                            if (paid) Strings.ui("🔒 Future campaign waves")
+                            else Strings.ui("🔒 Unlock World Campaign"),
+                            style = v.text(6.5f, color = if (paid) Vga.LightCyan else Vga.Yellow, bold = true),
+                        )
                     }
                 }
             }
@@ -906,7 +975,7 @@ private fun CasePlannerWindow(v: Virtual, vm: ClaraViewModel) {
                         Text(Strings.place(city), style = v.text(7.5f, color = Vga.White, bold = true))
                         Column(horizontalAlignment = Alignment.End) {
                             Text(Strings.ui("{0}h flight", hours), style = v.text(7, color = Vga.Yellow))
-                            Text(vm.clockLabel(hours), style = v.text(6, color = Vga.LightCyan))
+                            Text(vm.arrivalClockLabel(hours), style = v.text(6, color = Vga.LightCyan))
                         }
                     }
                 }
