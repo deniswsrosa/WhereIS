@@ -1441,6 +1441,11 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     // 0 typing report · 1 typing quiz · 2 quiz input · 3 typing verdict/ready · 4 Yes/No
     var stage by remember { mutableStateOf(0) }
     var input by remember { mutableStateOf("") }
+    // The original gives three tries at the promotion quiz before the attempt fails outright —
+    // it doesn't re-ask forever. A failed attempt doesn't cost the rank the player already
+    // qualifies for; casesToNextPromotion() naturally re-offers the quiz once they solve their
+    // way to the next threshold (see ClaraViewModel.resolvePromotion(false)).
+    var quizTries by remember { mutableStateOf(0) }
     val quiz = remember { GameData.promotionQuiz.random() }
     val focus = remember { FocusRequester() }
     val done = stage == 4
@@ -1520,10 +1525,24 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
                 typeAll(listOf(Strings.ui("Ready for your next case, {0}?", s.detectiveName)))
                 stage = 4
             } else {
-                // DOS re-asks the same question until it's answered correctly
-                // (dos_quiz_incorrect_try_again.png) — the promotion stays attainable
-                typeAll(listOf(Strings.ui("That is incorrect."), Strings.ui("Please try again."), Strings.quizQuestion(quiz)))
-                stage = 2
+                quizTries++
+                if (quizTries < 3) {
+                    // DOS re-asks the same question on the first two misses
+                    // (dos_quiz_incorrect_try_again.png) — the promotion stays attainable
+                    typeAll(listOf(Strings.ui("That is incorrect."), Strings.ui("Please try again."), Strings.quizQuestion(quiz)))
+                    stage = 2
+                } else {
+                    // Three misses and the attempt fails outright, same as the original — no
+                    // rank change, and the quiz comes back only once a later case reaches the
+                    // next promotion threshold.
+                    vm.resolvePromotion(false)
+                    typeAll(listOf(
+                        Strings.ui("That is incorrect."),
+                        Strings.ui("Unfortunately, you are not ready for your promotion yet."),
+                    ))
+                    typeAll(listOf(Strings.ui("Ready for your next case, {0}?", s.detectiveName)))
+                    stage = 4
+                }
             }
         }
         if (stage == 2) {

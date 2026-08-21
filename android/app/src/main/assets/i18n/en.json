@@ -1,3 +1,6 @@
 {
-  "menu.language.title": "LANGUAGE"
+ "menu.language.title": "LANGUAGE",
+ "ui:Unfortunately, you are not ready for your promotion yet.": "Unfortunately, you are not ready for your promotion yet.",
+ "ui:We've heard the suspect is flying to {0}, {1}.": "We've heard the suspect is flying to {0}, {1}.",
+ "ui:We've heard the suspect is flying to {0}.": "We've heard the suspect is flying to {0}."
 }

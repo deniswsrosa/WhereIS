@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.acme.clara.data.CityInfo
 import com.acme.clara.data.CityMeta
+import com.acme.clara.data.CountryShapes
 import com.acme.clara.data.Expansion
 import com.acme.clara.data.Expansion2
 import com.acme.clara.data.GameData
@@ -386,24 +387,41 @@ class ClaraViewModel : ViewModel() {
         autosave()
     }
 
-    /** A tiered hint: a computer nudge, a directional lead, or an arrest prompt. The directional
-     *  lead names the region the trail points to (never the exact city — the player still has to
-     *  find it), styled as a tip radioed in from the Bureau. */
+    /** A tiered hint: a directional lead, a computer nudge, or an arrest prompt. Travel direction
+     *  comes first whenever there's still a city left to fly to — "where do I go next" is the
+     *  question a hint is asked for on almost every case, and it holds regardless of whether a
+     *  warrant has been run yet (the route is fixed at case start; running the computer is a
+     *  separate, later step that only matters once you've reached the hideout). Normally that
+     *  lead only names the region (never the exact city — the player still has to find it), the
+     *  same level of detail a witness's trail clue gives; but if a witness in THIS city already
+     *  gave that trail clue (a DESTINATION-kind venue among the ones visited), a region-only hint
+     *  would just repeat what's already known, so this one escalates and names the actual next
+     *  city and country outright. Styled as a tip radioed in from the Bureau either way. */
     private fun hintText(): String {
         val next = s.route.getOrNull(s.progress + 1)
         val i18n = com.acme.clara.i18n.Strings
+        val gotTrailClueHere = s.visited.any { s.venues.getOrNull(it)?.kind == ClueKind.DESTINATION }
         return when {
             s.atHideout && s.warrantFor?.name == s.culprit?.name ->
                 i18n.ui("You've cornered the thief — search the venues here to make the arrest.")
             s.atHideout ->
                 i18n.ui("This is the hideout. Make sure your warrant names the right suspect before closing in.")
+            next != null && gotTrailClueHere -> {
+                val country = CountryShapes.placeCountry[next]?.let { code ->
+                    i18n.opt("country.$code") ?: CountryShapes.countryName[code] ?: code
+                }
+                if (country != null)
+                    i18n.ui("We've heard the suspect is flying to {0}, {1}.", i18n.place(next), country)
+                else
+                    i18n.ui("We've heard the suspect is flying to {0}.", i18n.place(next))
+            }
+            next != null ->
+                i18n.ui("The Bureau received word — the suspect is flying toward {0}.",
+                    CityMeta.of(next).region.let { i18n.label("region.name", it) })
             s.warrantFor == null && matches().size == 1 && anyFilterSet() ->
                 i18n.ui("You have enough of the description — run the crime computer to issue the warrant.")
             s.warrantFor == null ->
                 i18n.ui("Question more witnesses; the crime computer still lists several suspects.")
-            next != null ->
-                i18n.ui("The Bureau received word — the suspect is flying toward {0}.",
-                    CityMeta.of(next).region.let { i18n.label("region.name", it) })
             else ->
                 i18n.ui("Follow your last lead to the thief's hideout.")
         }

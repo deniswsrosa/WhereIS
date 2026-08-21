@@ -2,9 +2,11 @@ package com.acme.clara
 
 import com.acme.clara.billing.BillingManager
 import com.acme.clara.game.ClaraViewModel
+import com.acme.clara.game.ClueKind
 import com.acme.clara.game.Overlay
 import com.acme.clara.save.InMemorySaveRepository
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -55,6 +57,27 @@ class BureauHintTest {
         val lines = (vm.s.overlay as Overlay.Info).lines
         assertTrue("told there's nothing left, not repeated or vagued out",
             lines.any { it.contains("no additional tips") })
+    }
+
+    @Test fun hintNamesOnlyTheRegionBeforeAnyWitnessHasGivenTheTrailClueHere() {
+        val vm = ClaraViewModel().apply { signOn("Ada") }
+        val next = vm.s.route[1]
+        vm.requestHint()
+        val hint = (vm.s.overlay as Overlay.Info).lines[0]
+        assertFalse("shouldn't name the exact next city before a witness has said so",
+            hint.contains(next))
+    }
+
+    @Test fun hintEscalatesToTheNamedCityOnceAWitnessAlreadyGaveTheTrailClueHere() {
+        val vm = ClaraViewModel().apply { signOn("Ada") }
+        val next = vm.s.route[1]
+        val trailVenue = vm.s.venues.indexOfFirst { it.kind == ClueKind.DESTINATION }
+        vm.openVenue(trailVenue)   // a witness here already gave the region-level trail clue
+
+        vm.requestHint()
+        val hint = (vm.s.overlay as Overlay.Info).lines[0]
+        assertTrue("a region-only hint would just repeat the witness — name the city instead",
+            hint.contains(next))
     }
 
     @Test fun onceSalesGoLive_aBankedWelcomeBackHintBypassesThePaidGate() {
