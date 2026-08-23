@@ -7,8 +7,10 @@ import com.acme.clara.data.Suspect
 import com.acme.clara.game.ClaraViewModel
 import com.acme.clara.game.Phase
 import com.acme.clara.save.InMemorySaveRepository
+import com.acme.clara.ui.screens.resultStoryAsset
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -43,6 +45,31 @@ class MastermindsTest {
         assertTrue(Masterminds.arcs.last().final)
         assertEquals(10, Masterminds.arcs.map { it.suspectName }.toSet().size)
         assertTrue(Masterminds.arcs.all { arc -> GameData.suspects.any { it.name == arc.suspectName } })
+    }
+
+    @Test fun fiveFamilyStampsRequireBothBossAndSuccessor() {
+        assertEquals(5, Masterminds.familyOrder.size)
+        assertEquals(Masterminds.familyOrder.toSet(), Masterminds.familyStampAssets.keys)
+        assertEquals(5, Masterminds.familyStampAssets.values.toSet().size)
+        Masterminds.familyOrder.forEach { family ->
+            val members = Masterminds.arcs.filter { it.family == family }
+            assertEquals("$family has one Boss and one Successor", 2, members.size)
+            assertFalse("Boss alone must not earn $family's stamp",
+                family in Masterminds.completedFamilies(setOf(members.first().suspectName)))
+            assertTrue("both captures earn $family's stamp",
+                family in Masterminds.completedFamilies(members.mapTo(hashSetOf()) { it.suspectName }))
+        }
+    }
+
+    @Test fun resultStoryArtOnlyAppearsOnWinningAuthoredBeats() {
+        val successor = Masterminds.arcForWave(5)!!
+        val finale = Masterminds.arcForWave(9)!!
+        assertEquals("story_clara_escape", resultStoryAsset(won = true, case14Escape = true, arc = null))
+        assertEquals("story_clara_escape", resultStoryAsset(won = true, case14Escape = false, arc = successor))
+        assertEquals("story_clara_capture_final", resultStoryAsset(won = true, case14Escape = false, arc = finale))
+        assertNull("a later loss must not replay the last completed story beat",
+            resultStoryAsset(won = false, case14Escape = false, arc = successor))
+        assertNull(resultStoryAsset(won = true, case14Escape = false, arc = Masterminds.arcForWave(0)))
     }
 
     @Test fun purchaseOpensWaveOneImmediatelyAtAnyFreeRank() {

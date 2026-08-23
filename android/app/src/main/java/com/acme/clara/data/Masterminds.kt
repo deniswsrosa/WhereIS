@@ -34,6 +34,24 @@ object Masterminds {
         MastermindArc(9, 14, "Oceania & the Frontiers", "Successor", "Natasha Zhuravleva", claraFlavor = true, final = true),
     )
 
+    /** The five regional families in their campaign/Passport display order. */
+    val familyOrder: List<String> = arcs.take(5).map { it.family }
+
+    /** Transparent route seals shown in the Passport once both members of a family are caught. */
+    val familyStampAssets: Map<String, String> = linkedMapOf(
+        "Europe" to "story_stamp_europe",
+        "the Americas" to "story_stamp_americas",
+        "Asia" to "story_stamp_asia",
+        "Africa" to "story_stamp_africa",
+        "Oceania & the Frontiers" to "story_stamp_oceania_frontiers",
+    )
+
+    /** A family is dismantled only after its Boss and Successor are both in the permanent gallery. */
+    fun completedFamilies(capturedVillains: Set<String>): Set<String> =
+        familyOrder.filterTo(linkedSetOf()) { family ->
+            arcs.filter { it.family == family }.all { it.suspectName in capturedVillains }
+        }
+
     fun arcForWave(waveIndex: Int): MastermindArc? = arcs.getOrNull(waveIndex)
 
     /** Returns an arc only when [campaignCasesSolved] lands exactly on a wave finale. */

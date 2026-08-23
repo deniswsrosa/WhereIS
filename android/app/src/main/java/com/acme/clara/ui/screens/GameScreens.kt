@@ -39,6 +39,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.acme.clara.data.CityMeta
 import com.acme.clara.data.GameData
+import com.acme.clara.data.MastermindArc
 import com.acme.clara.data.Progression
 import com.acme.clara.data.WorldMap
 import com.acme.clara.game.ClaraViewModel
@@ -307,7 +308,7 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
     // Yes / No buttons (yellow, red text) for "Are you new here?" — DOS geometry:
     // Yes At(152,176,76,11), No At(234,176,76,11) (dos_signon_yesno ref, ÷2)
     if (stage == ST_YESNO) {
-        v.At(152, 176, 76, 12) {
+        v.At(152, 174, 76, 16) {
             // the paper echoes the pressed answer's initial, like the DOS "Y"/"N" keypress
             YellowButton(v, Strings.ui("Yes")) {
                 printed.add(Strings.ui("Yes").take(1).uppercase())
@@ -315,7 +316,7 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
                 stage = ST_IDENT
             }
         }
-        v.At(234, 176, 76, 12) {
+        v.At(234, 174, 76, 16) {
             // "No" re-asks for the name, like the original
             YellowButton(v, Strings.ui("No")) {
                 printed.add(Strings.ui("No").take(1).uppercase()); printed.add("")
@@ -1070,7 +1071,11 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
         // flight time); a second tap on the same city commits the flight — so a mis-tap
         // never burns hours by accident.
         var selected by remember(s.currentCity) { mutableStateOf(-1) }
-        val fullH = 18f + options.size * 10f + 6f + 9f
+        // Each destination used to occupy only 10 virtual pixels (~21dp on a
+        // typical landscape phone). Allocate a comfortably tappable row without
+        // changing the type or two-tap confirmation behavior.
+        val destinationRowH = 22f
+        val fullH = 18f + options.size * destinationRowH + 6f + 9f
         v.At(4, 13, 141, 24f + (fullH - 24f) * grow) {
             Column(Modifier.fillMaxSize().background(Vga.Black)
                 .border(BorderStroke(v.w(1), Vga.White)).clickable(
@@ -1083,9 +1088,10 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                     Column(Modifier.fillMaxWidth()) {
                         options.forEachIndexed { i, city ->
                             val isSel = i == selected
-                            Box(Modifier.fillMaxWidth().height(v.w(10))
+                            Box(Modifier.fillMaxWidth().height(v.w(destinationRowH))
                                 .then(if (isSel) Modifier.background(Vga.White) else Modifier)
-                                .clickable { if (selected == i) vm.travelTo(city) else selected = i },
+                                .clickable { if (selected == i) vm.travelTo(city) else selected = i }
+                                .labelled(Strings.place(city)),
                                 contentAlignment = Alignment.Center) {
                                 Text(Strings.place(city), style = v.text(8.5f,
                                     color = if (isSel) Vga.Black else Vga.White, bold = true))
@@ -1438,6 +1444,16 @@ private fun foldDiacritics(s: String): String =
     java.text.Normalizer.normalize(s.lowercase(), java.text.Normalizer.Form.NFD)
         .replace(Regex("\\p{Mn}+"), "")
 
+/** Select story art only for a winning authored beat. Keeping the win guard here matters: after
+ *  a finale, [completedCampaignArc] remains that arc until the next case is solved, so a later
+ *  ordinary loss must not replay Clara's prior escape/capture illustration. */
+internal fun resultStoryAsset(won: Boolean, case14Escape: Boolean, arc: MastermindArc?): String? = when {
+    !won -> null
+    arc?.final == true -> "story_clara_capture_final"
+    case14Escape || arc?.claraFlavor == true -> "story_clara_escape"
+    else -> null
+}
+
 @Composable
 fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f) { v ->
     val s = vm.s
@@ -1450,7 +1466,8 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     val case14Escape = s.won && s.casesSolved == com.acme.clara.game.GameState.CAREER_CASES &&
         s.culprit?.name == "Clara San Diego"
     val completedArc = vm.completedCampaignArc()
-    val claraEscaped = case14Escape || (s.won && completedArc?.claraFlavor == true && !completedArc.final)
+    val storyAsset = resultStoryAsset(s.won, case14Escape, completedArc)
+    val claraEscaped = storyAsset == "story_clara_escape"
     val printed = remember { mutableStateListOf<String>() }
     var typing by remember { mutableStateOf("") }
     // 0 typing report · 1 typing quiz · 2 quiz input · 3 typing verdict/ready · 4 Yes/No
@@ -1627,40 +1644,29 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
             }
         }
     }
-    // right: the JAIL (win) or black panel (loss / Clara's Case-14 escape — nobody's behind
-    // bars there, so the jail art would contradict "she got away"; claraEscaped above).
+    // right: approved story art for Clara's authored escape/final capture; the ordinary DOS jail
+    // remains unchanged for every other win. Both illustrations contain no baked text, so the
+    // localized outcome label stays live Compose UI along the bottom.
     v.At(150, 26, 168, 146) {
         Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White))) {
-            if (s.won && !claraEscaped) {
+            if (storyAsset != null) {
+                PixelImage(storyAsset, Modifier.fillMaxSize(), ContentScale.Fit,
+                    alignment = Alignment.TopCenter)
+                Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                    .background(Vga.Black.copy(alpha = 0.84f)).padding(v.w(3)),
+                    contentAlignment = Alignment.Center) {
+                    Text(
+                        Strings.ui(if (claraEscaped) "CLARA ESCAPED" else "CLARA CAPTURED"),
+                        style = v.text(8, color = Vga.Yellow, bold = true),
+                    )
+                }
+            } else if (s.won) {
                 PixelImage("jail_cell", Modifier.fillMaxSize())
                 // the suspect's eyes blink behind the bars on a slow loop (dos_jail_eyes_a/b)
                 var blink by remember { mutableStateOf(false) }
                 if (!reduce) LaunchedEffect(Unit) { while (true) { delay(1000); blink = !blink } }
                 if (blink) v.At(63, 71, 41, 29) {
                     PixelImage("jail_eyes_alt", Modifier.fillMaxSize())
-                }
-                if (s.careerOver) {
-                    Column(Modifier.align(Alignment.Center).fillMaxWidth(0.82f),
-                        horizontalAlignment = Alignment.CenterHorizontally) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(v.w(5))) {
-                            listOf(s.culprit?.name, "Clara San Diego").filterNotNull().forEach { name ->
-                                Box(Modifier.size(v.w(46)).background(Vga.DarkGray)
-                                    .border(BorderStroke(v.w(1), Vga.Yellow))) {
-                                    PixelImage("suspect_${snake(name)}", Modifier.fillMaxSize())
-                                }
-                            }
-                        }
-                        Spacer(Modifier.height(v.w(4)))
-                        Text(Strings.ui("CLARA CAPTURED"),
-                            style = v.text(8, color = Vga.Yellow, bold = true),
-                            modifier = Modifier.background(Vga.Black.copy(alpha = 0.86f)).padding(v.w(2)))
-                    }
-                }
-            } else if (claraEscaped) {
-                PixelImage("suspect_clara_san_diego", Modifier.fillMaxSize())
-                Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Vga.Black.copy(alpha = 0.82f))
-                    .padding(v.w(3)), contentAlignment = Alignment.Center) {
-                    Text(Strings.ui("CLARA ESCAPED"), style = v.text(8, color = Vga.Yellow, bold = true))
                 }
             }
         }
@@ -1669,7 +1675,7 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     // the "next case?" Yes/No pair, which read as part of that decision — up here, clearly its own
     // independent, always-available action instead.
     if (s.won && !s.careerOver) {
-        v.At(266, 14, 50, 10) {
+        v.At(266, 13, 50, 12) {
             YellowButton(v, Strings.ui("SHARE")) { com.acme.clara.ui.shareResult(shareCtx, vm) }
         }
     }
@@ -1679,7 +1685,7 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     // equals CAREER_CASES on this exact screen, win or lose, and this only fires on a win).
     if (s.won && s.casesSolved == com.acme.clara.game.GameState.CAREER_CASES &&
         !s.expansionUnlocked && com.acme.clara.billing.BillingManager.SALES_ENABLED) {
-        v.At(150, 14, 112, 10) {
+        v.At(150, 13, 112, 12) {
             YellowButton(v, Strings.ui("Unlock World Campaign")) {
                 vm.openOverlay(Overlay.PurchaseOffer("Case 14 Clara escape"))
             }
@@ -1702,8 +1708,8 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
                         Text(Strings.ui("button to continue."), style = v.text(7.5f, color = Vga.Black, bold = true))
                     }
                 done -> Row(horizontalArrangement = Arrangement.spacedBy(v.w(8))) {
-                    Box(Modifier.size(v.w(76), v.w(12))) { YellowButton(v, Strings.ui("Yes")) { vm.toBriefingForNext() } }
-                    Box(Modifier.size(v.w(76), v.w(12))) { YellowButton(v, Strings.ui("No")) { vm.menuQuitToTitle() } }
+                    Box(Modifier.size(v.w(76), v.w(16))) { YellowButton(v, Strings.ui("Yes")) { vm.toBriefingForNext() } }
+                    Box(Modifier.size(v.w(76), v.w(16))) { YellowButton(v, Strings.ui("No")) { vm.menuQuitToTitle() } }
                 }
             }
         }

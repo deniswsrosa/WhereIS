@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Where is Clara? — Paid story asset review</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --black: #050609;
+      --panel: #101319;
+      --panel-2: #181c23;
+      --white: #f4f3ea;
+      --gray: #a7abb2;
+      --yellow: #fff12f;
+      --cyan: #18e9ef;
+      --green: #04bb13;
+      --red: #d81919;
+      --line: #414852;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--white);
+      background: radial-gradient(circle at 50% -15%, #29313b 0, #10141a 42%, #07090c 78%);
+      font-family: "Courier New", Courier, monospace;
+    }
+
+    button { font: inherit; }
+    img { display: block; }
+
+    .page {
+      width: min(1480px, 100%);
+      margin: 0 auto;
+      padding: clamp(22px, 4vw, 58px);
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      max-width: 900px;
+      margin-bottom: 13px;
+      color: var(--yellow);
+      font-size: clamp(28px, 4.2vw, 58px);
+      line-height: .98;
+      text-transform: uppercase;
+      text-shadow: 4px 4px 0 #000;
+    }
+
+    .lead {
+      max-width: 900px;
+      color: #d6d8d6;
+      font-size: clamp(14px, 1.4vw, 18px);
+      line-height: 1.55;
+    }
+
+    .audit {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1px;
+      margin: 28px 0 46px;
+      border: 1px solid var(--line);
+      background: var(--line);
+    }
+
+    .audit div {
+      min-height: 88px;
+      padding: 15px;
+      background: var(--panel);
+    }
+
+    .audit strong {
+      display: block;
+      color: var(--cyan);
+      font-size: clamp(20px, 2vw, 31px);
+    }
+
+    .audit span {
+      color: var(--gray);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .audit .new strong { color: var(--yellow); }
+
+    section { margin-top: 50px; }
+
+    h2 {
+      margin-bottom: 8px;
+      color: var(--yellow);
+      font-size: clamp(22px, 2.8vw, 36px);
+      text-transform: uppercase;
+    }
+
+    .section-copy {
+      max-width: 940px;
+      color: var(--gray);
+      line-height: 1.5;
+    }
+
+    .candidate-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+      margin-top: 20px;
+    }
+
+    .candidate {
+      position: relative;
+      overflow: hidden;
+      border: 2px solid var(--line);
+      background: var(--panel);
+      box-shadow: 7px 7px 0 #000;
+    }
+
+    .candidate.recommended { border-color: var(--yellow); }
+
+    .candidate-image {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      image-rendering: pixelated;
+      border-bottom: 2px solid var(--line);
+      background: #000;
+    }
+
+    .candidate-body { padding: 16px; }
+
+    .candidate h3 {
+      margin-bottom: 7px;
+      color: var(--white);
+      font-size: 16px;
+      text-transform: uppercase;
+    }
+
+    .candidate p {
+      min-height: 58px;
+      margin-bottom: 14px;
+      color: var(--gray);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 2;
+      padding: 5px 8px;
+      color: #090909;
+      background: var(--yellow);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      box-shadow: 3px 3px 0 #000;
+    }
+
+    .choose {
+      width: 100%;
+      min-height: 42px;
+      border: 2px solid var(--white);
+      color: var(--white);
+      background: #272d35;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    .choose[aria-pressed="true"] {
+      color: #050609;
+      background: var(--cyan);
+      border-color: var(--cyan);
+    }
+
+    .stamp-stage {
+      position: relative;
+      min-height: 340px;
+      margin-top: 20px;
+      overflow: hidden;
+      border: 3px solid var(--white);
+      background:
+        linear-gradient(rgba(3, 9, 16, .58), rgba(3, 9, 16, .76)),
+        url("../../android/app/src/main/assets/sprites/screens/world_map_clean.png") center / cover no-repeat;
+      box-shadow: 8px 8px 0 #000;
+      image-rendering: pixelated;
+    }
+
+    .stamp-grid {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      place-items: center;
+      gap: 12px;
+      padding: 30px;
+    }
+
+    .stamp-card {
+      display: grid;
+      justify-items: center;
+      gap: 9px;
+      width: 100%;
+      color: var(--white);
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      text-transform: uppercase;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    .stamp-card img {
+      width: min(150px, 100%);
+      aspect-ratio: 1;
+      object-fit: contain;
+      filter: drop-shadow(5px 5px 0 rgba(0, 0, 0, .62));
+      image-rendering: pixelated;
+    }
+
+    .native-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 15px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .native-row span {
+      color: var(--gray);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .native-row img {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px;
+      margin-top: 22px;
+    }
+
+    .preview-card h3 {
+      color: var(--cyan);
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+
+    .game-screen {
+      position: relative;
+      aspect-ratio: 16 / 10;
+      overflow: hidden;
+      border: 3px solid var(--white);
+      background: #000;
+      box-shadow: 9px 9px 0 #000;
+    }
+
+    .game-top {
+      position: absolute;
+      inset: 0 0 auto;
+      height: 7%;
+      padding: 1.2% 2%;
+      color: #090909;
+      background: var(--white);
+      font-size: clamp(7px, .7vw, 11px);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .report {
+      position: absolute;
+      left: 2%;
+      top: 11%;
+      bottom: 6%;
+      width: 48%;
+      padding: 4%;
+      color: #111;
+      background: #f1dcc2;
+      border: 2px solid #111;
+      font-size: clamp(8px, .9vw, 13px);
+      line-height: 1.35;
+    }
+
+    .report strong { color: #006c74; }
+
+    .story-art {
+      position: absolute;
+      right: 2%;
+      top: 11%;
+      width: 46%;
+      height: 72%;
+      object-fit: cover;
+      object-position: center;
+      border: 2px solid var(--white);
+      image-rendering: pixelated;
+    }
+
+    .screen-action {
+      position: absolute;
+      right: 2%;
+      bottom: 6%;
+      width: 46%;
+      min-height: 9%;
+      display: grid;
+      place-items: center;
+      color: #090909;
+      background: var(--yellow);
+      font-size: clamp(7px, .75vw, 11px);
+      font-weight: 700;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .use-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      margin-top: 22px;
+      border: 1px solid var(--line);
+      background: var(--line);
+    }
+
+    .use-grid article {
+      padding: 20px;
+      background: var(--panel);
+    }
+
+    .use-grid h3 {
+      margin-bottom: 8px;
+      color: var(--cyan);
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+
+    .use-grid p {
+      margin: 0;
+      color: var(--gray);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .footer {
+      margin-top: 48px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--gray);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .footer strong { color: var(--yellow); }
+
+    @media (max-width: 900px) {
+      .audit { grid-template-columns: repeat(2, 1fr); }
+      .candidate-grid, .preview-grid, .use-grid { grid-template-columns: 1fr; }
+      .stamp-grid { grid-template-columns: repeat(3, 1fr); position: relative; }
+      .stamp-stage { min-height: 620px; }
+      .candidate p { min-height: 0; }
+    }
+
+    @media (max-width: 560px) {
+      .audit { grid-template-columns: 1fr; }
+      .stamp-grid { grid-template-columns: repeat(2, 1fr); padding: 20px; }
+      .stamp-stage { min-height: 760px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <p class="eyebrow">Asset gate · review before gameplay wiring</p>
+    <h1>Paid story art — complete candidate set</h1>
+    <p class="lead">The core game art was already complete. The real gap was the paid-campaign story layer: one reusable escape scene, one unique final-capture scene, and five family route stamps. The scenes have three options each because this is a small, high-impact set.</p>
+
+    <div class="audit" aria-label="Asset coverage audit">
+      <div><strong>231 / 231</strong><span>destination postcards already covered</span></div>
+      <div><strong>29 / 29</strong><span>venue buildings already covered</span></div>
+      <div><strong>53 / 53</strong><span>witness roles already covered</span></div>
+      <div><strong>19 / 19</strong><span>suspect portraits already covered</span></div>
+      <div class="new"><strong>7 new</strong><span>paid-story visual assets in this review</span></div>
+    </div>
+
+    <section>
+      <p class="eyebrow">Reusable scene · choose one</p>
+      <h2>Clara escaped</h2>
+      <p class="section-copy">Used six times: Case 14, then the Wave 6–10 successor finales. The case report and buttons remain live UI; only the illustration is reused.</p>
+      <div class="candidate-grid" data-group="escape">
+        <article class="candidate recommended">
+          <span class="badge">Recommended</span>
+          <a href="assets/paid_story_review/escape_a_runway.png"><img class="candidate-image" src="assets/paid_story_review/escape_a_runway.png" alt="Clara running toward an aircraft at night"></a>
+          <div class="candidate-body">
+            <h3>A · Night runway</h3>
+            <p>Most reusable and geographically neutral. The plane makes international escape immediate; the dark field leaves the UI visually calm.</p>
+            <button class="choose" type="button" data-target="escapePreview" data-src="assets/paid_story_review/escape_a_runway.png" aria-pressed="true">Use A in preview</button>
+          </div>
+        </article>
+        <article class="candidate">
+          <a href="assets/paid_story_review/escape_b_night_train.png"><img class="candidate-image" src="assets/paid_story_review/escape_b_night_train.png" alt="Clara boarding a night train"></a>
+          <div class="candidate-body">
+            <h3>B · Night train</h3>
+            <p>Best facial continuity with the dossier portrait. More mysterious than kinetic, and slightly more tied to a European setting.</p>
+            <button class="choose" type="button" data-target="escapePreview" data-src="assets/paid_story_review/escape_b_night_train.png" aria-pressed="false">Use B in preview</button>
+          </div>
+        </article>
+        <article class="candidate">
+          <a href="assets/paid_story_review/escape_c_speedboat.png"><img class="candidate-image" src="assets/paid_story_review/escape_c_speedboat.png" alt="Clara escaping by speedboat"></a>
+          <div class="candidate-body">
+            <h3>C · Speedboat</h3>
+            <p>Strongest “one second too late” action beat. The clearest chase, though the harbor makes it less universal than the runway.</p>
+            <button class="choose" type="button" data-target="escapePreview" data-src="assets/paid_story_review/escape_c_speedboat.png" aria-pressed="false">Use C in preview</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <p class="eyebrow">Wave 10 only · choose one</p>
+      <h2>Clara captured</h2>
+      <p class="section-copy">This appears once, after all ten masterminds fall. It should feel more conclusive than the ordinary jail result and visibly pay off the global campaign.</p>
+      <div class="candidate-grid" data-group="capture">
+        <article class="candidate">
+          <a href="assets/paid_story_review/capture_a_jail.png"><img class="candidate-image" src="assets/paid_story_review/capture_a_jail.png" alt="Clara handcuffed behind bars with five closed case files"></a>
+          <div class="candidate-body">
+            <h3>A · Five files closed</h3>
+            <p>Clearest literal capture, with the five family files as payoff. It overlaps most with the game’s ordinary jail-screen language.</p>
+            <button class="choose" type="button" data-target="capturePreview" data-src="assets/paid_story_review/capture_a_jail.png" aria-pressed="false">Use A in preview</button>
+          </div>
+        </article>
+        <article class="candidate recommended">
+          <span class="badge">Recommended</span>
+          <a href="assets/paid_story_review/capture_b_evidence_room.png"><img class="candidate-image" src="assets/paid_story_review/capture_b_evidence_room.png" alt="Clara captured in front of a world evidence map"></a>
+          <div class="candidate-body">
+            <h3>B · Network dismantled</h3>
+            <p>Best campaign payoff: Clara, two agents, and every route converging on the evidence map. Distinct from the ordinary result screen.</p>
+            <button class="choose" type="button" data-target="capturePreview" data-src="assets/paid_story_review/capture_b_evidence_room.png" aria-pressed="true">Use B in preview</button>
+          </div>
+        </article>
+        <article class="candidate">
+          <a href="assets/paid_story_review/capture_c_airport.png"><img class="candidate-image" src="assets/paid_story_review/capture_c_airport.png" alt="Clara arrested beside an aircraft at dawn"></a>
+          <div class="candidate-body">
+            <h3>C · Last flight stopped</h3>
+            <p>Strong visual rhyme with escape option A and the five stamps. More cinematic, but less explicitly “the whole network is finished.”</p>
+            <button class="choose" type="button" data-target="capturePreview" data-src="assets/paid_story_review/capture_c_airport.png" aria-pressed="false">Use C in preview</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <p class="eyebrow">Complete set · one visual system</p>
+      <h2>Five family route stamps</h2>
+      <p class="section-copy">Each seal marks one fully dismantled family in the campaign Passport/route dossier. Before completion the same asset can render dim and monochrome; after the successor capture it turns full color, so no second bitmap state is needed.</p>
+      <div class="stamp-stage">
+        <div class="stamp-grid">
+          <div class="stamp-card"><img src="assets/paid_story_review/stamp_europe.png" alt="Europe family route stamp"><span>Europe</span></div>
+          <div class="stamp-card"><img src="assets/paid_story_review/stamp_americas.png" alt="Americas family route stamp"><span>Americas</span></div>
+          <div class="stamp-card"><img src="assets/paid_story_review/stamp_asia.png" alt="Asia family route stamp"><span>Asia</span></div>
+          <div class="stamp-card"><img src="assets/paid_story_review/stamp_africa.png" alt="Africa family route stamp"><span>Africa</span></div>
+          <div class="stamp-card"><img src="assets/paid_story_review/stamp_oceania_frontiers.png" alt="Oceania and Frontiers family route stamp"><span>Oceania + Frontiers</span></div>
+        </div>
+      </div>
+      <div class="native-row" aria-label="Stamps at their intended UI size">
+        <span>48 px check</span>
+        <img src="assets/paid_story_review/stamp_europe.png" alt="">
+        <img src="assets/paid_story_review/stamp_americas.png" alt="">
+        <img src="assets/paid_story_review/stamp_asia.png" alt="">
+        <img src="assets/paid_story_review/stamp_africa.png" alt="">
+        <img src="assets/paid_story_review/stamp_oceania_frontiers.png" alt="">
+      </div>
+    </section>
+
+    <section>
+      <p class="eyebrow">320 × 200 layout simulation</p>
+      <h2>How the selected art sits in-game</h2>
+      <p class="section-copy">Use the buttons above to swap candidates here. Text, counters, localization, price, and actions remain Compose UI rather than pixels baked into an image.</p>
+      <div class="preview-grid">
+        <article class="preview-card">
+          <h3>Reusable escape result</h3>
+          <div class="game-screen">
+            <div class="game-top">Game&nbsp;&nbsp; Options&nbsp;&nbsp; Case&nbsp;&nbsp; Detective</div>
+            <div class="report"><strong>CLARA ENCOUNTER · 1 OF 6</strong><br><br>The stolen Master Atlas is safe. Clara escaped.<br><br>Left behind: proof of a five-family network.<br><br><strong>NEXT: WAVE 1</strong></div>
+            <img id="escapePreview" class="story-art" src="assets/paid_story_review/escape_a_runway.png" alt="Selected Clara escape art">
+            <div class="screen-action">Continue investigation</div>
+          </div>
+        </article>
+        <article class="preview-card">
+          <h3>Unique final result</h3>
+          <div class="game-screen">
+            <div class="game-top">Game&nbsp;&nbsp; Options&nbsp;&nbsp; Case&nbsp;&nbsp; Detective</div>
+            <div class="report"><strong>CASE FILE · CLOSED</strong><br><br>All five families dismantled. Clara is under arrest.<br><br>Masterminds: 10 of 10<br>Encounters: 6 of 6<br><br><strong>CHIEF DIRECTOR</strong></div>
+            <img id="capturePreview" class="story-art" src="assets/paid_story_review/capture_b_evidence_room.png" alt="Selected Clara capture art">
+            <div class="screen-action">View final case file</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <p class="eyebrow">Implementation intent</p>
+      <h2>What each asset does</h2>
+      <div class="use-grid">
+        <article><h3>Escape illustration</h3><p>Reusable narrative beat after Case 14 and five late-wave finales. Keeps six reports visually consistent while report copy changes around it.</p></article>
+        <article><h3>Final capture</h3><p>One-time visual reward after Wave 10. It differentiates the campaign ending from an ordinary suspect arrest and pays off the world-network story.</p></article>
+        <article><h3>Route stamps</h3><p>Persistent collection feedback in Passport/campaign progress. The UI controls locked/unlocked treatment; each family needs only this one transparent PNG.</p></article>
+      </div>
+    </section>
+
+    <p class="footer"><strong>Status:</strong> approved and implemented. Escape A, Capture B, and all five route stamps are bundled as production-sized game sprites; the remaining candidates stay here for visual reference. Full generation prompts and provenance are recorded in <code>assets/paid_story_review/generation_manifest.md</code>.</p>
+  </main>
+
+  <script>
+    document.querySelectorAll('.choose').forEach((button) => {
+      button.addEventListener('click', () => {
+        const preview = document.getElementById(button.dataset.target);
+        preview.src = button.dataset.src;
+        const group = button.closest('[data-group]');
+        group.querySelectorAll('.choose').forEach((peer) => peer.setAttribute('aria-pressed', String(peer === button)));
+      });
+    });
+  </script>
+</body>
+</html>

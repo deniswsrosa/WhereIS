@@ -1,6 +1,7 @@
 package com.acme.clara
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
@@ -16,6 +17,7 @@ import com.acme.clara.data.AlmanacFlags
 import com.acme.clara.data.CityMeta
 import com.acme.clara.data.Expansion
 import com.acme.clara.data.Expansion2
+import com.acme.clara.data.Masterminds
 import com.acme.clara.game.ClaraViewModel
 import com.acme.clara.game.Overlay
 import com.acme.clara.ui.OverlayHost
@@ -86,6 +88,27 @@ class OverlaysTest {
             val asset = AlmanacFlags.assetName(name)
             assertNotNull("No flag mapping for $name", asset)
             assertTrue("Missing bundled asset for $name ($asset)", "$asset.png" in bundled)
+        }
+    }
+
+    @Test fun paidStorySpritesAreBundledAtTheirProductionSizes() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val bundled = context.assets.list("sprites/story").orEmpty().toSet()
+        val scenes = setOf("story_clara_escape.png", "story_clara_capture_final.png")
+        val stamps = Masterminds.familyStampAssets.values.mapTo(linkedSetOf()) { "$it.png" }
+        assertTrue("missing paid-story sprites: ${(scenes + stamps) - bundled}",
+            bundled.containsAll(scenes + stamps))
+
+        scenes.forEach { file ->
+            val bitmap = context.assets.open("sprites/story/$file").use(BitmapFactory::decodeStream)
+            assertEquals("$file width", 168, bitmap.width)
+            assertEquals("$file height", 126, bitmap.height)
+        }
+        stamps.forEach { file ->
+            val bitmap = context.assets.open("sprites/story/$file").use(BitmapFactory::decodeStream)
+            assertEquals("$file width", 48, bitmap.width)
+            assertEquals("$file height", 48, bitmap.height)
+            assertTrue("$file keeps transparent corners", bitmap.hasAlpha())
         }
     }
 

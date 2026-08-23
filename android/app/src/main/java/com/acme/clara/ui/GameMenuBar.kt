@@ -17,12 +17,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
 import com.acme.clara.data.CountryShapes
 import com.acme.clara.data.AlmanacFlags
 import com.acme.clara.data.WorldMap
@@ -168,9 +170,14 @@ private fun MenuTitle(v: Virtual, title: String, items: List<MenuItemDef>) {
                 var pressed by remember { mutableStateOf(false) }
                 Box(Modifier.fillMaxWidth()
                     .background(if (pressed) Vga.Black else Vga.White)
+                    // Adjacent popup rows used to clip Compose's automatic 48dp touch
+                    // expansion down to the text's ~28dp line box. Give every menu item
+                    // its own full target while leaving the DOS typography unchanged.
+                    .heightIn(min = 48.dp)
                     .clickable(enabled = def.enabled) { pressed = true; open = false; def.action() }
                     .labelled(def.label.trim())
-                    .padding(horizontal = 14.dp, vertical = 5.dp)) {
+                    .padding(horizontal = 14.dp, vertical = 5.dp),
+                    contentAlignment = Alignment.CenterStart) {
                     // disabled items render gray, like the DOS grayed Save entry
                     Text(def.label, fontFamily = FontFamily.Monospace,
                         color = if (!def.enabled) Vga.LightGray
@@ -266,7 +273,8 @@ private fun ConfirmQuitDialog(v: Virtual, vm: ClaraViewModel) {
 @Composable
 private fun QuitButton(v: Virtual, label: String, onClick: () -> Unit) {
     Box(Modifier.background(Vga.Yellow).border(BorderStroke(v.w(1), Vga.Black))
-        .clickable(onClick = onClick).padding(horizontal = v.w(10), vertical = v.w(2)),
+        .clickable(onClick = onClick).tappable(label)
+        .padding(horizontal = v.w(10), vertical = v.w(2)),
         contentAlignment = Alignment.Center) {
         Text(label, style = v.text(8.5f, color = Vga.Red, bold = true))
     }
@@ -288,7 +296,7 @@ private fun LanguageWindow(v: Virtual, vm: ClaraViewModel) {
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
                 com.acme.clara.i18n.Strings.LANGUAGES.forEach { (code, name) ->
                     val sel = code == com.acme.clara.i18n.Strings.language
-                    Box(Modifier.fillMaxWidth().padding(vertical = v.w(0.8f))
+                    Box(Modifier.fillMaxWidth().heightIn(min = 48.dp)
                         .then(if (sel) Modifier.background(Vga.White) else Modifier)
                         .clickable {
                             // setLanguage() parses a per-language catalog (up to ~336KB) off the
@@ -296,7 +304,7 @@ private fun LanguageWindow(v: Virtual, vm: ClaraViewModel) {
                             scope.launch(kotlinx.coroutines.Dispatchers.IO) { com.acme.clara.i18n.Strings.setLanguage(code) }
                             vm.dismissOverlay()
                         }
-                        .padding(vertical = v.w(2)),
+                        .labelled(name).padding(vertical = v.w(2)),
                         contentAlignment = Alignment.Center) {
                         Text(name, style = v.text(9, color = if (sel) Vga.Black else Vga.White, bold = sel))
                     }
@@ -678,11 +686,15 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                             due -> Vga.Yellow
                             else -> Vga.White
                         }
-                        Text(Strings.place(name), style = v.text(7, color = color, bold = unlocked),
-                            modifier = Modifier
+                        Box(
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                                 .clickable { selected = name }
                                 .labelled(if (unlocked) Strings.place(name) else Strings.ui("{0}, locked", Strings.place(name)))
-                                .padding(vertical = v.w(1.2f), horizontal = v.w(1)))
+                                .padding(horizontal = v.w(1)),
+                            contentAlignment = Alignment.CenterStart,
+                        ) {
+                            Text(Strings.place(name), style = v.text(7, color = color, bold = unlocked))
+                        }
                     }
                 }
             } else {
@@ -774,6 +786,7 @@ private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
         CountryShapes.rings(placeCountry[it].orEmpty()).isEmpty() }
     val visitedPlaces = s.visitedPlaces.filter { it in placeCountry && placeUnlocked(it) }
     val visitedCountries = visitedPlaces.mapNotNull { placeCountry[it] }.toSet()
+    val completedFamilies = Masterminds.completedFamilies(s.capturedVillains)
 
     Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.6f)).clickable { vm.dismissOverlay() },
         contentAlignment = Alignment.Center) {
@@ -853,6 +866,37 @@ private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
                             else Strings.ui("🔒 Unlock World Campaign"),
                             style = v.text(6.5f, color = if (paid) Vga.LightCyan else Vga.Yellow, bold = true),
                         )
+                    }
+                }
+                // Five persistent campaign seals live inside the map instead of consuming another
+                // vertical row in the already-tight Passport window. A family earns full colour
+                // only once both its Boss and Successor are captured.
+                Row(
+                    Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                        .background(Vga.Black.copy(alpha = 0.82f))
+                        .padding(horizontal = v.w(3), vertical = v.w(1)),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("${completedFamilies.size}/${Masterminds.familyOrder.size}",
+                        style = v.text(6f, color = Vga.Yellow, bold = true))
+                    Masterminds.familyOrder.forEach { family ->
+                        val earned = family in completedFamilies
+                        val asset = Masterminds.familyStampAssets.getValue(family)
+                        val familyLabel = Strings.label("mastermind.family", family)
+                        Box(
+                            Modifier.size(v.w(17)).padding(v.w(0.6f))
+                                .border(BorderStroke(v.w(0.5f), if (earned) Vga.Yellow else Vga.DarkGray)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            PixelImage(
+                                asset,
+                                Modifier.fillMaxSize().alpha(if (earned) 1f else 0.32f),
+                                ContentScale.Fit,
+                                contentDescription = if (earned) familyLabel
+                                    else Strings.ui("{0}, locked", familyLabel),
+                            )
+                        }
                     }
                 }
             }
@@ -949,7 +993,7 @@ private fun PurchaseOfferWindow(v: Virtual, vm: ClaraViewModel) {
             Text(
                 Strings.ui("Restore purchase"), style = v.text(6.5f, color = Vga.LightCyan),
                 modifier = Modifier.clickable { com.acme.clara.billing.BillingManager.queryExistingPurchases() }
-                    .padding(v.w(1)),
+                    .tappable(Strings.ui("Restore purchase")).padding(v.w(1)),
             )
         }
     }
