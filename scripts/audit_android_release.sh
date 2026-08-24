@@ -27,6 +27,46 @@ require_line 'applicationId = "com.acme.clara"' "$gradle_file" \
 require_line 'targetSdk = 36' "$gradle_file" \
     'The release target SDK is not the audited API level.'
 
+python3 - "$repo_dir" <<'PY'
+import json
+import re
+import sys
+from pathlib import Path
+
+repo = Path(sys.argv[1])
+source = json.loads((repo / "translation/source/ui2.json").read_text())
+placeholders = re.compile(r"\{(?:\d+|[sSp])\}|%s")
+languages = ("de", "es", "fr", "id", "it", "nl", "pl", "pt", "ru", "tr")
+
+for language in languages:
+    catalog = json.loads((repo / f"translation/{language}/ui2.json").read_text())
+    runtime = json.loads(
+        (repo / f"android/app/src/main/assets/i18n/{language}.json").read_text()
+    )
+    missing = [key for key in source if key not in catalog or key not in runtime]
+    empty = [key for key in source if not str(catalog.get(key, "")).strip()]
+    bad_placeholders = [
+        key
+        for key, value in source.items()
+        if key in catalog
+        and sorted(placeholders.findall(value))
+        != sorted(placeholders.findall(str(catalog[key])))
+    ]
+    stale_runtime = [
+        key for key in source if key in catalog and runtime.get(key) != catalog[key]
+    ]
+    if missing or empty or bad_placeholders or stale_runtime:
+        print(
+            f"RELEASE BLOCKER: {language} translation is incomplete "
+            f"(missing={len(missing)}, empty={len(empty)}, "
+            f"placeholders={len(bad_placeholders)}, stale_runtime={len(stale_runtime)}).",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+print(f"Translation audit passed: {len(source)} source keys in {len(languages)} languages")
+PY
+
 (
     cd "$android_dir"
     ./gradlew testDebugUnitTest testReleaseUnitTest lintRelease bundleRelease

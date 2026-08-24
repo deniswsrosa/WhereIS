@@ -107,15 +107,18 @@ fun ClaraApp() {
     LaunchedEffect(com.acme.clara.i18n.Strings.revision) {
         withContext(Dispatchers.IO) { com.acme.clara.game.Humor.reload(context) }
     }
-    // World Campaign entitlement: connect once, grant on any resolved purchase — a fresh buy, an
-    // explicit restore, or (silently, no "Restore" tap needed) Play already showing it owned on
-    // reconnect, which covers a reinstall or a new device. Gated on SALES_ENABLED too, not just
+    // World Campaign entitlement: connect once and reconcile with Play — grant a fresh buy/restore
+    // or revoke only when a successful query confirms it is no longer owned. Failed and offline
+    // queries preserve the last verified state. Gated on SALES_ENABLED too, not just
     // the purchase-CTA UI: without this, queryExistingPurchases() could silently grant entitlement
     // to a Play Console license-test account the moment the product is created for testing, even
     // in a build that's supposed to be fully dark until the switch flips.
     LaunchedEffect(Unit) {
         if (com.acme.clara.billing.BillingManager.SALES_ENABLED) {
-            com.acme.clara.billing.BillingManager.connect(context, onGranted = { vm.unlockExpansion() })
+            com.acme.clara.billing.BillingManager.connect(
+                context,
+                onOwnershipChanged = vm::reconcileExpansionOwnership,
+            )
         }
     }
     // Keep the audio engine's mute state in sync with the Options > Sound toggle.

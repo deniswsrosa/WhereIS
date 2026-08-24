@@ -14,6 +14,7 @@ class SaveStore(context: Context) : SaveRepository {
 
     private val dir = File(context.filesDir, "saves").apply { mkdirs() }
     private val expansionEntitlement = File(context.filesDir, "world-campaign-owned")
+    private val expansionOwnershipKnown = File(context.filesDir, "world-campaign-ownership-checked")
     private val pendingSignOn = File(context.filesDir, "new-career-pending")
 
     // autosave() (ClaraViewModel) calls save() synchronously on nearly every player action, and
@@ -96,10 +97,24 @@ class SaveStore(context: Context) : SaveRepository {
 
     override fun ownsExpansion(): Boolean = expansionEntitlement.exists()
 
+    override fun isExpansionOwnershipKnown(): Boolean =
+        expansionEntitlement.exists() || expansionOwnershipKnown.exists()
+
     override fun setExpansionOwned() {
-        // A tiny monotonic marker is deliberately separate from career saves: deleting, replacing,
-        // or creating a profile must never revoke a Play-owned non-consumable purchase.
-        runCatching { if (!expansionEntitlement.exists()) expansionEntitlement.writeText("owned") }
+        // Tiny markers live outside career saves: deleting/replacing a profile cannot revoke a
+        // Play-owned purchase, while the separate checked marker prevents a refunded stale save
+        // from promoting its historical expansionUnlocked flag back into app-wide ownership.
+        runCatching {
+            if (!expansionEntitlement.exists()) expansionEntitlement.writeText("owned")
+            if (!expansionOwnershipKnown.exists()) expansionOwnershipKnown.writeText("checked")
+        }
+    }
+
+    override fun clearExpansionOwned() {
+        runCatching {
+            expansionEntitlement.delete()
+            if (!expansionOwnershipKnown.exists()) expansionOwnershipKnown.writeText("checked")
+        }
     }
 
     /** Test-only: block until every write submitted so far has landed on disk. Production code

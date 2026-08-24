@@ -262,8 +262,17 @@ class ClaraViewModel : ViewModel() {
 
     private fun mergeGlobalEntitlement() {
         val r = repo ?: return
-        if (s.expansionUnlocked) r.setExpansionOwned()
-        else if (r.ownsExpansion()) s = s.copy(expansionUnlocked = true)
+        // One-time migration for saves created before ownership became app-wide. Once Play has
+        // explicitly reconciled ownership, the durable repository decision wins over stale saves
+        // so a refunded career cannot grant itself again when loaded.
+        if (!r.isExpansionOwnershipKnown() && s.expansionUnlocked) r.setExpansionOwned()
+        s = s.copy(expansionUnlocked = r.ownsExpansion())
+    }
+
+    private fun entitlementFor(savedValue: Boolean): Boolean {
+        val r = repo ?: return savedValue
+        if (!r.isExpansionOwnershipKnown() && savedValue) r.setExpansionOwned()
+        return r.ownsExpansion()
     }
 
     /** Block until any save queued so far has actually landed on disk. Call this from onStop(),
@@ -295,8 +304,7 @@ class ClaraViewModel : ViewModel() {
         // Loading an existing detective explicitly abandons any unconfirmed new-career draft.
         // Otherwise that stale marker would send the next cold launch back to the printer.
         repo?.setPendingSignOn(false)
-        if (data.state.expansionUnlocked) repo?.setExpansionOwned()
-        var st = data.state.copy(expansionUnlocked = data.state.expansionUnlocked || repo?.ownsExpansion() == true)
+        var st = data.state.copy(expansionUnlocked = entitlementFor(data.state.expansionUnlocked))
         val backAfterGap = WelcomeBack.grantsHint(data.meta.lastPlayed, clock())
         // H3: after a long absence, bank a free hint (capped at 1 — this is a "welcome back"
         // nudge, not a resource to stockpile across repeated unplayed gaps) and queue a kinder
@@ -361,8 +369,7 @@ class ClaraViewModel : ViewModel() {
     fun loadCareer(data: SaveData) {
         profileId = data.meta.id
         repo?.setPendingSignOn(false)
-        if (data.state.expansionUnlocked) repo?.setExpansionOwned()
-        s = data.state.copy(expansionUnlocked = data.state.expansionUnlocked || repo?.ownsExpansion() == true)
+        s = data.state.copy(expansionUnlocked = entitlementFor(data.state.expansionUnlocked))
     }
 
     /** Persist the current state to the active profile — the state on disk always equals the
@@ -528,6 +535,20 @@ class ClaraViewModel : ViewModel() {
         repo?.setExpansionOwned()
         if (s.expansionUnlocked) return
         s = s.copy(expansionUnlocked = true, overlay = Overlay.UnlockCeremony)
+        autosave()
+    }
+
+    /** Apply a successful Play ownership query. Connection/query failures never call this, so an
+     *  offline buyer stays unlocked; an explicit successful "not owned" result revokes a refund
+     *  app-wide and overrides historical per-career flags on every later load. */
+    fun reconcileExpansionOwnership(owned: Boolean) {
+        if (owned) {
+            unlockExpansion()
+            return
+        }
+        repo?.clearExpansionOwned()
+        if (!s.expansionUnlocked) return
+        s = s.copy(expansionUnlocked = false)
         autosave()
     }
 

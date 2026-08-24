@@ -72,6 +72,9 @@ Use Play's license-testing account and test payment methods; do not use an ordin
    the same Google account) — the app should silently re-grant the unlock on next launch without
    needing the Restore button at all (that's `BillingManager.queryExistingPurchases()`, called on
    every connect), but the button is there too for anyone who doesn't want to wait.
+7. Revoke/refund the test purchase in Play Console, relaunch online, and confirm the campaign
+   relocks. Then grant it again, launch once online, switch the device offline, and confirm the
+   last verified entitlement remains available while Play cannot be reached.
 
 ## 5. Go live
 
@@ -83,10 +86,11 @@ Use Play's license-testing account and test payment methods; do not use an ordin
 
 ## What's already handled in code (no further setup)
 
-- **Entitlement**: a purchase (or a restore, or a silent re-detected purchase on reconnect) calls
-  `ClaraViewModel.unlockExpansion()`, which sets `GameState.expansionUnlocked = true` and is
-  persisted in the existing save file. There is no backend and none is needed — Google Play is
-  the source of truth for ownership; the app just asks it.
+- **Entitlement**: a successful Play ownership query grants or revokes the app-wide World Campaign
+  marker and updates the active career. Failed/offline queries make no ownership change, so a
+  verified buyer can continue playing offline; a successful empty query removes a refunded
+  entitlement and stale paid career saves cannot grant it again. There is no developer backend —
+  Google Play remains the source of truth for ownership.
 - **Acknowledgement**: every purchase is acknowledged automatically (`BillingManager
   .handlePurchase`) — an unacknowledged purchase auto-refunds after 3 days, so this matters and
   is already done for you.

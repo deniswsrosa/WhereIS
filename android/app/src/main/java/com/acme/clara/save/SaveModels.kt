@@ -54,13 +54,18 @@ interface SaveRepository {
     /** App-wide non-consumable ownership. Unlike campaign progress, this belongs to the player,
      *  not to one career, so every existing and future profile inherits it. */
     fun ownsExpansion(): Boolean
+    /** Whether Play ownership has ever been resolved (owned or explicitly not owned). This lets
+     *  pre-billing paid saves migrate once without allowing a refunded stale save to re-grant. */
+    fun isExpansionOwnershipKnown(): Boolean
     fun setExpansionOwned()
+    fun clearExpansionOwned()
 }
 
 /** In-memory repository — the reference implementation used by unit tests. */
 class InMemorySaveRepository : SaveRepository {
     private val store = LinkedHashMap<String, SaveData>()
     private var expansionOwned = false
+    private var expansionOwnershipKnown = false
     private var pendingSignOn = false
 
     override fun list(): List<SaveMeta> =
@@ -83,5 +88,15 @@ class InMemorySaveRepository : SaveRepository {
 
     override fun ownsExpansion(): Boolean = expansionOwned
 
-    override fun setExpansionOwned() { expansionOwned = true }
+    override fun isExpansionOwnershipKnown(): Boolean = expansionOwnershipKnown
+
+    override fun setExpansionOwned() {
+        expansionOwned = true
+        expansionOwnershipKnown = true
+    }
+
+    override fun clearExpansionOwned() {
+        expansionOwned = false
+        expansionOwnershipKnown = true
+    }
 }

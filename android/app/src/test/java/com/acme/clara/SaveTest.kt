@@ -190,6 +190,39 @@ class SaveTest {
         assertTrue("loading a paid save promotes its old per-career flag", repo.ownsExpansion())
     }
 
+    @Test fun successfulPlayRevocationOverridesEveryStalePaidCareer() {
+        val repo = InMemorySaveRepository()
+        val vm = ClaraViewModel().apply {
+            bindRepository(repo)
+            signOn("Refunded buyer")
+            unlockExpansion()
+        }
+        val stalePaidSave = vm.snapshot("paid-before-refund", 1L)
+        repo.save(stalePaidSave)
+
+        vm.reconcileExpansionOwnership(false)
+
+        assertTrue("a successful Play decision is recorded", repo.isExpansionOwnershipKnown())
+        assertFalse("the global entitlement is removed", repo.ownsExpansion())
+        assertFalse("the active career relocks", vm.s.expansionUnlocked)
+
+        vm.resume(stalePaidSave)
+        assertFalse("loading an older paid save cannot undo the refund", vm.s.expansionUnlocked)
+        assertFalse("the stale save cannot recreate global ownership", repo.ownsExpansion())
+    }
+
+    @Test fun aLaterPlayRestoreRegrantsAfterRevocation() {
+        val repo = InMemorySaveRepository()
+        val vm = ClaraViewModel().apply { bindRepository(repo); signOn("Restored buyer") }
+        vm.reconcileExpansionOwnership(false)
+        assertFalse(vm.s.expansionUnlocked)
+
+        vm.reconcileExpansionOwnership(true)
+
+        assertTrue(repo.ownsExpansion())
+        assertTrue(vm.s.expansionUnlocked)
+    }
+
     // ---------- launch decision ----------
 
     @Test fun launchDecisionMapsSaveCount() {

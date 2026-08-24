@@ -77,11 +77,25 @@ class RobolectricSaveStoreTest {
 
     @Test fun expansionOwnershipSurvivesStoreInstancesAndCareerDeletion() {
         File(ctx.filesDir, "world-campaign-owned").delete()
+        File(ctx.filesDir, "world-campaign-ownership-checked").delete()
         val store = SaveStore(ctx)
         store.setExpansionOwned()
         assertEquals(true, SaveStore(ctx).ownsExpansion())
         store.delete("does-not-exist")
         assertEquals(true, SaveStore(ctx).ownsExpansion())
+    }
+
+    @Test fun expansionRevocationSurvivesStoreInstances() {
+        File(ctx.filesDir, "world-campaign-owned").delete()
+        File(ctx.filesDir, "world-campaign-ownership-checked").delete()
+        val store = SaveStore(ctx)
+        store.setExpansionOwned()
+
+        store.clearExpansionOwned()
+
+        val reopened = SaveStore(ctx)
+        assertEquals(false, reopened.ownsExpansion())
+        assertEquals(true, reopened.isExpansionOwnershipKnown())
     }
 
     @Test fun deleteCannotBeUndoneByAnOlderQueuedAutosave() {
