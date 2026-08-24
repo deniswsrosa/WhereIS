@@ -56,6 +56,32 @@ class CrimeComputerTest {
         assertNull(vm.s.warrantFor)
     }
 
+    @Test fun oneCharacteristicNeverIdentifiesASuspectOrIssuesAWarrant() {
+        val vm = vm()
+        val filters = listOf(
+            "sex" to GameData.sexes,
+            "hobby" to GameData.hobbies,
+            "hair" to GameData.hairColors,
+            "feature" to GameData.features,
+            "vehicle" to GameData.vehicles,
+        )
+        for ((category, values) in filters) {
+            for (value in values) {
+                vm.setAll(null, null, null, null, null)
+                vm.setComp(category, value)
+                val matches = vm.matches()
+                if (matches.isNotEmpty()) {
+                    assertTrue(
+                        "$category '$value' uniquely identifies ${matches.singleOrNull()?.name}",
+                        matches.size >= 2,
+                    )
+                }
+                vm.compute()
+                assertNull("single $category '$value' issued a warrant", vm.s.warrantFor)
+            }
+        }
+    }
+
     @Test fun anyFilterSetReflectsState() {
         val vm = vm()
         assertFalse(vm.anyFilterSet())

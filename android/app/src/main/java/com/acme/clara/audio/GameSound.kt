@@ -20,6 +20,8 @@ object GameSound {
     private var theme: MediaPlayer? = null
     private var stinger: MediaPlayer? = null
     private var enabled = true
+    private var themePaused = false
+    private var themePrepared = false
 
     // Short PCM click for the HQ printer teletype, played via SoundPool so rapid repeats overlap
     // cheaply (MediaPlayer can't). Loaded lazily on the first keystroke.
@@ -86,26 +88,51 @@ object GameSound {
     /** Start (or keep) the looping title theme. No-op if already playing or sound is off. */
     fun startTheme(context: Context) {
         if (!enabled || theme != null) return
-        theme = create(context, THEME)?.apply {
-            isLooping = true
-            start()
+        themePaused = false
+        themePrepared = false
+        val player = createUnprepared(context, THEME) ?: return
+        theme = player
+        player.isLooping = true
+        player.setOnPreparedListener {
+            if (theme === it && enabled && !themePaused) {
+                themePrepared = true
+                runCatching { it.start() }
+            } else if (theme === it && enabled) {
+                // It finished preparing while the Activity was in the background. Leave it
+                // prepared and silent; resumeTheme() will start it on return.
+                themePrepared = true
+            } else if (theme !== it || !enabled) {
+                it.release()
+            }
         }
+        installErrorHandler(player)
+        prepareAsync(player)
     }
 
     fun stopTheme() {
-        theme?.let { runCatching { it.stop() }; it.release() }
+        theme?.let { if (themePrepared) runCatching { it.stop() }; it.release() }
         theme = null
+        themePaused = false
+        themePrepared = false
     }
 
     /** Pause the looping theme so it never keeps playing while the app is in the background;
      *  paired with [resumeTheme] on return. No-op if no theme is currently loaded. */
-    fun pauseTheme() { theme?.let { runCatching { if (it.isPlaying) it.pause() } } }
+    fun pauseTheme() {
+        themePaused = true
+        theme?.let { if (themePrepared) runCatching { if (it.isPlaying) it.pause() } }
+        // Event stingers are intentionally not resumed after leaving the app; otherwise a cue can
+        // finish preparing and play over another app while Clara is backgrounded.
+        stinger?.release()
+        stinger = null
+    }
 
     /** Resume a theme that [pauseTheme] paused (only if it's still the active title-screen theme
      *  and sound is on). No-op once the theme has been stopped for gameplay. */
     fun resumeTheme() {
         if (!enabled) return
-        theme?.let { runCatching { if (!it.isPlaying) it.start() } }
+        themePaused = false
+        theme?.let { if (themePrepared) runCatching { if (!it.isPlaying) it.start() } }
     }
 
     /** Play a one-shot stinger by asset filename (stops the theme underneath, like the DOS
@@ -114,21 +141,44 @@ object GameSound {
         if (!enabled) return
         stopTheme()
         stinger?.release()
-        stinger = create(context, file)?.apply {
-            setOnCompletionListener { it.release(); if (stinger === it) stinger = null }
-            start()
+        val player = createUnprepared(context, file) ?: return
+        stinger = player
+        player.setOnPreparedListener {
+            if (stinger === it && enabled) runCatching { it.start() }
+            else it.release()
         }
+        player.setOnCompletionListener { it.release(); if (stinger === it) stinger = null }
+        installErrorHandler(player)
+        prepareAsync(player)
     }
 
-    /** Build a prepared MediaPlayer for assets/audio/<file>, or null if the asset is absent
-     *  (or won't decode). Requires the file to be stored uncompressed — see noCompress "mid". */
-    private fun create(context: Context, file: String): MediaPlayer? = runCatching {
+    /** Configure a MediaPlayer for assets/audio/<file>, or return null if the asset is absent.
+     *  Preparation remains asynchronous so MIDI synthesis never stalls the UI thread. */
+    private fun createUnprepared(context: Context, file: String): MediaPlayer? = runCatching {
         context.applicationContext.assets.openFd("$DIR/$file").use { afd ->
             MediaPlayer().apply {
                 setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-                setOnErrorListener { _, _, _ -> true }
-                prepare()
             }
         }
     }.getOrNull()
+
+    private fun prepareAsync(player: MediaPlayer) {
+        if (runCatching { player.prepareAsync() }.isFailure) {
+            if (theme === player) theme = null
+            if (stinger === player) stinger = null
+            player.release()
+        }
+    }
+
+    private fun installErrorHandler(player: MediaPlayer) {
+        player.setOnErrorListener { failed, _, _ ->
+            if (theme === failed) {
+                theme = null
+                themePrepared = false
+            }
+            if (stinger === failed) stinger = null
+            failed.release()
+            true
+        }
+    }
 }

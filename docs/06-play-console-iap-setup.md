@@ -1,17 +1,20 @@
 # 06 — Play Console setup for the World Campaign unlock
 
-_How to turn the already-written billing code into a real, purchasable product. Generated
-2026-08-10. The app-side code (`billing/BillingManager.kt`, wired into `ClaraViewModel` and the
-Campaign/Passport/Database CTAs) is complete and builds; nothing here requires another code
-change except swapping one constant once you've done step 2._
+_How to activate and test the app's one-time World Campaign product. Updated 2026-08-24. The
+app-side code (`billing/BillingManager.kt`, wired into the Campaign/Passport/Database CTAs) is
+complete, uses the permanent product ID below, and ships with `SALES_ENABLED = true`._
 
 ## Why this is needed
 
-`BillingManager.PRODUCT_ID` is currently set to a placeholder, `"world_campaign_unlock"`, that
-does not exist in Google Play yet. Until you create a real product with that exact ID (or create
-one with a different ID and update the constant), every purchase button in the app will
-correctly show **"Not available yet — check back soon."** instead of crashing — that's the
-intended fallback, not a bug. Nothing will actually sell until you complete the steps below.
+`BillingManager.PRODUCT_ID` is permanently set to `"world_campaign_unlock"`. Until an active Play
+product with that exact ID is available to the installed track/account, every purchase button
+safely shows **"Not available yet — check back soon."** Nothing can be charged in that state.
+
+The first internal-track AAB can and should already have `SALES_ENABLED = true`. Google requires a
+billing-enabled build on a track before billing product configuration is available. Upload that
+signed AAB, create and activate the product, then test the same build from Play; no throwaway
+`SALES_ENABLED = false` release or second version is required. See Google's current setup order:
+<https://developer.android.com/google/play/billing/getting-ready>.
 
 ## 1. Prerequisites
 
@@ -27,10 +30,8 @@ intended fallback, not a bug. Nothing will actually sell until you complete the 
 
 1. Play Console → your app → **Monetize** → **Products** → **In-app products**.
 2. **Create product**.
-3. **Product ID**: enter `world_campaign_unlock` exactly (case-sensitive, no spaces) — this
-   matches `BillingManager.PRODUCT_ID` in the code already, so no further code change is needed
-   if you use this exact string. If you'd rather use a different ID, that's fine — just update
-   the constant in `android/app/src/main/java/com/acme/clara/billing/BillingManager.kt` to match.
+3. **Product ID**: enter `world_campaign_unlock` exactly (case-sensitive, no spaces). Product IDs
+   should be treated as permanent, so do not invent a temporary Console ID.
 4. **Name**: "International Campaign" (or whatever you want players to see in Play's own purchase
    sheet — this is separate from the in-app dialog copy, which the app controls itself).
 5. **Description**: a short player-facing line, e.g. "Unlock the worldwide manhunt: 201 new
@@ -54,7 +55,7 @@ intended fallback, not a bug. Nothing will actually sell until you complete the 
 
 ## 4. Test it before going live
 
-Play Billing will not process real charges against license testers, so this is safe to do freely:
+Use Play's license-testing account and test payment methods; do not use an ordinary account/card:
 
 1. Play Console → **Setup** → **License testing** → add the Google account(s) you'll test with.
 2. Upload a signed build to the **Internal testing** track and add the same testers to that
@@ -77,9 +78,8 @@ Play Billing will not process real charges against license testers, so this is s
 1. Promote the tested build to **Production** (or whichever track you release from).
 2. No further Play Console step is needed for the product itself — an Activated in-app product
    is available in every track and country you've configured, automatically.
-3. The Play Store listing's `privacy_policy.md` already describes this purchase ("An optional
-   in-app purchase unlocks additional game content... handled entirely by Google Play") — no
-   changes needed there.
+3. Publish `docs/PRIVACY.md` at a public URL and use it in the listing. It describes the optional
+   purchase, Google Play processing, and the app's lack of a developer backend.
 
 ## What's already handled in code (no further setup)
 

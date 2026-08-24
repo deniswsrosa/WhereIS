@@ -86,7 +86,7 @@ dependencies {
     implementation("androidx.compose.material:material")
     implementation("androidx.work:work-runtime:2.7.0")
     // World Campaign one-time unlock — see billing/BillingManager.kt and
-    // docs/06-play-console-iap-setup.md (the product it queries doesn't exist in Play Console yet).
+    // docs/06-play-console-iap-setup.md for the matching Play Console product setup.
     implementation("com.android.billingclient:billing-ktx:8.0.0")
 
     testImplementation("junit:junit:4.13.2")
@@ -96,5 +96,7 @@ dependencies {
     testImplementation("org.robolectric:robolectric:4.12.2")
     testImplementation("androidx.test:core:1.5.0")
     testImplementation("androidx.compose.ui:ui-test-junit4")
+    // Compose UI tests live in src/testDebug: ui-test-manifest intentionally never enters
+    // the production release manifest, while pure logic/Robolectric tests run in both variants.
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

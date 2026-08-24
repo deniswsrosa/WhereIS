@@ -22,11 +22,9 @@ import com.android.billingclient.api.QueryPurchasesParams
  * "Restore purchase" and a silent re-grant on reinstall are both just [queryExistingPurchases]
  * — nothing is persisted here beyond what the save file already carries.
  *
- * PLACEHOLDER PRODUCT ID. [PRODUCT_ID] does not exist in Play Console yet — see
- * docs/06-play-console-iap-setup.md for the exact steps to create it and swap this constant for
- * the real one. Until then, [queryProductDetails] returns null (Play doesn't recognize an
- * unknown product id) and every purchase button should show "not available yet" rather than
- * attempt a purchase — see the `productDetails == null` branch at each call site.
+ * [PRODUCT_ID] is the permanent ID that must be created as an active one-time product in Play
+ * Console. Until Play recognizes it for the installed track/account, [queryProductDetails]
+ * returns null and purchase buttons safely show "not available yet".
  */
 object BillingManager {
     const val PRODUCT_ID = "world_campaign_unlock"
@@ -81,7 +79,7 @@ object BillingManager {
     }
 
     /** [onResult] receives null if the client isn't connected yet OR Play doesn't recognize
-     *  [PRODUCT_ID] (the placeholder hasn't been replaced with a real Play Console product). */
+     *  [PRODUCT_ID] for this package, installed track, country, or tester account. */
     fun queryProductDetails(onResult: (ProductDetails?) -> Unit) {
         val c = client?.takeIf { it.isReady } ?: run { onResult(null); return }
         val product = QueryProductDetailsParams.Product.newBuilder()
@@ -95,8 +93,7 @@ object BillingManager {
     }
 
     /** Launches the native Play purchase sheet. No-op if the client isn't ready or [details] has
-     *  no one-time offer (shouldn't happen for a real INAPP product, but the placeholder id
-     *  resolves no offers, so this stays a safe no-op rather than a crash). */
+     *  no one-time offer, so incomplete Play configuration can never crash the game. */
     fun launchPurchase(activity: Activity, details: ProductDetails) {
         val c = client?.takeIf { it.isReady } ?: return
         val offerToken = details.oneTimePurchaseOfferDetailsList?.firstOrNull()?.offerToken ?: return

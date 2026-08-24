@@ -1,6 +1,5 @@
-// AUTO-GENERATED from corpus/game_data.json by scripts/gen_kotlin_data.py
-// Byte-exact strings extracted from CARMEN.EXE (Enhanced, MS-DOS v2.1, (c)1990 Broderbund).
-// DO NOT EDIT BY HAND.
+// The original rows were generated from corpus/game_data.json. The expanded roster below is
+// deliberately authored here and covered by mechanics/integrity tests.
 package com.acme.clara.data
 
 data class Suspect(
@@ -253,7 +252,8 @@ object GameData {
         "Romeo Jacomelli",
         "Carlos Escarlate",
         "Sylvia Fansworth",
-        "Otto Clockwell"
+        "Otto Clockwell",
+        "Marina Valentine"
     )
 
     val suspects = listOf(
@@ -408,6 +408,15 @@ object GameData {
             feature1 = "Constantly checks a gold pocket watch engraved with dozens of false identities.", feature2 = "Eats breakfast precisely at midnight and refuses any egg that is not perfectly circular.",
             tSex = "male", tHobby = "collecting", tHair = "gray",
             tFeature = "jewelry", tVehicle = "convertible",
+        ),
+        Suspect(
+            name = "Marina Valentine", sex = "Female",
+            occupation = "Luxury-yacht broker who courts wealthy clients before sailing away with their valuables",
+            hobby = "Dating", hair = "Chestnut brown", auto = "Luxury yacht",
+            feature1 = "Never travels without a compact marine radio tuned to private channels.",
+            feature2 = "Keeps a little black book of aliases, ports, and conveniently forgotten anniversaries.",
+            tSex = "female", tHobby = "dating", tHair = "brown",
+            tFeature = "gadget", tVehicle = "yacht",
         ),
     )
 

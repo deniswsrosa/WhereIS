@@ -5,7 +5,7 @@ against the fixed 320×200 pixel-art canvas.
 
 ## Done
 
-- **Target SDK 35 + edge-to-edge.** Builds against `compileSdk`/`targetSdk = 35` (AGP 8.6.0).
+- **Target SDK 36 + edge-to-edge.** Builds against `compileSdk`/`targetSdk = 36` (AGP 8.6.0).
   `MainActivity` draws edge-to-edge (`setDecorFitsSystemWindows(false)`) and pads content with the
   system-bar insets, so the HUD is never hidden behind the status/navigation bars or a cutout.
 - **Reduced motion.** `isReducedMotion(context)` reads `ANIMATOR_DURATION_SCALE`. When the user has
@@ -15,10 +15,15 @@ against the fixed 320×200 pixel-art canvas.
   cue ("Warrant issued", "The thief got away", …) for deaf / hard-of-hearing or muted-context play.
   Off by default; saved with the career.
 - **Screen-reader labels.** Interactive controls carry a `contentDescription` for TalkBack — menu
-  items, the Yes/No and dialog buttons, and the "Choose a game" picker rows (continue / delete /
-  new game).
+  items, the Yes/No and dialog buttons, the game toolbar, investigation venues, crime-computer
+  attributes, and the "Choose a game" picker rows (continue / delete / new game).
 - **48 dp touch targets** on the off-canvas UI — dialog buttons (`DosButton`) and the picker rows
   use `minimumInteractiveComponentSize()` / a 48 dp minimum height without changing their look.
+- **Mobile game controls.** Menu and destination rows have explicit large targets; the four main
+  toolbar zones are already large on a handset. The crime computer keeps its authentic compact
+  CRT rows but duplicates every operation on large keyboard-style previous/next/change/compute
+  keys. Venue illustrations provide large alternatives to their compact text rows.
+- **Non-colour state.** The selected toolbar tool uses both its green border and a white check mark.
 - **16 KB page size.** The app ships no native `.so` libraries (pure Kotlin/Compose), so it is
   compliant with the Nov 2025 16 KB requirement automatically. Re-audit if any native dep is added.
 - **Adaptive layout.** The whole game renders through a `Virtual` canvas that scales the fixed
@@ -26,15 +31,12 @@ against the fixed 320×200 pixel-art canvas.
   than stretching or cropping. `configChanges` covers orientation/size/fold/density/fontScale so the
   Activity is not recreated on those changes.
 
-## Deliberate trade-offs (documented, not yet "done")
+## Deliberate trade-offs
 
-- **Colour is not the only signal — mostly.** Win vs. loss differ structurally (jail art + report
-  text), and cues carry captions. The in-canvas toolbar's *green selection border* is still
-  colour-led; a shape/label affordance there is a follow-up.
-- **In-canvas tap targets.** Buttons rendered inside the 320×200 canvas (the toolbar, on-screen
-  Yes/No) are tied to the canvas scale and can fall below 48 dp on small screens. Enlarging them
-  would break the faithful DOS layout, so they carry TalkBack labels but keep their pixel size; the
-  off-canvas UI meets 48 dp.
+- **In-canvas legacy rows.** Some text rows baked into the 320×200 composition remain below 48 dp
+  because expanding them would overlap adjacent DOS controls. They have spoken labels and a large
+  equivalent control (crime-computer keys or venue illustration); primary actions and off-canvas
+  options meet the mobile target.
 - **Scalable text.** Chrome text on the new off-canvas screens uses `sp`; text baked into the pixel
   canvas does not honour the system font scale by design (it is part of the art grid). A future pass
   could render the almanac / dialog copy in scalable overlays.

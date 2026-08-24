@@ -17,6 +17,7 @@ import com.acme.clara.data.AlmanacFlags
 import com.acme.clara.data.CityMeta
 import com.acme.clara.data.Expansion
 import com.acme.clara.data.Expansion2
+import com.acme.clara.data.GameData
 import com.acme.clara.data.Masterminds
 import com.acme.clara.game.ClaraViewModel
 import com.acme.clara.game.Overlay
@@ -110,6 +111,16 @@ class OverlaysTest {
             assertEquals("$file height", 48, bitmap.height)
             assertTrue("$file keeps transparent corners", bitmap.hasAlpha())
         }
+    }
+
+    @Test fun everySuspectHasABundledPortrait() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val bundled = context.assets.list("sprites/suspects").orEmpty().toSet()
+        val expected = GameData.suspects.mapTo(linkedSetOf()) { suspect ->
+            "suspect_" + suspect.name.lowercase()
+                .replace(Regex("[^a-z0-9]+"), "_").trim('_') + ".png"
+        }
+        assertTrue("missing suspect portraits: ${expected - bundled}", bundled.containsAll(expected))
     }
 
     @Test fun hintOverlayShowsAHint() {

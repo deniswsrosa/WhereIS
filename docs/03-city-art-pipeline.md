@@ -81,7 +81,7 @@ and typos (see the corpus notes) for byte-fidelity to the source.
 ```bash
 cd android && ./gradlew :app:assembleDebug \
  && adb install -r app/build/outputs/apk/debug/app-debug.apk \
- && adb shell am start -n com.acme.carmen/.MainActivity \
+ && adb shell am start -n com.acme.clara/.MainActivity \
  && sleep 3 && adb exec-out screencap -p > /tmp/city.png && open /tmp/city.png
 ```
 

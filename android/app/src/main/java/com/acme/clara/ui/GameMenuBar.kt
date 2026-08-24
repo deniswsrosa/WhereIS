@@ -99,7 +99,8 @@ fun GameMenuBar(v: Virtual, vm: ClaraViewModel) {
             MenuItemDef(Strings.ui("Most Wanted")) { vm.openOverlay(Overlay.MostWanted) },
             MenuItemDef(Strings.ui("Commendations")) { vm.openOverlay(Overlay.Commendations) },
         ))
-        // Dossiers menu lists the ten suspects under their EXE short names
+        // Dossiers lists the original and expanded roster; appended entries keep older i18n
+        // dossier indices stable.
         MenuTitle(v, Strings.ui("Dossiers"), GameData.suspects.mapIndexed { i, su ->
             MenuItemDef(GameData.dossierMenuNames.getOrElse(i) { su.name }) {
                 vm.openOverlay(Overlay.Dossier(su))

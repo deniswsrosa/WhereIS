@@ -15,7 +15,7 @@ Two goals, in order:
 
 1. **Corpus extraction** — pull the authentic text + art out of the original DOS
    game *Where in the World is Carmen Sandiego? (Enhanced)*.
-2. **Faithful Android remake** — a Jetpack Compose app (`com.acme.carmen`) that
+2. **Faithful Android remake** — a Jetpack Compose app (`com.acme.clara`) that
    uses the **real game assets** (nostalgia goal). Runs landscape, renders inside
    a 320×200 virtual canvas letterboxed to the device.
 
@@ -39,7 +39,7 @@ sound, sprite animations, the dynamic world-map route line.
   Only the name is plaintext. **Images are NOT decodable yet** — see guide 04.
 - `CARMEN.DAT` = graphics. `ACME.DAT` = player save roster (NOT canonical text).
 - `DIGISND.DAT` / `MIDISND.DAT` = sound (not wired into the app yet).
-- 30 cities, 10 suspects (8 dossier fields each).
+- 30 original cities and an expanded 20-suspect roster (8 dossier fields each).
 - Preserved original typos/spellings to keep byte-accuracy: `tennis raquet`,
   `Ukranian`, toponym `Peking`, and 1990 geography (Soviet Union, Czechoslovakia,
   Yugoslavia).
@@ -64,7 +64,7 @@ whereintheworld/
 ├── scripts/               # extract_corpus.py, build_report.py, gen_kotlin_data.py
 ├── tools/                 # ★ RE + DOSBox-capture tooling (see guide 02 & 04)
 ├── reference_screens/     # 21 CARMEN##.BMP + abandonwaredos web_0N shots + INDEX.md
-├── android/               # Jetpack Compose app (Kotlin), package com.acme.carmen
+├── android/               # Jetpack Compose app (Kotlin), package com.acme.clara
 └── docs/                  # ← you are here
 ```
 

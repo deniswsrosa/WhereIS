@@ -9,11 +9,11 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Integrity of the extracted game data (GameData.kt is generated from the corpus). */
+/** Integrity of the original and expanded game data. */
 class GameDataTest {
 
-    @Test fun nineteenSuspectsIncludingClara() {
-        assertEquals(19, GameData.suspects.size)
+    @Test fun twentySuspectsIncludingClara() {
+        assertEquals(20, GameData.suspects.size)
         assertTrue(GameData.suspects.any { it.name == "Clara San Diego" })
     }
 
@@ -33,6 +33,25 @@ class GameDataTest {
             assertTrue("${s.name} hair ${s.tHair}", s.tHair in GameData.hairColors)
             assertTrue("${s.name} feature ${s.tFeature}", s.tFeature in GameData.features)
             assertTrue("${s.name} vehicle ${s.tVehicle}", s.tVehicle in GameData.vehicles)
+        }
+    }
+
+    @Test fun everyUsedTraitValueDescribesAtLeastTwoSuspects() {
+        // A witness must never identify a culprit merely by mentioning one characteristic.
+        val categories = linkedMapOf<String, (com.acme.clara.data.Suspect) -> String>(
+            "sex" to { it.tSex },
+            "hobby" to { it.tHobby },
+            "hair" to { it.tHair },
+            "feature" to { it.tFeature },
+            "vehicle" to { it.tVehicle },
+        )
+        for ((category, valueOf) in categories) {
+            for ((value, suspects) in GameData.suspects.groupBy(valueOf)) {
+                assertTrue(
+                    "$category '$value' identifies only ${suspects.joinToString { it.name }}",
+                    suspects.size >= 2,
+                )
+            }
         }
     }
 

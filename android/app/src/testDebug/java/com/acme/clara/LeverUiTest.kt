@@ -22,9 +22,9 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
-/** UI coverage for the five Compose-only levers (P1/P2/P4/S1/S2) — the ones the ViewModel
- *  tests couldn't reach. Each lever composable is rendered inside the game's VirtualScreen and
- *  asserted by the text it draws. P4 is a pure copy function, checked directly. */
+/** Debug-variant UI coverage for the five Compose-only levers (P1/P2/P4/S1/S2) — the ones the
+ *  ViewModel tests cannot reach. Each lever composable is rendered inside the game's
+ *  VirtualScreen and asserted by the text it draws. P4 is a pure copy function, checked directly. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33], qualifiers = "w411dp-h891dp")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)

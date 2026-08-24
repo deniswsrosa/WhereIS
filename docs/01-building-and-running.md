@@ -38,7 +38,7 @@ cd android
 ```
 
 Output APK: `android/app/build/outputs/apk/debug/app-debug.apk`.
-Package id: **`com.acme.carmen`**, launch activity `com.acme.carmen.MainActivity`.
+Package id: **`com.acme.clara`**, launch activity `com.acme.clara.MainActivity`.
 
 A clean build after JDK changes: `./gradlew clean :app:assembleDebug`.
 
@@ -54,7 +54,7 @@ Install + launch:
 
 ```bash
 adb install -r android/app/build/outputs/apk/debug/app-debug.apk
-adb shell am start -n com.acme.carmen/.MainActivity
+adb shell am start -n com.acme.clara/.MainActivity
 # force landscape if the AVD boots portrait:
 adb shell settings put system accelerometer_rotation 0
 adb shell settings put system user_rotation 1
@@ -137,7 +137,7 @@ frame rather than hard-coding.
 ```bash
 cd android && ./gradlew :app:assembleDebug \
  && adb install -r app/build/outputs/apk/debug/app-debug.apk \
- && adb shell am start -n com.acme.carmen/.MainActivity \
+ && adb shell am start -n com.acme.clara/.MainActivity \
  && sleep 3 && adb exec-out screencap -p > /tmp/carmen_boot.png
 open /tmp/carmen_boot.png
 ```

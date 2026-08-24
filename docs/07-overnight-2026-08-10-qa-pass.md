@@ -1,7 +1,8 @@
 # Overnight QA pass — 2026-08-10
 
-> Historical QA record. Its fixed eight-case/nine-arc and late-purchase notes were superseded by
-> the ten-wave mockup implementation on 2026-08-21; see `05-game-design-and-progression.md`.
+> Historical QA record. Its fixed eight-case/nine-arc, late-purchase, and `SALES_ENABLED = false`
+> notes were superseded by the ten-wave mockup implementation and sales-enabled release work;
+> see `05-game-design-and-progression.md` and `06-play-console-iap-setup.md`.
 
 Everything below happened in one unattended session on `deniswsrosa/Paid_CTA`, picking up
 right after the full live-emulator playthrough (Case 1 → Case 86) confirmed the mastermind

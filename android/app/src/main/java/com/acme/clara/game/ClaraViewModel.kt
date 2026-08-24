@@ -654,7 +654,7 @@ class ClaraViewModel : ViewModel() {
         s = s.copy(departOptions = makeDepartOptions())
     }
 
-    /** Order culprit traits so a prefix uniquely identifies them among all 10 suspects. */
+    /** Order culprit traits so a prefix uniquely identifies them among the whole roster. */
     private fun discriminatingOrder(c: Suspect): List<Pair<String, String>> {
         val cats = linkedMapOf(
             "sex" to c.tSex, "hobby" to c.tHobby, "hair" to c.tHair,

@@ -669,10 +669,14 @@ fun GameToolbar(v: Virtual, vm: ClaraViewModel, seeLabel: String? = null,
             Row(Modifier.fillMaxSize()) {
                 // During a guided step the tour disables the tools it isn't pointing at.
                 fun ok(i: Int) = com.acme.clara.ui.tourAllowsTool(vm.s, i)
-                ToolZone(Modifier.weight(1f), selected == 0, ok(0), v) { onSee?.invoke() }
-                ToolZone(Modifier.weight(1f), selected == 1, ok(1), v) { vm.gotoTravel() }
-                ToolZone(Modifier.weight(1f), selected == 2, ok(2), v) { onInvestigate?.invoke() }
-                ToolZone(Modifier.weight(1f), selected == 3, ok(3), v) { vm.gotoCrime() }
+                ToolZone(Modifier.weight(1f), selected == 0, ok(0), v,
+                    seeLabel ?: Strings.ui("SEE")) { onSee?.invoke() }
+                ToolZone(Modifier.weight(1f), selected == 1, ok(1), v,
+                    Strings.ui("DEPART")) { vm.gotoTravel() }
+                ToolZone(Modifier.weight(1f), selected == 2, ok(2), v,
+                    Strings.ui("INVESTIGATE")) { onInvestigate?.invoke() }
+                ToolZone(Modifier.weight(1f), selected == 3, ok(3), v,
+                    Strings.ui("CRIME")) { vm.gotoCrime() }
             }
             // "HIDE" caption over the SEE icon while its dropdown is open (DOS behaviour)
             if (seeLabel != null) {
@@ -687,12 +691,26 @@ fun GameToolbar(v: Virtual, vm: ClaraViewModel, seeLabel: String? = null,
 }
 
 @Composable
-private fun ToolZone(modifier: Modifier, selected: Boolean, enabled: Boolean, v: Virtual, onClick: () -> Unit) {
+private fun ToolZone(
+    modifier: Modifier,
+    selected: Boolean,
+    enabled: Boolean,
+    v: Virtual,
+    label: String,
+    onClick: () -> Unit,
+) {
     Box(
         modifier.fillMaxHeight()
             .then(if (selected) Modifier.border(BorderStroke(v.w(2), Vga.Green)) else Modifier)
             .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier)
+            .labelled(if (selected) "$label, ${Strings.ui("selected")}" else label)
     ) {
+        // Do not communicate selection by green alone: the corner tick survives grayscale and
+        // color-vision deficiencies without repainting the original toolbar art.
+        if (selected) {
+            Text("✓", style = v.text(8, color = Vga.White, bold = true),
+                modifier = Modifier.align(Alignment.TopEnd).padding(end = v.w(2)))
+        }
         // A disabled tool (locked by the tour) is dimmed so it reads as unavailable.
         if (!enabled) Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.5f)))
     }
@@ -850,6 +868,7 @@ private fun InvestigatePicker(v: Virtual, venues: List<Venue>, visited: Set<Int>
                     val asset = "venue_" + snake(venue.place)
                     val lift = if (i == 1) 8f else 0f
                     Box(Modifier.width(v.w(52)).fillMaxHeight().clickable { selected = i; onPick(i) }
+                        .labelled(Strings.ui("Investigate {0}", Strings.label("venue", venue.place)))
                         .padding(bottom = v.w(lift)),
                         contentAlignment = Alignment.BottomCenter) {
                         if (spriteExists(asset)) {
@@ -887,7 +906,9 @@ private fun InvestigatePicker(v: Virtual, venues: List<Venue>, visited: Set<Int>
                 val isSel = i == selected || (selected < 0 && i == 0)
                 Box(Modifier.fillMaxWidth().padding(horizontal = v.w(24))
                     .then(if (isSel) Modifier.background(Vga.White) else Modifier)
-                    .clickable { selected = i; onPick(i) }.padding(vertical = v.w(0.5f)),
+                    .clickable { selected = i; onPick(i) }
+                    .labelled(Strings.ui("Investigate {0}", Strings.label("venue", venue.place)))
+                    .padding(vertical = v.w(0.5f)),
                     contentAlignment = Alignment.Center) {
                     Text(Strings.label("venue", venue.place),
                         style = v.text(8.5f, color = if (isSel) Vga.Black else if (done) Vga.LightGray else Vga.White, bold = true),
@@ -1194,6 +1215,13 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
         val idx = cyc.indexOf(valueOf(row))
         vm.setComp(keyOf(row), cyc[(idx + 1) % cyc.size])
     }
+    fun moveSelection(delta: Int) {
+        selRow = if (selRow !in 0..5) {
+            if (delta > 0) 0 else 5
+        } else {
+            (selRow + delta + 6) % 6
+        }
+    }
     fun runCompute() {
         if (printing) return
         printing = true
@@ -1276,9 +1304,12 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
             CRIME_ROWS.forEachIndexed { i, label ->
                 val sel = selRow == i
                 v.At(13, 9f + i * 10f, 139, 9) {
+                    val current = valueOf(i)?.let { Strings.label("tval", it) }
+                        ?: Strings.ui("not set")
                     Box(Modifier.fillMaxSize()
                         .then(if (sel) Modifier.background(Vga.White) else Modifier)
-                        .clickable { if (selRow == i) cycle(i) else selRow = i }) {
+                        .clickable { if (selRow == i) cycle(i) else selRow = i }
+                        .labelled("${Strings.ui(label)}: $current")) {
                         Text(Strings.ui(label) + ":", style = v.text(8, color = if (sel) Vga.Blue else Vga.Yellow, bold = true),
                             modifier = Modifier.align(Alignment.CenterStart).padding(start = v.w(11)))
                         valueOf(i)?.let {
@@ -1292,9 +1323,38 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
             v.At(13, 69, 139, 9) {
                 Box(Modifier.fillMaxSize()
                     .then(if (selRow == 5) Modifier.background(Vga.White) else Modifier)
-                    .clickable { selRow = 5; runCompute() }) {
+                    .clickable { selRow = 5; runCompute() }
+                    .labelled(Strings.ui("COMPUTE"))) {
                     Text(Strings.ui("COMPUTE"), style = v.text(8, color = if (selRow == 5) Vga.Blue else Vga.Yellow, bold = true),
                         modifier = Modifier.align(Alignment.CenterStart).padding(start = v.w(11)))
+                }
+            }
+            // The original CRT rows are only nine virtual pixels high. Keep those faithful
+            // controls, and add phone-sized keys on the computer's keyboard/bezel so every
+            // operation is also available through targets roughly 48dp tall on a handset.
+            Row(
+                Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                    // The computer art extends nine virtual pixels behind the toolbar. Lift the
+                    // keys above that overlap so the toolbar cannot clip their mobile hit boxes.
+                    .offset(y = v.w(-10))
+                    .height(v.w(32)).padding(horizontal = v.w(4), vertical = v.w(2)),
+                horizontalArrangement = Arrangement.spacedBy(v.w(2)),
+            ) {
+                CrimeComputerKey(v, "▲", Strings.ui("Previous category"), Modifier.weight(1.2f)) {
+                    moveSelection(-1)
+                }
+                CrimeComputerKey(v, "▼", Strings.ui("Next category"), Modifier.weight(1.2f)) {
+                    moveSelection(1)
+                }
+                CrimeComputerKey(v, Strings.ui("CHANGE"), Strings.ui("Change selected value"),
+                    Modifier.weight(2f)) {
+                    if (selRow !in 0..5) selRow = 0
+                    else if (selRow == 5) runCompute() else cycle(selRow)
+                }
+                CrimeComputerKey(v, Strings.ui("COMPUTE"), Strings.ui("COMPUTE"),
+                    Modifier.weight(2.4f)) {
+                    selRow = 5
+                    runCompute()
                 }
             }
         }
@@ -1306,6 +1366,24 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     // Suppress while the printer is still clattering out the suspect list, so the player reads the
     // result before the next tip (chase the suspect) appears.
     com.acme.clara.ui.Tour(v, vm, suppressed = printing)
+}
+
+@Composable
+private fun CrimeComputerKey(
+    v: Virtual,
+    text: String,
+    label: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier.fillMaxHeight().background(Vga.DarkGray)
+            .border(BorderStroke(v.w(1), Vga.White))
+            .clickable(onClick = onClick).labelled(label),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text, style = v.text(6.2f, color = Vga.White, bold = true), maxLines = 1)
+    }
 }
 
 /** S2: the "WARRANT ISSUED · APPROVED" stamp — a ritual beat that slams in when the roster

@@ -5,6 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +25,8 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.Text
 import com.acme.clara.ui.theme.Vga
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /** Scope for laying out inside a virtual 320x200 DOS screen. `unit` = one virtual pixel, in Dp. */
 class Virtual(val unit: Dp, val density: Density) {
@@ -95,7 +99,8 @@ fun VirtualScreen(
  *  lookup goes through this index, so callers keep using bare names. */
 private object Sprites {
     @Volatile private var index: Map<String, String>? = null
-    private val bitmaps = HashMap<String, androidx.compose.ui.graphics.ImageBitmap?>()
+    private val bitmaps = HashMap<String, androidx.compose.ui.graphics.ImageBitmap>()
+    private val missing = HashSet<String>()
 
     private fun indexFor(ctx: android.content.Context): Map<String, String> =
         index ?: synchronized(this) {
@@ -115,16 +120,44 @@ private object Sprites {
 
     fun exists(ctx: android.content.Context, name: String) = indexFor(ctx).containsKey(name)
 
+    fun cached(name: String): SpriteLoad? = synchronized(bitmaps) {
+        bitmaps[name]?.let { SpriteLoad(it, complete = true) }
+            ?: if (name in missing) SpriteLoad(null, complete = true) else null
+    }
+
+    /** Called from Dispatchers.IO: decoding a large scene must never block Compose's UI thread. */
     fun bitmap(ctx: android.content.Context, name: String): androidx.compose.ui.graphics.ImageBitmap? =
         synchronized(bitmaps) {
-            bitmaps.getOrPut(name) {
-                indexFor(ctx)[name]?.let { p ->
-                    ctx.assets.open(p).use { s ->
-                        android.graphics.BitmapFactory.decodeStream(s)?.asImageBitmap()
+            bitmaps[name] ?: if (name in missing) null else {
+                val decoded = indexFor(ctx)[name]?.let { p ->
+                    ctx.assets.open(p).use { stream ->
+                        android.graphics.BitmapFactory.decodeStream(stream)?.asImageBitmap()
                     }
                 }
+                if (decoded != null) bitmaps[name] = decoded else missing += name
+                decoded
             }
         }
+}
+
+private data class SpriteLoad(
+    val bitmap: androidx.compose.ui.graphics.ImageBitmap? = null,
+    val complete: Boolean = false,
+)
+
+@Composable
+private fun rememberSprite(name: String): SpriteLoad {
+    val appContext = LocalContext.current.applicationContext
+    val initial = remember(name) { Sprites.cached(name) ?: SpriteLoad() }
+    val state = remember(name) { mutableStateOf(initial) }
+    LaunchedEffect(name, appContext) {
+        if (!state.value.complete) {
+            state.value = withContext(Dispatchers.IO) {
+                SpriteLoad(Sprites.bitmap(appContext, name), complete = true)
+            }
+        }
+    }
+    return state.value
 }
 
 /** True if a sprite with this name exists in assets/sprites/<any category>/. */
@@ -137,17 +170,20 @@ fun spriteExists(name: String): Boolean {
 @Composable
 fun PixelImage(name: String, modifier: Modifier = Modifier, scale: ContentScale = ContentScale.FillBounds,
                alignment: Alignment = Alignment.Center, contentDescription: String? = name) {
-    val ctx = LocalContext.current
-    val bmp = remember(name) { Sprites.bitmap(ctx, name) }
+    val load = rememberSprite(name)
+    val bmp = load.bitmap
     if (bmp != null) {
         Image(
             bitmap = bmp, contentDescription = contentDescription, modifier = modifier,
             contentScale = scale, alignment = alignment,
         )
-    } else {
+    } else if (load.complete) {
         Box(modifier.background(Vga.Cyan), contentAlignment = Alignment.Center) {
             Text("NO SIGNAL", style = TextStyle(fontFamily = FontFamily.Monospace, color = Vga.Black))
         }
+    } else {
+        // Keep the intended footprint stable while the asset is decoded off the UI thread.
+        Box(modifier.background(Vga.Black))
     }
 }
 
@@ -156,8 +192,7 @@ fun PixelImage(name: String, modifier: Modifier = Modifier, scale: ContentScale 
  *  of the scale the asset was captured at. */
 @Composable
 fun drawableAspect(name: String, fallback: Float = 1f): Float {
-    val ctx = LocalContext.current
-    val bmp = remember(name) { Sprites.bitmap(ctx, name) }
+    val bmp = rememberSprite(name).bitmap
     return if (bmp != null && bmp.width > 0 && bmp.height > 0)
         bmp.height.toFloat() / bmp.width.toFloat() else fallback
 }
