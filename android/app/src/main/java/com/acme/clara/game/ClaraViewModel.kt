@@ -506,7 +506,10 @@ class ClaraViewModel : ViewModel() {
     fun selectTool(i: Int) { s = s.copy(selectedTool = i) }
 
     // ---------- menu bar ----------
-    fun openOverlay(o: Overlay) { s = s.copy(overlay = o) }
+    fun openOverlay(o: Overlay) {
+        if (o == Overlay.Almanac) teach("database")
+        s = s.copy(overlay = o)
+    }
     fun dismissOverlay() { s = s.copy(overlay = null) }
     fun menuNewCase() {
         // The printer's unconfirmed identity is not a career yet. Letting its menu create a case

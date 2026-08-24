@@ -100,15 +100,14 @@ cd android && ./gradlew bundleRelease
 # → app/build/outputs/bundle/release/app-release.aab
 ```
 
-Version is `versionCode 1` / `versionName "1.0"` — bump `versionCode` on every upload.
+Version is `versionCode 6` / `versionName "1.3"` — bump `versionCode` on every upload.
 
 ## 8. Remaining loose ends before going live
 
 - [ ] Application ID decision (see top)
 - [x] Release signing config + keystore (upload key at `~/keystores/clara-upload.jks`, credentials in `android/keystore.properties` — BACK BOTH UP)
-- [ ] Play Billing integration for the expansion unlock (`ClaraViewModel.unlockExpansion()`
-      is the entry point; the debug menu's "Paid version" toggle must never ship — it's
-      already behind `BuildConfig.DEBUG`, so release builds are safe)
+- [x] Play Billing integration for the one-time World Campaign unlock; the debug menu is guarded
+      by `BuildConfig.DEBUG` and the release audit verifies its labels are absent from release DEX.
 - [ ] Host the privacy policy and paste its URL
 - [ ] Google Play Console developer account ($25 one-time) with contact email
 - [ ] Optional: tablet screenshots (Play accepts the phone set, but 7"/10" shots improve

@@ -108,7 +108,7 @@ fun Tour(v: Virtual, vm: ClaraViewModel, suppressed: Boolean = false) {
 private class Shown(val id: String, val target: R, val title: String, val text: String, val info: Boolean)
 
 /** The one relevant lesson for this game state, or null when the tour should stay quiet. Scanned in
- *  teaching priority: interview → mind-the-clock → crime computer → follow-trail → warrant → arrest. */
+ *  teaching priority: World Database → interview → clock → computer → trail → warrant → arrest. */
 private fun lessonFor(s: GameState): Shown? {
     val seen = s.tutorialSeen
     fun un(id: String) = id !in seen
@@ -116,6 +116,13 @@ private fun lessonFor(s: GameState): Shown? {
     if (un("wrongflight") && !s.onTrack && s.phase == Phase.CITY && s.route.isNotEmpty())
         return Shown("wrongflight", TOOL_DEPART, Strings.ui("WRONG TURN"),
             Strings.ui("This isn't where the suspect went — nobody here has seen them. Tap the plane and fly back to try the right city."), false)
+
+    // Put the Bureau's reference tool in the player's mental map before the first interview. This
+    // is an action lesson rather than a dismissible tip: following it opens the real Database,
+    // where the player can browse freely, and openOverlay() marks the lesson complete.
+    if (un("database") && s.phase == Phase.CITY && s.onTrack && s.visited.isEmpty())
+        return Shown("database", BUREAU_MENU, Strings.ui("WORLD DATABASE"),
+            Strings.ui("Need help with a clue? Open Bureau ▸ World Database to learn about every destination. You can use it at any time."), false)
 
     if (un("interview") && s.phase == Phase.CITY && s.onTrack && s.visited.size < 3)
         return Shown("interview", TOOL_INVESTIGATE, Strings.ui("QUESTION THE WITNESSES"),
@@ -195,6 +202,7 @@ private class R(val x: Float, val y: Float, val w: Float, val h: Float)
 private val TOOL_DEPART = R(190.75f, 163f, 41.75f, 32f)       // toolbar: plane / fly
 private val TOOL_INVESTIGATE = R(232.5f, 163f, 41.75f, 32f)  // toolbar: magnifying glass
 private val TOOL_CRIME = R(274.25f, 163f, 41.75f, 32f)       // toolbar: crime computer
+private val BUREAU_MENU = R(54f, 0f, 58f, 12f)               // top bar: localized Bureau title
 private val CLOCK = R(4f, 13f, 141f, 30f)                    // top-left city name / clock box
 private val CRT_COMPUTE = R(162f, 84f, 142f, 11f)          // crime computer: the COMPUTE row
 private val TRAVEL_LIST = R(3f, 12f, 143f, 92f)            // travel screen: the destination dropdown

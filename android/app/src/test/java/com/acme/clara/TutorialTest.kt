@@ -2,6 +2,7 @@ package com.acme.clara
 
 import com.acme.clara.game.ClaraViewModel
 import com.acme.clara.game.ClueKind
+import com.acme.clara.game.Overlay
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -24,6 +25,13 @@ class TutorialTest {
     @Test fun lessonsAreTaughtAsTheActionsHappen() {
         val vm = ClaraViewModel().apply { signOn("Rookie") }
         vm.beginInvestigation()   // -> CITY
+
+        // The first coach mark points to Bureau ▸ World Database and clears only when the player
+        // opens the actual reference tool.
+        assertTrue("database starts untaught", "database" !in vm.s.tutorialSeen)
+        vm.openOverlay(Overlay.Almanac)
+        assertTrue("opening the database teaches the first lesson", "database" in vm.s.tutorialSeen)
+        vm.dismissOverlay()
 
         // a trail witness arms the follow-the-trail lesson; a trait witness arms the computer lesson
         val destIdx = vm.s.venues.indexOfFirst { it.kind == ClueKind.DESTINATION }
