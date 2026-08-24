@@ -253,7 +253,9 @@ object GameData {
         "Carlos Escarlate",
         "Sylvia Fansworth",
         "Otto Clockwell",
-        "Marina Valentine"
+        "Marina Valentine",
+        "Pepper Sterling",
+        "Miles Memento"
     )
 
     val suspects = listOf(
@@ -380,9 +382,9 @@ object GameData {
         Suspect(
             name = "Romeo Jacomelli", sex = "Male",
             occupation = "Former dating-app consultant who steals the identities of his wealthiest clients",
-            hobby = "Dating", hair = "Black", auto = "Cherry-red convertible",
+            hobby = "Dating", hair = "Dark brown", auto = "Cherry-red convertible",
             feature1 = "Always carries the newest and most expensive mobile phone.", feature2 = "Orders the most expensive sushi on every first date but always disappears before the bill arrives.",
-            tSex = "male", tHobby = "dating", tHair = "black",
+            tSex = "male", tHobby = "dating", tHair = "brown",
             tFeature = "gadget", tVehicle = "convertible",
         ),
         Suspect(
@@ -417,6 +419,24 @@ object GameData {
             feature2 = "Keeps a little black book of aliases, ports, and conveniently forgotten anniversaries.",
             tSex = "female", tHobby = "dating", tHair = "brown",
             tFeature = "gadget", tVehicle = "yacht",
+        ),
+        Suspect(
+            name = "Pepper Sterling", sex = "Female",
+            occupation = "Food-science celebrity who smuggles stolen microchips inside self-heating recipe cases",
+            hobby = "Cooking experimental tasting menus", hair = "Steel-gray", auto = "Silver electric coupe",
+            feature1 = "Carries a palm-sized flavor scanner that is really an encrypted radio.",
+            feature2 = "Refuses to season anything until a stopwatch reaches exactly sixty seconds.",
+            tSex = "female", tHobby = "cooking", tHair = "gray",
+            tFeature = "gadget", tVehicle = "car",
+        ),
+        Suspect(
+            name = "Miles Memento", sex = "Male",
+            occupation = "Disgraced auction cataloguer who swaps national relics for convincing replicas",
+            hobby = "Collecting antique luggage labels", hair = "Slate gray", auto = "Bottle-green grand touring car",
+            feature1 = "Carries a carved wooden chess knight that he claims brings luck.",
+            feature2 = "Can identify a century from the smell of old paper, but never the rightful owner.",
+            tSex = "male", tHobby = "collecting", tHair = "gray",
+            tFeature = "trinket", tVehicle = "car",
         ),
     )
 

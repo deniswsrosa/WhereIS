@@ -24,8 +24,17 @@ against the fixed 320×200 pixel-art canvas.
   CRT rows but duplicates every operation on large keyboard-style previous/next/change/compute
   keys. Venue illustrations provide large alternatives to their compact text rows.
 - **Non-colour state.** The selected toolbar tool uses both its green border and a white check mark.
-- **16 KB page size.** The app ships no native `.so` libraries (pure Kotlin/Compose), so it is
-  compliant with the Nov 2025 16 KB requirement automatically. Re-audit if any native dep is added.
+- **Font scaling.** New/off-canvas Android UI uses `sp` and follows the full system font scale.
+  Reflowable reading copy inside the 320×200 canvas (city facts, witness clues, dialogs, and the
+  World Database) follows the system setting up to 110%. Layout-critical clock/menu/control labels
+  remain on the pixel grid so they cannot overlap. TalkBack labels remain available at every scale,
+  and Android magnification can enlarge the complete pixel canvas beyond that tested cap.
+- **Text contrast.** Recurring foreground/background pairs were audited against WCAG AA. Danger
+  copy on black now uses light red (6.68:1), and green action buttons use black text (6.75:1).
+  Automated checks protect the core VGA text pairs from regressing below 4.5:1.
+- **16 KB page size.** Current AndroidX Compose contributes the small
+  `libandroidx.graphics.path.so`; all four bundled ABIs were checked with `readelf` and every LOAD
+  segment is aligned to `0x4000` (16 KB). Re-audit whenever a dependency changes native binaries.
 - **Adaptive layout.** The whole game renders through a `Virtual` canvas that scales the fixed
   320×200 play-field to fit, letter-/pillar-boxing on tall phones, tablets, and foldables rather
   than stretching or cropping. `configChanges` covers orientation/size/fold/density/fontScale so the
@@ -37,8 +46,6 @@ against the fixed 320×200 pixel-art canvas.
   because expanding them would overlap adjacent DOS controls. They have spoken labels and a large
   equivalent control (crime-computer keys or venue illustration); primary actions and off-canvas
   options meet the mobile target.
-- **Scalable text.** Chrome text on the new off-canvas screens uses `sp`; text baked into the pixel
-  canvas does not honour the system font scale by design (it is part of the art grid). A future pass
-  could render the almanac / dialog copy in scalable overlays.
-- **Contrast.** The VGA palette on its dark grounds generally clears 4.5:1; a per-screen contrast
-  audit against WCAG is a follow-up before store submission.
+- **Large text inside the legacy canvas.** Scaling beyond 110% would overlap adjacent DOS controls.
+  The complete canvas remains compatible with Android magnification, while spoken labels provide
+  an equivalent path for controls whose visual type cannot grow further.

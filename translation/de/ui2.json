@@ -872,5 +872,20 @@
  "venue.Sport Club": "Sportverein",
  "venue.Stock Exchange": "Börse",
  "venue.Television Station": "Fernsehsender",
- "venue.University": "Universität"
+ "venue.University": "Universität",
+ "suspect.15.hair": "Dunkelbraun",
+ "suspect.20.auto": "Silbernes Elektro-Coupé",
+ "suspect.20.feature1": "Trägt einen handtellergroßen Geschmacksscanner bei sich, der in Wahrheit ein verschlüsseltes Funkgerät ist.",
+ "suspect.20.feature2": "Würzt grundsätzlich erst, wenn eine Stoppuhr genau sechzig Sekunden anzeigt.",
+ "suspect.20.hair": "Stahlgrau",
+ "suspect.20.hobby": "Kochen experimenteller Degustationsmenüs",
+ "suspect.20.occupation": "Berühmte Lebensmittelwissenschaftlerin, die gestohlene Mikrochips in selbsterhitzenden Rezeptkoffern schmuggelt",
+ "suspect.20.sex": "Weiblich",
+ "suspect.21.auto": "Flaschengrüner Gran Turismo",
+ "suspect.21.feature1": "Trägt einen geschnitzten hölzernen Springer bei sich, der angeblich Glück bringt.",
+ "suspect.21.feature2": "Kann ein Jahrhundert am Geruch alten Papiers erkennen, aber nie den rechtmäßigen Besitzer.",
+ "suspect.21.hair": "Schiefergrau",
+ "suspect.21.hobby": "Sammeln antiker Gepäckaufkleber",
+ "suspect.21.occupation": "In Ungnade gefallener Auktionskatalogisierer, der nationale Relikte gegen überzeugende Nachbildungen austauscht",
+ "suspect.21.sex": "Männlich"
 }

@@ -39,7 +39,7 @@ sound, sprite animations, the dynamic world-map route line.
   Only the name is plaintext. **Images are NOT decodable yet** — see guide 04.
 - `CARMEN.DAT` = graphics. `ACME.DAT` = player save roster (NOT canonical text).
 - `DIGISND.DAT` / `MIDISND.DAT` = sound (not wired into the app yet).
-- 30 original cities and an expanded 20-suspect roster (8 dossier fields each).
+- 30 original cities and an expanded 22-suspect roster (8 dossier fields each).
 - Preserved original typos/spellings to keep byte-accuracy: `tennis raquet`,
   `Ukranian`, toponym `Peking`, and 1990 geography (Soviet Union, Czechoslovakia,
   Yugoslavia).

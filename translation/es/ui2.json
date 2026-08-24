@@ -872,5 +872,20 @@
  "venue.Sport Club": "Club Deportivo",
  "venue.Stock Exchange": "Bolsa de Valores",
  "venue.Television Station": "Canal de TV",
- "venue.University": "Universidad"
+ "venue.University": "Universidad",
+ "suspect.15.hair": "Castaño oscuro",
+ "suspect.20.auto": "Cupé eléctrico plateado",
+ "suspect.20.feature1": "Lleva un escáner de sabores del tamaño de la palma que en realidad es una radio cifrada.",
+ "suspect.20.feature2": "Se niega a sazonar nada hasta que un cronómetro marca exactamente sesenta segundos.",
+ "suspect.20.hair": "Gris acero",
+ "suspect.20.hobby": "Cocinar menús degustación experimentales",
+ "suspect.20.occupation": "Celebridad de la ciencia alimentaria que introduce microchips robados en estuches de recetas autocalentables",
+ "suspect.20.sex": "Femenino",
+ "suspect.21.auto": "Gran turismo verde botella",
+ "suspect.21.feature1": "Lleva un caballo de ajedrez de madera tallada que, según él, le trae suerte.",
+ "suspect.21.feature2": "Puede identificar un siglo por el olor del papel viejo, pero nunca al propietario legítimo.",
+ "suspect.21.hair": "Gris pizarra",
+ "suspect.21.hobby": "Coleccionar etiquetas antiguas de equipaje",
+ "suspect.21.occupation": "Catalogador de subastas caído en desgracia que cambia reliquias nacionales por réplicas convincentes",
+ "suspect.21.sex": "Masculino"
 }

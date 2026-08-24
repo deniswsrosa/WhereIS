@@ -1,5 +1,6 @@
 package com.acme.clara.ui
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -239,12 +240,12 @@ fun OverlayHost(v: Virtual, vm: ClaraViewModel) {
             Spacer(Modifier.height(v.w(4)))
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
                 lines.forEach {
-                    Text(it, style = v.text(7.5f, color = Vga.White), textAlign = TextAlign.Center,
+                    Text(it, style = v.readingText(7.5f, color = Vga.White), textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth().padding(vertical = v.w(0.6f)))
                 }
             }
             Spacer(Modifier.height(v.w(4)))
-            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
+            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.TextOnGreen,
                 style = v.text(9, bold = true)) { vm.dismissOverlay() }
         }
     }
@@ -312,7 +313,7 @@ private fun LanguageWindow(v: Virtual, vm: ClaraViewModel) {
                 }
             }
             Spacer(Modifier.height(v.w(3)))
-            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
+            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.TextOnGreen,
                 style = v.text(9, bold = true)) { vm.dismissOverlay() }
         }
     }
@@ -434,7 +435,7 @@ private fun MostWantedWindow(v: Virtual, vm: ClaraViewModel) {
                 }
             }
             Spacer(Modifier.height(v.w(3)))
-            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
+            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.TextOnGreen,
                 style = v.text(9, bold = true)) { vm.dismissOverlay() }
         }
     }
@@ -499,7 +500,7 @@ private fun CommendationsWindow(v: Virtual, vm: ClaraViewModel) {
                 }
             }
             Spacer(Modifier.height(v.w(3)))
-            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
+            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.TextOnGreen,
                 style = v.text(9, bold = true)) { vm.dismissOverlay() }
         }
     }
@@ -748,12 +749,12 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                                 Text(it, style = v.text(6.5f, color = Vga.LightCyan))
                                 Spacer(Modifier.height(v.w(3)))
                             }
-                            Text(entry.description, style = v.text(7.5f, color = Vga.White))
+                            Text(entry.description, style = v.readingText(7.5f, color = Vga.White))
                         } else {
                             Text("▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒", style = v.text(8, color = Vga.LightGray))
                             Spacer(Modifier.height(v.w(3)))
                             Text(Strings.ui("One fact is on file. The rest unlocks with this campaign wave."),
-                                style = v.text(7, color = Vga.LightCyan))
+                                style = v.readingText(7, color = Vga.LightCyan))
                             if (com.acme.clara.billing.BillingManager.SALES_ENABLED && !paid) {
                                 Spacer(Modifier.height(v.w(4)))
                                 DosButton(Strings.ui("Unlock World Campaign"), fill = Vga.Yellow,
@@ -927,7 +928,7 @@ private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
                 }
                 Spacer(Modifier.height(v.w(2)))
             }
-            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
+            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.TextOnGreen,
                 style = v.text(9, bold = true)) { vm.dismissOverlay() }
         }
     }
@@ -939,7 +940,7 @@ private fun PassportWindow(v: Virtual, vm: ClaraViewModel) {
  * .PurchaseOffer.source] only tags which one for analytics. */
 @Composable
 private fun PurchaseOfferWindow(v: Virtual, vm: ClaraViewModel) {
-    val activity = LocalContext.current as? android.app.Activity
+    val activity = LocalActivity.current
     var details by remember { mutableStateOf<com.android.billingclient.api.ProductDetails?>(null) }
     var checked by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -960,7 +961,7 @@ private fun PurchaseOfferWindow(v: Virtual, vm: ClaraViewModel) {
             Spacer(Modifier.height(v.w(2)))
             Text(
                 Strings.ui("Dismantle Clara's five crime families, one wave at a time — and finally catch her."),
-                style = v.text(7, color = Vga.LightCyan), textAlign = TextAlign.Center,
+                style = v.readingText(7, color = Vga.LightCyan), textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.height(v.w(4)))
@@ -972,7 +973,7 @@ private fun PurchaseOfferWindow(v: Virtual, vm: ClaraViewModel) {
             ).forEach { line ->
                 Row(Modifier.fillMaxWidth().padding(vertical = v.w(0.7f))) {
                     Text("◆ ", style = v.text(7, color = Vga.Yellow, bold = true))
-                    Text(line, style = v.text(7, color = Vga.White))
+                    Text(line, style = v.readingText(7, color = Vga.White))
                 }
             }
             Spacer(Modifier.height(v.w(4)))
@@ -1030,7 +1031,7 @@ private fun CasePlannerWindow(v: Virtual, vm: ClaraViewModel) {
                         modifier = Modifier.fillMaxWidth())
                 }
             }
-            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.White,
+            DosButton(Strings.ui("CLOSE"), fill = Vga.Green, textColor = Vga.TextOnGreen,
                 style = v.text(9, bold = true)) { vm.dismissOverlay() }
         }
     }

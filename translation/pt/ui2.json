@@ -872,5 +872,20 @@
  "venue.Sport Club": "Clube Esportivo",
  "venue.Stock Exchange": "Bolsa de Valores",
  "venue.Television Station": "Emissora de TV",
- "venue.University": "Universidade"
+ "venue.University": "Universidade",
+ "suspect.15.hair": "Castanho-escuro",
+ "suspect.20.auto": "Cupê elétrico prateado",
+ "suspect.20.feature1": "Carrega um scanner de sabores do tamanho da palma da mão que, na verdade, é um rádio criptografado.",
+ "suspect.20.feature2": "Recusa-se a temperar qualquer coisa até o cronômetro marcar exatamente sessenta segundos.",
+ "suspect.20.hair": "Cinza-aço",
+ "suspect.20.hobby": "Cozinhar menus de degustação experimentais",
+ "suspect.20.occupation": "Celebridade da ciência dos alimentos que contrabandeia microchips roubados em estojos de receitas autoaquecidos",
+ "suspect.20.sex": "Feminino",
+ "suspect.21.auto": "Gran turismo verde-garrafa",
+ "suspect.21.feature1": "Carrega um cavalo de xadrez de madeira entalhada que, segundo ele, traz sorte.",
+ "suspect.21.feature2": "Identifica um século pelo cheiro de papel velho, mas nunca o dono legítimo.",
+ "suspect.21.hair": "Cinza-ardósia",
+ "suspect.21.hobby": "Colecionar etiquetas antigas de bagagem",
+ "suspect.21.occupation": "Catalogador de leilões desonrado que troca relíquias nacionais por réplicas convincentes",
+ "suspect.21.sex": "Masculino"
 }

@@ -872,5 +872,20 @@
  "venue.Sport Club": "Club de sport",
  "venue.Stock Exchange": "Bourse",
  "venue.Television Station": "Télévision",
- "venue.University": "Université"
+ "venue.University": "Université",
+ "suspect.15.hair": "Brun foncé",
+ "suspect.20.auto": "Coupé électrique argenté",
+ "suspect.20.feature1": "Transporte un analyseur de saveurs grand comme la paume qui est en réalité une radio chiffrée.",
+ "suspect.20.feature2": "Refuse d'assaisonner quoi que ce soit avant que son chronomètre affiche exactement soixante secondes.",
+ "suspect.20.hair": "Gris acier",
+ "suspect.20.hobby": "Cuisiner des menus dégustation expérimentaux",
+ "suspect.20.occupation": "Célébrité des sciences alimentaires qui dissimule des micropuces volées dans des coffrets de recettes autochauffants",
+ "suspect.20.sex": "Femme",
+ "suspect.21.auto": "Grand tourisme vert bouteille",
+ "suspect.21.feature1": "Porte un cavalier d'échecs en bois sculpté qui, selon lui, lui porte chance.",
+ "suspect.21.feature2": "Reconnaît un siècle à l'odeur du vieux papier, mais jamais son propriétaire légitime.",
+ "suspect.21.hair": "Gris ardoise",
+ "suspect.21.hobby": "Collectionner les anciennes étiquettes de bagages",
+ "suspect.21.occupation": "Catalogueur de ventes aux enchères déchu qui remplace des reliques nationales par des répliques convaincantes",
+ "suspect.21.sex": "Homme"
 }

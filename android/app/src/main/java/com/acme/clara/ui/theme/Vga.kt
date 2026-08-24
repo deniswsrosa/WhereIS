@@ -34,6 +34,11 @@ object Vga {
     val LightMagenta = Color(0xFFFF55FF)
     val Yellow = Color(0xFFFFFF55)
     val White = Color(0xFFFFFFFF)
+
+    // Accessible semantic choices for text on the two recurring dark surfaces. Keep the original
+    // 16-colour palette, but avoid AA0000 red on black (2.71:1) and white on green (3.11:1).
+    val DangerOnDark = LightRed       // 6.68:1 on Black
+    val TextOnGreen = Black           // 6.75:1 on Green
 }
 
 /** DOS-flavoured monospace text styles. */

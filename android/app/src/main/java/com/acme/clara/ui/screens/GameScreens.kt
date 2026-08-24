@@ -356,10 +356,10 @@ private fun CountryText(v: Virtual, info: com.acme.clara.data.CityInfo, paid: Bo
         funny ?: info.greeting
     }
     Column(Modifier.fillMaxSize()) {
-        Text(info.description, style = v.text(8.5f, color = Vga.White))
+        Text(info.description, style = v.readingText(8.5f, color = Vga.White))
         if (bottom != null) {
             Spacer(Modifier.weight(1f))
-            Text(bottom, style = v.text(7f, color = Vga.LightGray))
+            Text(bottom, style = v.readingText(7f, color = Vga.LightGray))
         }
     }
 }
@@ -463,7 +463,7 @@ fun CityClockBox(v: Virtual, vm: ClaraViewModel, tickHours: Int = 0) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     val left = vm.hoursLeft() - tickHours
                     Text(vm.deadlineLabel(tickHours),
-                        style = v.text(6.5f, color = if (left in 0..24) Vga.Red else Vga.LightGray))
+                        style = v.text(6.5f, color = if (left in 0..24) Vga.DangerOnDark else Vga.LightGray))
                     if (inCase && s.onTrack) {
                         Spacer(Modifier.width(v.w(3)))
                         TrailMeter(v, heat)
@@ -540,7 +540,7 @@ fun CityScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                 .border(BorderStroke(v.w(1), Vga.White)).padding(v.w(4))) {
                 if (s.onTrack) CountryText(v, info, vm.s.expansionUnlocked)
                 else Text(Strings.ui("You look around. Nothing here seems out of the ordinary..."),
-                    style = v.text(8.5f, color = Vga.White))
+                    style = v.readingText(8.5f, color = Vga.White))
             }
         }
     }
@@ -781,7 +781,7 @@ private fun WitnessPanel(v: Virtual, clue: Venue, onDone: () -> Unit) {
                 Box {
                     Box(Modifier.background(Vga.White, RoundedCornerShape(v.w(6)))
                         .padding(horizontal = v.w(5), vertical = v.w(4))) {
-                        Text(clue.text.take(shown), style = v.text(7.5f, color = Vga.Black))
+                        Text(clue.text.take(shown), style = v.readingText(7.5f, color = Vga.Black))
                     }
                     // tail: triangle sticking out of the bubble's left edge toward the sprite
                     Canvas(Modifier.align(Alignment.CenterStart).offset(v.w(-7), v.w(4)).size(v.w(9), v.w(8))) {
@@ -1027,7 +1027,7 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     v.At(149, 13, 167, 145) {
         Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(4))) {
             Column {
-                Text(CityMeta.of(s.currentCity).description, style = v.text(8.5f, color = Vga.White))
+                Text(CityMeta.of(s.currentCity).description, style = v.readingText(8.5f, color = Vga.White))
                 // Soft nudge, last 2 free cases only: flows right under the description, in the
                 // panel's own safe (map-uncovered) top region — no button, no popup, easy to miss
                 // on purpose. See ui/GameMenuBar.kt's Campaign entry for the actual CTA.
@@ -1401,8 +1401,8 @@ internal fun WarrantStamp(v: Virtual, reduce: Boolean, onDone: () -> Unit) {
             .padding(horizontal = v.w(10), vertical = v.w(5)),
             contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(Strings.ui("WARRANT ISSUED"), style = v.text(13, color = Vga.Red, bold = true))
-                Text("●  " + Strings.ui("APPROVED") + "  ●", style = v.text(9, color = Vga.Red, bold = true))
+                Text(Strings.ui("WARRANT ISSUED"), style = v.text(13, color = Vga.DangerOnDark, bold = true))
+                Text("●  " + Strings.ui("APPROVED") + "  ●", style = v.text(9, color = Vga.DangerOnDark, bold = true))
             }
         }
     }

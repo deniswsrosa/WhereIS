@@ -12,8 +12,8 @@ import org.junit.Test
 /** Integrity of the original and expanded game data. */
 class GameDataTest {
 
-    @Test fun twentySuspectsIncludingClara() {
-        assertEquals(20, GameData.suspects.size)
+    @Test fun twentyTwoSuspectsIncludingClara() {
+        assertEquals(22, GameData.suspects.size)
         assertTrue(GameData.suspects.any { it.name == "Clara San Diego" })
     }
 
@@ -52,6 +52,17 @@ class GameDataTest {
                     suspects.size >= 2,
                 )
             }
+        }
+    }
+
+    @Test fun sexAndHairTogetherNeverIdentifyOneSuspect() {
+        // Witnesses can reveal sex and hair early in a case. That pair must still leave a real
+        // choice — especially gray hair, whose original male/female buckets each had one person.
+        for ((traits, suspects) in GameData.suspects.groupBy { it.tSex to it.tHair }) {
+            assertTrue(
+                "sex/hair $traits identifies only ${suspects.joinToString { it.name }}",
+                suspects.size >= 2,
+            )
         }
     }
 

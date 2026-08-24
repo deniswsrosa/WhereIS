@@ -28,13 +28,28 @@ import com.acme.clara.ui.theme.Vga
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+/**
+ * Scale reflowable reading type enough to respect the user's preference without making the
+ * 320×200 scene overlap itself. New/off-canvas Compose UI receives Android's full font scale;
+ * selected canvas copy grows by up to 10%, while layout-critical labels stay on the pixel grid.
+ */
+internal fun boundedCanvasTextScale(systemFontScale: Float): Float =
+    (1f + (systemFontScale.coerceAtLeast(1f) - 1f) * 0.4f).coerceAtMost(1.10f)
+
 /** Scope for laying out inside a virtual 320x200 DOS screen. `unit` = one virtual pixel, in Dp. */
-class Virtual(val unit: Dp, val density: Density) {
+class Virtual(val unit: Dp, val density: Density, private val textScale: Float = 1f) {
     fun w(n: Number): Dp = unit * n.toFloat()
     fun sp(n: Number): TextUnit = with(density) { (unit * n.toFloat()).toSp() }
+    private fun readableSp(n: Number): TextUnit = sp(n) * textScale
     fun text(px: Number, color: Color = Vga.White, bold: Boolean = false) = TextStyle(
         fontFamily = FontFamily.Monospace, fontSize = sp(px), color = color,
         fontWeight = if (bold) FontWeight.Bold else FontWeight.Medium, lineHeight = sp(px.toFloat() * 1.15f)
+    )
+    /** System-scaled type for reflowable reading surfaces; keep tight control chrome on [text]. */
+    fun readingText(px: Number, color: Color = Vga.White, bold: Boolean = false) = TextStyle(
+        fontFamily = FontFamily.Monospace, fontSize = readableSp(px), color = color,
+        fontWeight = if (bold) FontWeight.Bold else FontWeight.Medium,
+        lineHeight = readableSp(px.toFloat() * 1.15f),
     )
 }
 
@@ -71,7 +86,10 @@ fun VirtualScreen(
         val unit = fitW / 320f
         if (!unit.value.isFinite() || unit.value <= 0f) return@BoxWithConstraints
         val density = LocalDensity.current
-        val v = remember(unit) { Virtual(unit, density) }
+        val canvasTextScale = boundedCanvasTextScale(density.fontScale)
+        val v = remember(unit, density.density, density.fontScale) {
+            Virtual(unit, density, canvasTextScale)
+        }
 
         // Pan the canvas up so `keepVirtualYAboveIme` clears the keyboard (no scaling).
         var shift: Dp = 0.dp
