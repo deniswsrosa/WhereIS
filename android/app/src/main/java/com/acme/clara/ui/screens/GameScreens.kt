@@ -35,8 +35,10 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextAlign
 import com.acme.clara.game.Venue
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.acme.clara.data.CityMeta
 import com.acme.clara.data.GameData
 import com.acme.clara.data.MastermindArc
@@ -104,8 +106,29 @@ fun IntroScreen(vm: ClaraViewModel) = VirtualScreen { v ->
 /* ----------------------------- TITLE ----------------------------- */
 @Composable
 fun TitleScreen(vm: ClaraViewModel) = VirtualScreen { v ->
-    // the whole screen advances, like the original's "any key or button"
-    Box(Modifier.fillMaxSize().clickable { vm.start() }) {
+    var loading by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    // The whole screen advances, like the original's "any key or button" — but a career already
+    // on disk (e.g. just quit here from "start a new case?" ▸ No) must be resumed, never
+    // silently abandoned for a brand-new sign-on. Mirrors decideLaunch()'s cold-start rule:
+    // 0 saves → sign-on, 1 → resume it directly, 2+ → the detective picker.
+    Box(Modifier.fillMaxSize().clickable {
+        if (!loading) {
+            loading = true
+            scope.launch {
+                val saves = withContext(Dispatchers.IO) { vm.savedGames() }
+                when {
+                    saves.isEmpty() -> vm.start()
+                    saves.size == 1 -> {
+                        val data = withContext(Dispatchers.IO) { vm.savedGame(saves.first().id) }
+                        if (data != null) vm.resume(data) else vm.start()
+                    }
+                    else -> vm.toChooseGame()
+                }
+                loading = false
+            }
+        }
+    }) {
         PixelImage("title_screen", Modifier.fillMaxSize())
     }
     v.At(0, 176, 320, 24, Alignment.Center) {
@@ -153,6 +176,7 @@ private const val ST_FLASH = 6       // typing FLASH + treasure
 private const val ST_GATE2 = 7       // press any key -> assignment segment
 private const val ST_ASSIGN = 8      // typing assignment + deadline
 private const val ST_BEGIN = 9       // press any key -> investigation
+private const val ST_DUPLICATE = 10  // typing the name-already-on-file message, then re-asks for a name
 
 @Composable
 private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin: () -> Unit) =
@@ -167,6 +191,7 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
     val scroll = rememberScrollState()
     val focus = remember { FocusRequester() }
     val ctx = androidx.compose.ui.platform.LocalContext.current
+    val scope = rememberCoroutineScope()
 
     suspend fun typeLines(lines: List<String>) {
         var n = 0
@@ -214,6 +239,12 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
                 typeLines(listOf("", Strings.ui("Your assignment:"), assignment,
                     "", GameData.DEADLINE))
                 stage = ST_BEGIN
+            }
+            ST_DUPLICATE -> {
+                typeLines(listOf("", Strings.ui("Agent {0} is already on file.", pendingName),
+                    "", Strings.ui("Please choose a different name.")))
+                pendingName = ""
+                stage = ST_NAME
             }
         }
     }
@@ -312,8 +343,16 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
             // the paper echoes the pressed answer's initial, like the DOS "Y"/"N" keypress
             YellowButton(v, Strings.ui("Yes")) {
                 printed.add(Strings.ui("Yes").take(1).uppercase())
-                vm.signOnStart(pendingName)
-                stage = ST_IDENT
+                val name = pendingName
+                scope.launch {
+                    // savedGames() reads + JSON-decodes every save file on disk — off the main
+                    // thread, same reasoning as the picker's use of it.
+                    val taken = withContext(Dispatchers.IO) {
+                        vm.savedGames().any { it.name.equals(name, ignoreCase = true) }
+                    }
+                    if (taken) stage = ST_DUPLICATE
+                    else { vm.signOnStart(name); stage = ST_IDENT }
+                }
             }
         }
         v.At(234, 174, 76, 16) {
@@ -1615,7 +1654,7 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
         if (stage == 3) {
             // Accent-insensitive: a translated answer (e.g. Portuguese "Nilo") shouldn't fail
             // just because a mobile keyboard made the diacritic (if any) awkward to type.
-            val correct = foldDiacritics(input.trim()) == foldDiacritics(Strings.quizAnswer(quiz))
+            val correct = foldDiacritics(input.trim()) == foldDiacritics(Strings.quizAnswer(quiz).trim())
             if (correct) {
                 vm.resolvePromotion(true)
                 // P4: name what the rank actually changes — route length is the real, coded
