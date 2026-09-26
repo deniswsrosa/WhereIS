@@ -206,8 +206,8 @@ data class GameState(
     val tutorialSeen: Set<String> = emptySet(),
     val sawTraitClue: Boolean = false,
     val sawTrailClue: Boolean = false,
-    // Level rules: the deadline for THIS case, set by Progression from the route's travel need +
-    // the rank's slack (see docs/05-game-design-and-progression.md). 152 = the legacy fixed value.
+    // Level rules: the deadline for THIS case, set at generation via estimateEfficientClock +
+    // Progression.slackHours (see docs/05-game-design-and-progression.md). 152 = legacy default.
     val caseDeadlineHours: Int = 152,
 ) {
     val revealedTraits: List<Pair<String, String>> get() = revealOrder.take(revealedCount)
@@ -215,7 +215,6 @@ data class GameState(
     val hideout: String get() = route.lastOrNull() ?: ""
     val atHideout: Boolean get() = currentCity == hideout && onTrack
     companion object {
-        const val DEADLINE_HOURS = 152     // Mon 9am -> Sun 5pm
         // Career length: promotions at 1, 5, 9, 13 solved (4 cases per middle rank); the first
         // case as Ace Detective is always Clara San Diego herself, but she escapes there — the
         // free career's inciting incident, not its end (see Masterminds.kt / win()'s

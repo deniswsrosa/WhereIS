@@ -31,8 +31,6 @@ object Achievements {
         Achievement("kingpin", "Kingpin", "Jail the ring-leader and close the career."),
     )
 
-    private val ids = catalog.map { it.id }.toSet()
-
     fun titleOf(id: String): String = catalog.firstOrNull { it.id == id }?.title ?: id
 
     /** Every achievement id the career currently satisfies (cumulative, order-independent). */
@@ -56,7 +54,4 @@ object Achievements {
         careerOver = state.careerOver,
     )
 
-    /** Any newly-unlocked ids not already in [already] — for a "commendation earned" toast. */
-    fun newlyEarned(state: GameState, already: Set<String>): Set<String> =
-        earned(summarise(state)).filter { it in ids }.toSet() - already
 }

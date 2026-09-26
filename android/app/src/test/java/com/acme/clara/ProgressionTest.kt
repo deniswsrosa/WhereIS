@@ -93,13 +93,6 @@ class ProgressionTest {
         assertEquals(9, Progression.unlockedMaxWave(999))
     }
 
-    @Test fun deadlineCoversTravelAndGrowsWithIt() {
-        val short = Progression.caseDeadlineHours(4, 40, 9)
-        val long = Progression.caseDeadlineHours(4, 90, 9)
-        assertTrue("more travel -> later deadline", long > short)
-        assertTrue("deadline always covers the raw flight hours", short >= 40)
-        assertTrue("deadline adds this rank's slack", short > 40)
-    }
 
     /** The game-theory check from the design doc encoded as a test: expected wrong-guesses vs the
      *  wrong-guess budget the slack buys — the margin must stay positive and never grow (never easier). */

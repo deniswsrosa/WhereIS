@@ -1,20 +1,6 @@
 package com.acme.clara.ui.theme
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 /** The 16-colour EGA/VGA text palette — the actual DOS colours. */
 object Vga {
@@ -39,30 +25,4 @@ object Vga {
     // 16-colour palette, but avoid AA0000 red on black (2.71:1) and white on green (3.11:1).
     val DangerOnDark = LightRed       // 6.68:1 on Black
     val TextOnGreen = Black           // 6.75:1 on Green
-}
-
-/** DOS-flavoured monospace text styles. */
-object DosType {
-    private val fam = FontFamily.Monospace
-    val body = TextStyle(fontFamily = fam, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = Vga.White)
-    val small = TextStyle(fontFamily = fam, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Vga.White)
-    val heading = TextStyle(fontFamily = fam, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Vga.Yellow)
-    val menu = TextStyle(fontFamily = fam, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Vga.LightGray)
-}
-
-/** A beveled DOS panel: light top/left, dark bottom/right feel via a double border. */
-@Composable
-fun DosPanel(
-    modifier: Modifier = Modifier,
-    fill: Color = Vga.Blue,
-    border: Color = Vga.White,
-    padding: PaddingValues = PaddingValues(10.dp),
-    content: @Composable () -> Unit,
-) {
-    Box(
-        modifier
-            .background(fill, RectangleShape)
-            .border(BorderStroke(2.dp, border), RectangleShape)
-            .padding(padding)
-    ) { content() }
 }
