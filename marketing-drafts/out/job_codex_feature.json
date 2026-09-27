@@ -1,0 +1,30 @@
+{
+  "id": "op_24",
+  "type": "operation",
+  "kind": "codex_image",
+  "status": "running",
+  "project_id": null,
+  "scene_id": null,
+  "created_at": "2026-09-27T14:04:32.588Z",
+  "finished_at": null,
+  "progress": {
+    "done": 0,
+    "total": null,
+    "percent": null,
+    "note": "Waiting for Codex (one image at a time)"
+  },
+  "estimate": {
+    "total_seconds": 120,
+    "remaining_seconds": 120,
+    "completion_at": "2026-09-27T14:06:32.590Z",
+    "elapsed_seconds": 0
+  },
+  "poll_after_seconds": 20,
+  "result": null,
+  "error": null,
+  "links": {
+    "self": "http://127.0.0.1:4900/api/v1/jobs/op_24",
+    "cancel": "http://127.0.0.1:4900/api/v1/jobs/op_24",
+    "project": null
+  }
+}

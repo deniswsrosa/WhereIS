@@ -1,0 +1,34 @@
+{
+  "id": "op_24",
+  "type": "operation",
+  "kind": "codex_image",
+  "status": "succeeded",
+  "project_id": null,
+  "scene_id": null,
+  "created_at": "2026-09-27T14:04:32.588Z",
+  "finished_at": "2026-09-27T14:06:12.719Z",
+  "progress": {
+    "done": 0,
+    "total": null,
+    "percent": null,
+    "note": "Codex is generating the image"
+  },
+  "estimate": {
+    "total_seconds": 120,
+    "remaining_seconds": 0,
+    "completion_at": null,
+    "elapsed_seconds": 100
+  },
+  "poll_after_seconds": null,
+  "result": {
+    "url": "http://127.0.0.1:4900/media/codex-images/d5760317-c102-4ee0-9e43-7ca374cece1a/image.png",
+    "id": "d5760317-c102-4ee0-9e43-7ca374cece1a",
+    "references": 2
+  },
+  "error": null,
+  "links": {
+    "self": "http://127.0.0.1:4900/api/v1/jobs/op_24",
+    "cancel": "http://127.0.0.1:4900/api/v1/jobs/op_24",
+    "project": null
+  }
+}

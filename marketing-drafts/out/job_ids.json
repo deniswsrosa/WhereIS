@@ -1,0 +1,62 @@
+[
+  {
+    "name": "clara-title-card-social-1080",
+    "id": "512",
+    "status": "queued",
+    "target": [
+      1080,
+      1080
+    ],
+    "gen": [
+      1088,
+      1088
+    ],
+    "estimate": {
+      "total_seconds": 92,
+      "remaining_seconds": 92,
+      "completion_at": "2026-09-27T13:47:25.535Z",
+      "elapsed_seconds": 0
+    },
+    "queue_position": 0
+  },
+  {
+    "name": "clara-title-card-story-1080x1920",
+    "id": "513",
+    "status": "queued",
+    "target": [
+      1080,
+      1920
+    ],
+    "gen": [
+      1088,
+      1920
+    ],
+    "estimate": {
+      "total_seconds": 92,
+      "remaining_seconds": 184,
+      "completion_at": "2026-09-27T13:48:57.549Z",
+      "elapsed_seconds": 0
+    },
+    "queue_position": 1
+  },
+  {
+    "name": "clara-feature-graphic-1024x500",
+    "id": "514",
+    "status": "queued",
+    "target": [
+      1024,
+      500
+    ],
+    "gen": [
+      1024,
+      512
+    ],
+    "estimate": {
+      "total_seconds": 92,
+      "remaining_seconds": 276,
+      "completion_at": "2026-09-27T13:50:29.561Z",
+      "elapsed_seconds": 0
+    },
+    "queue_position": 2
+  }
+]
