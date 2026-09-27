@@ -109,7 +109,6 @@ data class GameState(
     val detectiveName: String = "",
     val rankIndex: Int = 0,
     val casesSolved: Int = 0,
-    // case
     val culprit: Suspect? = null,
     val treasure: String = "",
     val route: List<String> = emptyList(),
@@ -117,14 +116,11 @@ data class GameState(
     val currentCity: String = "",
     val clock: Int = 0,                 // hours since Monday 9:00
     val onTrack: Boolean = true,
-    // discovery
     val revealOrder: List<Pair<String, String>> = emptyList(), // culprit traits, discriminating first
     val revealedCount: Int = 0,
-    // venues at current city
     val venues: List<Venue> = emptyList(),
     val visited: Set<Int> = emptySet(),
-    val openClue: Venue? = null,        // overlay
-    // crime computer
+    val openClue: Venue? = null,
     val compSex: String? = null,
     val compHobby: String? = null,
     val compHair: String? = null,
@@ -148,47 +144,37 @@ data class GameState(
     val selectedTool: Int = 2,
     // the overnight clamp fired: the city box shows "SLEEPING…" briefly
     val sleeping: Boolean = false,
-    // result
     val won: Boolean = false,
     val resultLines: List<String> = emptyList(),
-    // a promotion was earned and awaits the almanac quiz (original: "one more clue to unravel")
+    // Promotion earned; awaits almanac quiz (DOS: "one more clue to unravel").
     val pendingPromotion: Boolean = false,
-    // ui
     val overlay: Overlay? = null,
     val soundOn: Boolean = true,
     val hapticsOn: Boolean = true,
     val captionsOn: Boolean = false,   // Options ▸ Captions: on-screen text for audio cues
-    // per-case tallies (reset every newCase) — feed stats, achievements, the share card
+    // Per-case tallies (reset every newCase).
     val wrongFlights: Int = 0,
     val hintsUsed: Int = 0,
-    // paid-tier Bureau tip: one concrete lead per case (see requestHint()), reset every newCase
+    // Paid Bureau tip: one concrete lead per case (requestHint()); reset every newCase.
     val bureauTipUsed: Boolean = false,
-    // the running case journal: leads and traits as they're uncovered (reset per case)
+    // Case journal (reset per case).
     val journal: List<JournalEntry> = emptyList(),
-    // career record — persists across cases within a saved profile
+    // Career record (persists across cases in a profile).
     val capturedVillains: Set<String> = emptySet(),
     val unlockedAchievements: Set<String> = emptySet(),
-    // Passport (C4): every place the detective has ever landed in, across the whole career and
-    // both tiers. Recorded silently from day one on the free tier; on the paid unlock the
-    // world map paints in every country already visited here. Place names -> countries via
-    // data.CountryShapes.placeCountry.
+    // Passport (C4): career-wide places landed; paints world map on paid unlock (CountryShapes.placeCountry).
     val visitedPlaces: Set<String> = emptySet(),
-    // H3 welcome-back warm-up: the next fresh case after a long absence is kinder (a shorter
-    // route + one trait pre-solved). Set on resume() after a gap, consumed by newCase().
+    // H3: after a long absence, next case is kinder (shorter route + one trait pre-solved); set in resume(), consumed by newCase().
     val warmUpNextCase: Boolean = false,
-    // H4 case-a-day streak: consecutive days with a solved case, a weekly "streak freeze" that
-    // absorbs one missed day, and the epoch-day of the last solve (0 = never).
+    // H4 streak: consecutive solve-days, weekly freeze absorbs one miss; lastSolveEpochDay 0 = never.
     val streakDays: Int = 0,
     val streakFreezes: Int = 0,
     val lastSolveEpochDay: Int = 0,
-    // L4 spaced repetition: the case index (casesSolved) each place was last seen, so route
-    // picking can resurface geography on an expanding schedule and the almanac can flag it.
+    // L4: case index each place was last seen (spaced-repetition route picks + almanac flags).
     val cityLastSeen: Map<String, Int> = emptyMap(),
-    // paid-tier entitlement: unlocks the 201 campaign destinations wave by wave, plus the paid
-    // world tools and comforts. Free play stays on the original 30.
+    // Paid entitlement: 201 campaign destinations wave-by-wave + paid tools; free stays on original 30.
     val expansionUnlocked: Boolean = false,
-    // Optional paid comfort perk. It adds eight hours to a freshly generated case deadline and
-    // can be disabled from Options without affecting campaign progression.
+    // Paid comfort: +8h case deadline when enabled (Options); does not affect campaign progression.
     val travelBufferEnabled: Boolean = true,
     val hintFreeSolves: Int = 0,
     val hadCleanCase: Boolean = false,
@@ -196,11 +182,7 @@ data class GameState(
     // Capped at 1 in resume() — a paid player's per-case bureauTipUsed perk stacks on top, so the
     // combined ceiling in any one case is 2, never more.
     val freeHints: Int = 0,
-    // The guided first case is a set of contextual, teach-once lessons rather than a linear step
-    // counter: each lesson fires the first time its game state is true and clears when the player
-    // does the action. [tutorialActive] = the tour is running now; [tutorialDone] = it has run once
-    // (never re-arms); [tutorialSeen] = lesson ids already taught; the sawClue flags arm the lessons
-    // that only make sense once you've actually heard that kind of witness.
+    // Guided first case: teach-once lessons keyed on game state; sawClue flags arm witness-dependent ones.
     val tutorialDone: Boolean = false,
     val tutorialActive: Boolean = false,
     val tutorialSeen: Set<String> = emptySet(),
@@ -699,7 +681,6 @@ class ClaraViewModel : ViewModel() {
             chosen.add(best to cats[best]!!)
             candidates = candidates.filter { value(it, best) == cats[best] }
         }
-        // append leftover traits (flavour / redundancy)
         remaining.forEach { chosen.add(it to cats[it]!!) }
         return chosen
     }
@@ -747,7 +728,6 @@ class ClaraViewModel : ViewModel() {
             val used = HashSet<String>()
             val generals = ArrayDeque((info?.let { generalCluePool(it) } ?: emptyList()).shuffled())
 
-            // Localized lead-ins + template phrases (English is a no-op via Strings.opt).
             val leadIns = GameData.clueLeadIns.indices.map {
                 com.acme.clara.i18n.Strings.opt("clue.leadin.$it") ?: GameData.clueLeadIns[it]
             }
@@ -785,10 +765,8 @@ class ClaraViewModel : ViewModel() {
                 }
             }
 
-            // Venue 1 — a general trail hint.
             val v1 = trailVenue(places[0], occs[0])
 
-            // Venue 3 — the bet.
             val v3 = if (Random.nextDouble() < venue3Chance(st.rankIndex)) {
                 val useFlag = when {
                     flagFree() && curFree() -> Random.nextInt(100) < 65
@@ -803,7 +781,6 @@ class ClaraViewModel : ViewModel() {
                 }
             } else Venue(places[2], occs[2], ClueKind.DANGER, funnyText(occs[2]))
 
-            // Venue 2 — trait until the warrant is in hand, then a 2nd distinct trail hint.
             val v2 = if (!hasMandate && st.revealOrder.isNotEmpty()) {
                 val tr = st.revealOrder[st.revealedCount % st.revealOrder.size]
                 Venue(places[1], occs[1], ClueKind.TRAIT, flourish(traitClue(tr), occs[1]), tr)
@@ -1318,8 +1295,6 @@ class ClaraViewModel : ViewModel() {
             lines += GameData.PROMOTION.replace("%s", s.detectiveName)
             lines += i18n.ui("One last puzzle stands between you and the promotion.")
         }
-        // update the career record: capture the villain, tally clean / hint-free solves,
-        // then unlock any newly-earned commendations from the resulting record
         // An escape at Case 14 must not mark Clara "captured" in the Most Wanted gallery — she
         // isn't, until the true finale (isFinale) actually jails her.
         val captured = when {

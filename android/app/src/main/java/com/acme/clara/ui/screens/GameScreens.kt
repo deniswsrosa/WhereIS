@@ -399,14 +399,12 @@ private fun VgaCityCard(city: String, region: String, v: Virtual, modifier: Modi
         androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
             val w = size.width; val h = size.height
             drawRect(sky.copy(alpha = 1f), size = androidx.compose.ui.geometry.Size(w, h))
-            // horizon / ground
             val horizon = h * 0.62f
             drawRect(ground, topLeft = androidx.compose.ui.geometry.Offset(0f, horizon),
                 size = androidx.compose.ui.geometry.Size(w, h - horizon))
-            // sun/moon
             drawCircle(Vga.Yellow, radius = w * 0.10f,
                 center = androidx.compose.ui.geometry.Offset(w * 0.78f, h * 0.22f))
-            // skyline silhouette, deterministic from the city name
+            // Skyline silhouette (deterministic from city name).
             var seed = city.hashCode().toLong() and 0xffffffffL
             fun rnd(): Float { seed = (seed * 1103515245 + 12345) and 0xffffffffL; return (seed ushr 16 and 0x7fff) / 32767f }
             val n = 9
@@ -416,13 +414,11 @@ private fun VgaCityCard(city: String, region: String, v: Virtual, modifier: Modi
                 drawRect(Vga.Black,
                     topLeft = androidx.compose.ui.geometry.Offset(i * bw, horizon - bh),
                     size = androidx.compose.ui.geometry.Size(bw * 0.86f, bh))
-                // a couple of lit windows
                 if (rnd() > 0.4f) drawRect(Vga.Yellow,
                     topLeft = androidx.compose.ui.geometry.Offset(i * bw + bw * 0.3f, horizon - bh * 0.6f),
                     size = androidx.compose.ui.geometry.Size(bw * 0.18f, bh * 0.12f))
             }
         }
-        // name plate
         Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Vga.Black.copy(alpha = 0.72f))
             .padding(vertical = v.w(2)), contentAlignment = Alignment.Center) {
             Text(Strings.place(city), style = v.text(9, color = Vga.White, bold = true), textAlign = TextAlign.Center)
@@ -513,11 +509,9 @@ fun CityScreen(vm: ClaraViewModel) = VirtualScreen { v ->
         }
     }
 
-    // menu bar
     v.At(0, 0, 320, 11) { GameMenuBar(v, vm) }
 
     if (!seeOpen) CityClockBox(v, vm)
-    // city photo
     v.At(4, 45, 141, 148) {
         Box(Modifier.fillMaxSize().border(BorderStroke(v.w(1), Vga.White))) {
             CityPhoto(s.currentCity, v, Modifier.fillMaxSize())
@@ -801,43 +795,33 @@ private fun WitnessPanel(v: Virtual, clue: Venue, onDone: () -> Unit) {
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawBust(w: Float, h: Float, look: Look, bob: Float) {
     val ink = Vga.Black
     val stroke = androidx.compose.ui.graphics.drawscope.Stroke(width = w * 0.025f)
-    // ---- shoulders + collar ----
     val shTop = h * 0.72f + bob
     drawRoundRect(look.shirt, topLeft = Offset(w * 0.02f, shTop), size = Size(w * 0.96f, h - shTop),
         cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.18f, w * 0.18f))
-    // collar V
     val collar = androidx.compose.ui.graphics.Path().apply {
         moveTo(w * 0.32f, shTop); lineTo(w * 0.50f, shTop + h * 0.10f); lineTo(w * 0.68f, shTop)
     }
     drawPath(collar, Vga.White, style = stroke)
-    // ---- neck ----
     val headCx = w * 0.50f; val headCy = h * 0.36f + bob
     val hw = w * 0.34f; val hh = h * 0.30f
     drawRect(look.skin, topLeft = Offset(headCx - w * 0.10f, headCy + hh * 0.55f), size = Size(w * 0.20f, h * 0.16f))
-    // ---- head (big round, facing slightly right) ----
     drawOval(look.skin, topLeft = Offset(headCx - hw, headCy - hh), size = Size(hw * 2, hh * 2))
     drawOval(ink, topLeft = Offset(headCx - hw, headCy - hh), size = Size(hw * 2, hh * 2), style = stroke)
-    // ear (left)
     drawOval(look.skin, topLeft = Offset(headCx - hw * 1.06f, headCy - hh * 0.05f), size = Size(w * 0.10f, h * 0.09f))
-    // exaggerated nose (right profile)
     val nose = androidx.compose.ui.graphics.Path().apply {
         moveTo(headCx + hw * 0.70f, headCy - hh * 0.10f)
         lineTo(headCx + hw * 1.12f, headCy + hh * 0.12f)
         lineTo(headCx + hw * 0.70f, headCy + hh * 0.24f)
     }
     drawPath(nose, look.skin); drawPath(nose, ink, style = stroke)
-    // eyebrow + eye
     drawRect(ink, topLeft = Offset(headCx + hw * 0.12f, headCy - hh * 0.44f), size = Size(w * 0.14f, h * 0.018f))
     drawOval(ink, topLeft = Offset(headCx + hw * 0.20f, headCy - hh * 0.30f), size = Size(w * 0.055f, h * 0.06f))
-    // smiling mouth
     drawArc(ink, 20f, 50f, false, topLeft = Offset(headCx + hw * 0.02f, headCy - hh * 0.02f),
         size = Size(hw * 1.0f, hh * 0.9f), style = stroke)
-    // ---- hair by style ----
     when (look.style) {
         2 -> {}  // bald: just a fringe over the ear
         3 -> drawRect(look.hair, topLeft = Offset(headCx - hw * 1.02f, headCy - hh * 1.12f), size = Size(hw * 2.0f, hh * 0.55f)) // cap
         else -> {
-            // hair sweeping over the crown and down the back-left
             drawArc(look.hair, 160f, 230f, true,
                 topLeft = Offset(headCx - hw * 1.02f, headCy - hh * 1.12f), size = Size(hw * 2.0f, hh * 1.7f))
             if (look.style == 1)  // fuller: sideburn down the left
@@ -932,14 +916,10 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCivicBuilding(w
     when (idx % 3) {
         0 -> {  // Sport Club: low, wide, purple, with a railing and a stepped dome
             val purple = g(Color(0xFF9A6FB0)); val dark = g(Color(0xFF5C3F73))
-            // thin white antenna poles
             rect(0.06f, 0.30f, 0.015f, 0.30f, g(Vga.White)); rect(0.925f, 0.30f, 0.015f, 0.30f, g(Vga.White))
-            // wide base platform
             rect(0.02f, 0.60f, 0.96f, 0.30f, purple)
-            // railing bars with lit gaps
             for (i in 0 until 11) rect(0.06f + i * 0.082f, 0.56f, 0.02f, 0.14f, dark)
             if (!visited) for (i in 0 until 5) rect(0.14f + i * 0.16f, 0.60f, 0.05f, 0.08f, Vga.Yellow)
-            // stepped centre block + dome cap
             rect(0.30f, 0.44f, 0.40f, 0.18f, purple)
             rect(0.36f, 0.36f, 0.28f, 0.10f, dark)
             drawArc(purple, 180f, 180f, true, topLeft = Offset(w * 0.40f, h * 0.24f), size = Size(w * 0.20f, h * 0.24f))
@@ -947,39 +927,31 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCivicBuilding(w
         }
         1 -> {  // Library: salmon classical temple, tiled gable, dark columns, white steps
             val salmon = g(Color(0xFFC88878)); val col = g(Color(0xFF383038))
-            // gable roof (trapezoid) with a tiled band
             val roof = androidx.compose.ui.graphics.Path().apply {
                 moveTo(w * 0.10f, h * 0.34f); lineTo(w * 0.5f, h * 0.14f); lineTo(w * 0.90f, h * 0.34f); close()
             }
             drawPath(roof, salmon)
             rect(0.10f, 0.30f, 0.80f, 0.05f, g(Color(0xFF7A5A9A)))    // tiled frieze
-            // entablature
             rect(0.10f, 0.35f, 0.80f, 0.05f, salmon)
-            // columns
             for (c in 0 until 5) rect(0.14f + c * 0.16f, 0.40f, 0.05f, baseY - 0.40f, col)
             rect(0.10f, baseY - 0.02f, 0.80f, 0.06f, salmon)          // stylobate
-            // central pediment + entrance
             val ped = androidx.compose.ui.graphics.Path().apply {
                 moveTo(w * 0.38f, h * 0.46f); lineTo(w * 0.5f, h * 0.36f); lineTo(w * 0.62f, h * 0.46f); close()
             }
             drawPath(ped, salmon)
             if (!visited) { rect(0.22f, 0.48f, 0.07f, 0.10f, Vga.Yellow); rect(0.71f, 0.48f, 0.07f, 0.10f, Vga.Yellow) }
             rect(0.44f, 0.60f, 0.12f, 0.30f, salmon)
-            // white steps
             rect(0.36f, 0.90f, 0.28f, 0.04f, g(Vga.White)); rect(0.40f, 0.86f, 0.20f, 0.04f, g(Vga.White))
         }
         else -> {  // Palace: two green towers, crenellated salmon centre, blue entrance
             val green = g(Color(0xFF1E7A46)); val salmon = g(Color(0xFFD09890)); val blue = g(Color(0xFF3A46B0))
-            // side towers
             for (tx in listOf(0.04f, 0.74f)) {
                 rect(tx, 0.30f, 0.22f, baseY - 0.30f, green)
                 if (!visited) for (r in 0 until 3) for (cc in 0 until 2)
                     rect(tx + 0.04f + cc * 0.10f, 0.36f + r * 0.16f, 0.06f, 0.10f, Color(0xFF0E4028))
             }
-            // centre wall + crenellations
             rect(0.24f, 0.34f, 0.52f, baseY - 0.34f, salmon)
             for (i in 0 until 5) rect(0.25f + i * 0.11f, 0.28f, 0.06f, 0.07f, salmon)
-            // blue gabled entrance
             val gab = androidx.compose.ui.graphics.Path().apply {
                 moveTo(w * 0.40f, h * 0.44f); lineTo(w * 0.5f, h * 0.34f); lineTo(w * 0.60f, h * 0.44f); close()
             }
@@ -998,7 +970,7 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     val s = vm.s
     val options = s.departOptions
     val flying = s.flying
-    // flight animation: fraction of the current leg drawn (0..1)
+    // Flight leg draw fraction 0..1.
     var legT by remember { mutableStateOf(0f) }
     // DOS animates the destination list growing out of the city box when DEPART opens
     var grow by remember { mutableStateOf(0f) }
@@ -1023,7 +995,7 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
             CityPhoto(s.currentCity, v, Modifier.fillMaxSize())
         }
     }
-    // description panel (top-right, partly covered by the map below)
+    // Description panel (top-right; map covers the lower portion).
     v.At(149, 13, 167, 145) {
         Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White)).padding(v.w(4))) {
             Column {
@@ -1057,7 +1029,6 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                 val dashes = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
                     floatArrayOf(size.width * 0.008f, size.width * 0.006f), 0f)
                 val stroke = size.height * 0.016f
-                // the leg being flown grows dash by dash
                 if (flying != null) {
                     val a = px(s.currentCity); val b = px(flying)
                     if (a != null && b != null) {
@@ -1116,7 +1087,6 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                                 contentAlignment = Alignment.Center) {
                                 Text(Strings.place(city), style = v.text(8.5f,
                                     color = if (isSel) Vga.Black else Vga.White, bold = true))
-                                // flight time shown up front so the player weighs the cost
                                 Text("~${vm.flightHoursTo(city)}h",
                                     style = v.text(6f, color = if (isSel) Vga.Blue else Vga.LightGray),
                                     modifier = Modifier.align(Alignment.CenterEnd).padding(end = v.w(2)))
@@ -1124,7 +1094,6 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                         }
                     }
                 }
-                // hint appears once a city is highlighted
                 if (grow >= 1f) Box(Modifier.fillMaxWidth().height(v.w(8)), contentAlignment = Alignment.Center) {
                     if (selected >= 0) Text(Strings.ui("tap again to fly"),
                         style = v.text(6f, color = Vga.Yellow, bold = true))
@@ -1257,7 +1226,6 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     // city name / date box (unchanged from the city screen; shows SLEEPING… when the
     // 3-hour compute crosses 10 p.m. — the CRT stays up, like the original)
     CityClockBox(v, vm)
-    // LEFT: the printer panel — paper grows upward from the platen as results print
     v.At(2, 44, 146, 154) {
         Box(Modifier.fillMaxSize()) {
             PixelImage("crime_printer", Modifier.fillMaxSize())
@@ -1267,7 +1235,7 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
             val sheetH = (10f + shown.size * lineH).coerceAtLeast(29f).coerceAtMost(96f)
             v.At(14, 102f - sheetH, 113, sheetH) {
                 Box(Modifier.fillMaxSize().background(Vga.White).border(BorderStroke(v.w(0.7f), Vga.Black))) {
-                    // sprocket hole columns: small holes every ~6 virtual px down both edges
+                    // sprocket holes every ~6 virtual px on both edges
                     Canvas(Modifier.fillMaxSize()) {
                         val unit = size.width / 113f          // 1 virtual px
                         val hole = unit * 1.7f
@@ -1287,7 +1255,6 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
             }
         }
     }
-    // RIGHT: the CRT computer with the attribute rows
     v.At(150, 16, 170, 156) {
         Box(Modifier.fillMaxSize()) {
             PixelImage("crime_computer", Modifier.fillMaxSize())
@@ -1319,7 +1286,6 @@ fun CrimeScreen(vm: ClaraViewModel) = VirtualScreen { v ->
                     }
                 }
             }
-            // COMPUTE row
             v.At(13, 69, 139, 9) {
                 Box(Modifier.fillMaxSize()
                     .then(if (selRow == 5) Modifier.background(Vga.White) else Modifier)
@@ -1439,19 +1405,15 @@ fun ChaseScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     }
 
     LaunchedEffect(Unit) {
-        // 1) the suspect sprints across, left -> right
         x = -50f
         runTo(170f, 4.5f, 55)
-        // 2) "There goes the suspect!"
         skip = false; stage = 1
         pause(1500)
         if (s.won) {
-            // 3) the cops storm after them
             skip = false; stage = 2; x = -55f
             runTo(170f, 5f, 55)
             skip = false
             pause(700)
-            // 4) hands up: the suspect is walked back at gunpoint, right -> left
             skip = false; stage = 3; x = 165f
             runTo(-55f, -3.5f, 60)
         }
@@ -1459,15 +1421,13 @@ fun ChaseScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     }
 
     v.At(0, 0, 320, 11) { GameMenuBar(v, vm) }
-    // city name / date box
     CityClockBox(v, vm)
-    // city photo stays on the left
     v.At(4, 45, 141, 148) {
         Box(Modifier.fillMaxSize().border(BorderStroke(v.w(1), Vga.White))) {
             CityPhoto(s.currentCity, v, Modifier.fillMaxSize())
         }
     }
-    // right panel: the chase plays out on black (clipped so sprites enter/exit at the edges)
+    // Chase panel (black, clipped so sprites enter/exit at the edges).
     v.At(149, 13, 167, 145) {
         Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White))
             .clipToBounds()) {
@@ -1661,9 +1621,7 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     LaunchedEffect(printed.size, typing, input, stage) { paperScroll.scrollTo(paperScroll.maxValue) }
 
     v.At(0, 0, 320, 11) { GameMenuBar(v, vm) }
-    // city name box
     CityClockBox(v, vm)
-    // left: the printer with the Interpol report typing on
     v.At(2, 44, 146, 154) {
         Box(Modifier.fillMaxSize()) {
             PixelImage("crime_printer", Modifier.fillMaxSize())
