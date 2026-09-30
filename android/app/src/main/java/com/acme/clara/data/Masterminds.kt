@@ -73,14 +73,7 @@ object Masterminds {
         return (campaignCasesSolved - priorEnd).coerceIn(0, waveCases[wave])
     }
 
-    fun casesToWaveFinale(campaignCasesSolved: Int): Int {
-        val wave = waveForCampaignCasesSolved(campaignCasesSolved)
-        return (waveCases[wave] - casesIntoCurrentWave(campaignCasesSolved)).coerceAtLeast(0)
-    }
-
     /** Purchase opens Wave 1 immediately. Each captured mastermind opens the following wave. */
     fun unlockedMaxWave(rankIndex: Int, entitled: Boolean): Int =
         if (!entitled) -1 else Progression.unlockedMaxWave(rankIndex)
-
-    fun arcForRank(rankIndex: Int): MastermindArc? = arcs.lastOrNull { it.patentRank <= rankIndex }
 }
