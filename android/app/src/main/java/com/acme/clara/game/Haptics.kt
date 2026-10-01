@@ -1,7 +1,7 @@
 package com.acme.clara.game
 
 /** The abstract vibration shapes; the UI layer maps each to a concrete Android effect. */
-enum class HapticCue { NONE, TICK, CLICK, DOUBLE, HEAVY, SUCCESS, REJECT, RUMBLE }
+enum class HapticCue { NONE, STEP, TICK, CLICK, DOUBLE, HEAVY, SUCCESS, REJECT, RUMBLE }
 
 /**
  * Haptics ride the existing [SoundCue] pipeline: one map, driven off the same signal the

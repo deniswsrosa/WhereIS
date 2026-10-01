@@ -914,6 +914,7 @@
  "ui:New Case": "Nouvelle affaire",
  "ui:New Game": "Nouvelle partie",
  "ui:New clue": "Nouvel indice",
+ "ui:New in Most Wanted: {0} / {1} caught": "Nouveau dans Plus recherchés : {0} / {1} arrêtés",
  "ui:Next category": "Catégorie suivante",
  "ui:No": "Non",
  "ui:Need help with a clue? Open Bureau ▸ World Database to learn about every destination. You can use it at any time.": "Besoin d’aide avec un indice ? Ouvrez Bureau ▸ Base de données mondiale pour vous renseigner sur chaque destination. Vous pouvez la consulter à tout moment.",

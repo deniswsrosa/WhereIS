@@ -49,6 +49,7 @@ import com.acme.clara.game.Overlay
 import com.acme.clara.game.WantedEntry
 import com.acme.clara.i18n.Strings
 import com.acme.clara.ui.screens.CityPhoto
+import com.acme.clara.ui.screens.FlagStamp
 import com.acme.clara.ui.theme.Vga
 import kotlinx.coroutines.launch
 
@@ -712,25 +713,7 @@ private fun AlmanacWindow(v: Virtual, vm: ClaraViewModel) {
                                 .border(BorderStroke(v.w(0.8f), Vga.White)),
                         ) {
                             CityPhoto(entry.name, v, Modifier.fillMaxSize())
-                            AlmanacFlags.assetName(entry.name)?.let { flagAsset ->
-                                Box(
-                                    Modifier.align(Alignment.TopEnd).padding(v.w(3))
-                                        .width(v.w(31)).height(v.w(24)),
-                                ) {
-                                    Box(
-                                        Modifier.matchParentSize().offset(v.w(1), v.w(1))
-                                            .background(Vga.Black.copy(alpha = 0.65f)),
-                                    )
-                                    Box(
-                                        Modifier.matchParentSize().background(Vga.White).padding(v.w(1.3f)),
-                                    ) {
-                                        PixelImage(
-                                            flagAsset, Modifier.fillMaxSize(),
-                                            contentDescription = null,
-                                        )
-                                    }
-                                }
-                            }
+                            FlagStamp(entry.name, v, Modifier.align(Alignment.TopEnd).padding(v.w(3)))
                         }
                         Spacer(Modifier.height(v.w(2)))
                         Text(Strings.place(entry.name).uppercase(), style = v.text(8.5f, color = Vga.LightGreen, bold = true),

@@ -2587,6 +2587,7 @@
  "ui:New Case": "Новое дело",
  "ui:New Game": "Новая игра",
  "ui:New clue": "Новая улика",
+ "ui:New in Most Wanted: {0} / {1} caught": "Новый в «Самые разыскиваемые»: поймано {0} / {1}",
  "ui:Next category": "Следующая категория",
  "ui:No": "Нет",
  "ui:No saved games yet.": "Сохраненных игр пока нет.",

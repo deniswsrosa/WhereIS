@@ -14,7 +14,7 @@ object Progression {
     val LAST_RANK = 14                       // 5 free + 10 International grades
 
     private val HOPS  = intArrayOf(5, 6, 7, 8, 9, 9, 9, 10, 10, 10, 11, 11, 11, 12, 12)
-    private val NEWPC = intArrayOf(1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3, 3)
+    private val NEWPC = intArrayOf(1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4)
     private val SLACK = intArrayOf(30, 28, 26, 25, 24, 24, 23, 22, 20, 19, 18, 17, 16, 15, 15)
     private fun clampRank(r: Int) = r.coerceIn(0, LAST_RANK)
 

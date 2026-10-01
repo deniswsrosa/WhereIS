@@ -914,6 +914,7 @@
  "ui:New Case": "Новое дело",
  "ui:New Game": "Новая игра",
  "ui:New clue": "Новая улика",
+ "ui:New in Most Wanted: {0} / {1} caught": "Новый в «Самые разыскиваемые»: поймано {0} / {1}",
  "ui:Next category": "Следующая категория",
  "ui:No": "Нет",
  "ui:Need help with a clue? Open Bureau ▸ World Database to learn about every destination. You can use it at any time.": "Нужна помощь с уликой? Откройте Бюро ▸ Мировая база данных, чтобы узнать о каждом пункте назначения. Ею можно воспользоваться в любое время.",

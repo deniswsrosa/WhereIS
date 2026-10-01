@@ -36,6 +36,7 @@ object HapticEngine {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun effect(cue: HapticCue): VibrationEffect = when (cue) {
+        HapticCue.STEP -> VibrationEffect.createOneShot(8, 35)
         HapticCue.TICK -> VibrationEffect.createOneShot(12, 60)
         HapticCue.CLICK -> VibrationEffect.createOneShot(20, 120)
         HapticCue.HEAVY -> VibrationEffect.createOneShot(35, 255)
@@ -53,6 +54,7 @@ object HapticEngine {
     private fun legacy(vib: Vibrator, cue: HapticCue) = when (cue) {
         HapticCue.DOUBLE, HapticCue.REJECT -> vib.vibrate(longArrayOf(0, 20, 60, 20), -1)
         HapticCue.SUCCESS -> vib.vibrate(longArrayOf(0, 15, 40, 30), -1)
+        HapticCue.STEP -> vib.vibrate(8)
         HapticCue.TICK -> vib.vibrate(15)
         HapticCue.CLICK -> vib.vibrate(20)
         HapticCue.HEAVY -> vib.vibrate(35)

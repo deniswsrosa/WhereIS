@@ -364,6 +364,12 @@ private fun CountryText(v: Virtual, info: com.acme.clara.data.CityInfo, paid: Bo
     }
 }
 
+/** One footstep: the step sample plus, if enabled, a very light vibration tap. */
+private fun footstep(ctx: android.content.Context, hapticsOn: Boolean) {
+    GameSound.footstep(ctx)
+    com.acme.clara.audio.HapticEngine.play(ctx, com.acme.clara.game.HapticCue.STEP, hapticsOn)
+}
+
 /* ----------------------------- CITY ----------------------------- */
 @Composable
 fun CityPhoto(city: String, v: Virtual, modifier: Modifier) {
@@ -375,6 +381,24 @@ fun CityPhoto(city: String, v: Virtual, modifier: Modifier) {
     val resolved = listOfNotNull(info.drawable, "city_$slug", "country_$slug").firstOrNull { spriteExists(it) }
     if (resolved != null) PixelImage(resolved, modifier)
     else VgaCityCard(city, info.region, v, modifier)
+}
+
+/** The place's real flag pinned on its postcard like a small travel stamp (white border, drop
+ *  shadow). Renders nothing for a place without a bundled flag. */
+@Composable
+fun FlagStamp(place: String, v: Virtual, modifier: Modifier) {
+    val flagAsset = com.acme.clara.data.AlmanacFlags.assetName(place) ?: return
+    Box(modifier.width(v.w(31)).height(v.w(24))) {
+        Box(
+            Modifier.matchParentSize().offset(v.w(1), v.w(1))
+                .background(Vga.Black.copy(alpha = 0.65f)),
+        )
+        Box(
+            Modifier.matchParentSize().background(Vga.White).padding(v.w(1.3f)),
+        ) {
+            PixelImage(flagAsset, Modifier.fillMaxSize(), contentDescription = null)
+        }
+    }
 }
 
 /** Procedural 16-colour VGA "travel postcard" for cities without a captured photo.
@@ -436,6 +460,20 @@ fun CityClockBox(v: Virtual, vm: ClaraViewModel, tickHours: Int = 0) {
     LaunchedEffect(sleeping) {
         if (sleeping) { delay(1800); vm.sleepingShown() }
     }
+    // Last-day tension: a soft clock tick for every hour that passes (one per hour of a flight,
+    // two or three for a venue visit). Only counts down within this box's lifetime, so changing
+    // screens or starting a new case never ticks by itself.
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val shownLeft = vm.hoursLeft() - tickHours
+    var lastLeft by remember { mutableStateOf(shownLeft) }
+    LaunchedEffect(shownLeft) {
+        val passed = (lastLeft - shownLeft).coerceIn(0, 8)
+        lastLeft = shownLeft
+        if (s.route.size > 1 && shownLeft in 0..24) repeat(passed) {
+            GameSound.clockTick(ctx)
+            delay(130)
+        }
+    }
     // P1 trail heat: "CITY n/m" + a meter that warms cool→hot as you close on the hideout.
     // The distance already exists (it drives the sighting stings); this just surfaces it.
     val total = s.route.size
@@ -492,6 +530,7 @@ private fun TrailMeter(v: Virtual, heat: Float) {
 @Composable
 fun CityScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     val s = vm.s
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     val info = CityMeta.of(s.currentCity)
     var showVenues by remember(s.currentCity, s.progress) { mutableStateOf(false) }
     // SEE dropdown open: the city box is replaced by the connections list, SEE reads HIDE
@@ -499,11 +538,15 @@ fun CityScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     // walking-to-venue animation: index of the venue being walked to, -1 = none
     var walkingTo by remember(s.currentCity) { mutableStateOf(-1) }
     var walkStep by remember { mutableStateOf(0) }
+    LaunchedEffect(Unit) { GameSound.preloadSamples(ctx) }
 
     LaunchedEffect(walkingTo) {
         if (walkingTo >= 0) {
             walkStep = 0
-            while (walkStep < 8) { delay(140); walkStep++ }   // footsteps march toward the door
+            while (walkStep < 8) {   // footsteps march toward the door
+                if (walkStep % 2 == 0) footstep(ctx, s.hapticsOn)
+                delay(140); walkStep++
+            }
             val t = walkingTo; walkingTo = -1; showVenues = false
             vm.openVenue(t)
         }
@@ -515,6 +558,7 @@ fun CityScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     v.At(4, 45, 141, 148) {
         Box(Modifier.fillMaxSize().border(BorderStroke(v.w(1), Vga.White))) {
             CityPhoto(s.currentCity, v, Modifier.fillMaxSize())
+            FlagStamp(s.currentCity, v, Modifier.align(Alignment.BottomStart).padding(v.w(3)))
         }
     }
     // while SEE is active the connections dropdown replaces the city box, drawn over the
@@ -993,6 +1037,7 @@ fun TravelScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     v.At(4, 45, 141, 148) {
         Box(Modifier.fillMaxSize().border(BorderStroke(v.w(1), Vga.White))) {
             CityPhoto(s.currentCity, v, Modifier.fillMaxSize())
+            FlagStamp(s.currentCity, v, Modifier.align(Alignment.BottomStart).padding(v.w(3)))
         }
     }
     // Description panel (top-right; map covers the lower portion).
@@ -1385,6 +1430,7 @@ internal fun WarrantStamp(v: Virtual, reduce: Boolean, onDone: () -> Unit) {
 @Composable
 fun ChaseScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     val s = vm.s
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     // stage: 0 suspect runs right · 1 "There goes the suspect!" · 2 cops chase right ·
     // 3 escort marches back left (win only) · then done
     var stage by remember { mutableStateOf(0) }
@@ -1396,7 +1442,10 @@ fun ChaseScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     var skip by remember { mutableStateOf(false) }
 
     suspend fun runTo(target: Float, step: Float, stepDelay: Long) {
-        while ((if (step > 0) x < target else x > target) && !skip) { delay(stepDelay); x += step; frame++ }
+        while ((if (step > 0) x < target else x > target) && !skip) {
+            delay(stepDelay); x += step; frame++
+            if (frame % 3 == 0) footstep(ctx, s.hapticsOn)   // one footfall per run-cycle
+        }
         x = target
     }
     suspend fun pause(ms: Long) {
@@ -1425,6 +1474,7 @@ fun ChaseScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     v.At(4, 45, 141, 148) {
         Box(Modifier.fillMaxSize().border(BorderStroke(v.w(1), Vga.White))) {
             CityPhoto(s.currentCity, v, Modifier.fillMaxSize())
+            FlagStamp(s.currentCity, v, Modifier.align(Alignment.BottomStart).padding(v.w(3)))
         }
     }
     // Chase panel (black, clipped so sprites enter/exit at the edges).

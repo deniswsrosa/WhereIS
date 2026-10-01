@@ -78,8 +78,8 @@ class ProgressionTest {
         assertTrue("International routes are longer", Progression.hops(Progression.LAST_RANK) >= Progression.hops(5))
         // hops never decrease as you climb
         for (r in 1..Progression.LAST_RANK) assertTrue("hops non-decreasing at $r", Progression.hops(r) >= Progression.hops(r - 1))
-        // new-per-case is capped at 3 so the top stays fair
-        for (r in 0..Progression.LAST_RANK) assertTrue("new/case <= 3 at $r", Progression.newPerCase(r) in 1..3)
+        // new-per-case is capped at 4 so the top stays fair
+        for (r in 0..Progression.LAST_RANK) assertTrue("new/case <= 4 at $r", Progression.newPerCase(r) in 1..4)
         assertTrue("slack always positive", (0..Progression.LAST_RANK).all { Progression.slackHours(it) > 0 })
         // out-of-range ranks clamp instead of crashing
         assertEquals(Progression.hops(0), Progression.hops(-5))
@@ -222,6 +222,46 @@ class ProgressionTest {
                 assertTrue("case at rank ${vm.s.rankIndex} introduces <= $cap new (saw $fresh)", fresh <= cap)
             }
         }
+    }
+
+    @Test fun suspectNeverRepeatsBackToBack() {
+        val vm = ClaraViewModel().apply { signOn("Repeat") }
+        var prev = vm.s.culprit?.name
+        repeat(40) {
+            vm.menuNewCase()
+            val cur = vm.s.culprit?.name
+            assertTrue("culprit $cur repeated back-to-back", cur != prev)
+            prev = cur
+        }
+    }
+
+    @Test fun uncaughtSuspectsArePreferred() {
+        val bosses = com.acme.clara.data.Masterminds.arcs.map { it.suspectName }.toSet()
+        val ordinary = GameData.suspects.map { it.name }.filter { it != "Clara San Diego" && it !in bosses }
+        var recaptures = 0
+        var uniformExpected = 0.0
+        repeat(25) { career ->
+            val vm = ClaraViewModel().apply { signOn("Gallery$career") }
+            repeat(10) {
+                val caught = vm.s.capturedVillains
+                val fresh = ordinary.filter { it != vm.s.culprit?.name }
+                vm.solveCurrentCase()
+                if (vm.s.pendingPromotion) vm.resolvePromotion(true)
+                vm.nextCase()
+                if (vm.s.culprit!!.name in caught) recaptures++
+                uniformExpected += fresh.count { it in caught }.toDouble() / fresh.size
+            }
+        }
+        // a uniform pick would re-draw already-caught villains ~uniformExpected times; the 3:1
+        // lean toward uncaught ones should cut that to roughly a quarter
+        assertTrue("recaptures $recaptures vs uniform ~$uniformExpected", recaptures < uniformExpected * 0.6)
+    }
+
+    @Test fun firstArrestAnnouncesMostWantedProgress() {
+        val vm = ClaraViewModel().apply { signOn("Filed") }
+        vm.solveCurrentCase()
+        assertTrue("first arrest names the gallery count: ${vm.s.resultLines}",
+            vm.s.resultLines.any { it.startsWith("New in Most Wanted: 1 / ") })
     }
 
     private fun GameState_CAREER_CASES() = 14

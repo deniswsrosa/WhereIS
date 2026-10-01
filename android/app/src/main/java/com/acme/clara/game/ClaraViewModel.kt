@@ -587,12 +587,19 @@ class ClaraViewModel : ViewModel() {
         val campaignCase = nextCases - GameState.CAREER_CASES
         val arc = if (s.expansionUnlocked && campaignCase > 0)
             Masterminds.arcForCampaignCase(campaignCase) else null
+        // Never the same crook twice in a row: s.culprit still holds the previous case's suspect.
+        val freshPool = pool.filter { it.name != s.culprit?.name }.ifEmpty { pool }
+        // Lean toward villains still missing from Most Wanted (3:1) so the gallery fills evenly,
+        // without making the next culprit fully predictable.
+        val uncaught = freshPool.filter { it.name !in s.capturedVillains }
+        val nextRandom = if (uncaught.isNotEmpty() && uncaught.size < freshPool.size && Random.nextInt(4) != 0)
+            uncaught.random() else freshPool.random()
         // Clara is forced for the free-career inciting incident. Campaign finales force their
         // boss/successor, including Wave 10 where Clara is captured in the same raid.
         val culprit = when {
             s.casesSolved == GameState.CAREER_CASES - 1 -> carmen
-            arc != null -> allNonClara.firstOrNull { it.name == arc.suspectName } ?: pool.random()
-            else -> pool.random()
+            arc != null -> allNonClara.firstOrNull { it.name == arc.suspectName } ?: nextRandom
+            else -> nextRandom
         }
 
         val order = discriminatingOrder(culprit)
@@ -1283,6 +1290,16 @@ class ClaraViewModel : ViewModel() {
         }
         if (streak > 0 && streak % 7 == 0 && freezes < 1) freezes = 1        // earn a weekly freeze
         if (streak >= 2) lines += i18n.ui("🔥 {0}-day case streak!", streak)
+        // An escape at Case 14 must not mark Clara "captured" in the Most Wanted gallery — she
+        // isn't, until the true finale (isFinale) actually jails her.
+        val captured = when {
+            isCase14Clara -> s.capturedVillains
+            isFinale -> s.capturedVillains + c.name + "Clara San Diego"
+            else -> s.capturedVillains + c.name
+        }
+        if (captured.size > s.capturedVillains.size)
+            lines += i18n.ui("New in Most Wanted: {0} / {1} caught",
+                MostWanted.capturedCount(captured), MostWanted.total())
         // Only the true finale (Clara's real capture, Chief Director) ends the career now — Case 14
         // never does, paid or not, since she's always an escape there (see Masterminds.kt header).
         val careerOver = isFinale
@@ -1294,13 +1311,6 @@ class ClaraViewModel : ViewModel() {
         if (promote) {
             lines += GameData.PROMOTION.replace("%s", s.detectiveName)
             lines += i18n.ui("One last puzzle stands between you and the promotion.")
-        }
-        // An escape at Case 14 must not mark Clara "captured" in the Most Wanted gallery — she
-        // isn't, until the true finale (isFinale) actually jails her.
-        val captured = when {
-            isCase14Clara -> s.capturedVillains
-            isFinale -> s.capturedVillains + c.name + "Clara San Diego"
-            else -> s.capturedVillains + c.name
         }
         val cleanSweep = s.hadCleanCase || s.wrongFlights == 0
         val hintFree = if (s.hintsUsed == 0) s.hintFreeSolves + 1 else s.hintFreeSolves

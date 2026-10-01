@@ -33,7 +33,7 @@ print("paid cities mapped:",len(wave))
 
 # difficulty tables, 15 ranks: 5 free (Rookie..Ace) + 10 International grades (waves 0-9)
 HOPS =[5,6,7,8,9,  9,9,10,10,10,11,11,11,12,12]
-NEWPC=[1,1,1,1,1,  1,1,2,2,2, 3,3,3,3,3]
+NEWPC=[1,2,2,2,2,  2,3,3,3,3, 4,4,4,4,4]
 SLACK=[30,28,26,25,24, 24,23,22,20,19, 18,17,16,15,15]  # clock-hours of spare time (buffer)
 
 def kstr(s): return s.replace('\\','\\\\').replace('$','\\$').replace('"','\\"')

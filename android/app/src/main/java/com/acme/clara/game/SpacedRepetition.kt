@@ -35,7 +35,7 @@ object SpacedRepetition {
         fun weight(c: String): Double {
             val g = gap(c, lastSeen, currentCase)
             return when {
-                g == null -> 3.0                    // never taught — introduce it
+                g == null -> 4.0                    // never taught — introduce it
                 INTERVALS.any { g == it } -> 4.0    // due for review — resurface it
                 g == 0 -> 0.4                        // just seen — avoid an immediate repeat
                 else -> 1.0

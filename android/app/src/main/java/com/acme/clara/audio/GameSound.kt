@@ -23,10 +23,10 @@ object GameSound {
     private var themePaused = false
     private var themePrepared = false
 
-    // Short PCM click for the HQ printer teletype, played via SoundPool so rapid repeats overlap
-    // cheaply (MediaPlayer can't). Loaded lazily on the first keystroke.
+    // Short PCM samples (teletype click, footsteps), played via SoundPool so rapid repeats overlap
+    // cheaply (MediaPlayer can't). Each is loaded lazily on its first use.
     private var pool: android.media.SoundPool? = null
-    private var clickId = 0
+    private val sampleIds = HashMap<String, Int>()
 
     private const val DIR = "audio"
     private const val THEME = "theme.mid"
@@ -59,24 +59,42 @@ object GameSound {
 
     /** A single dot-matrix printer click, for the HQ teletype. Cheap and overlappable; no-op if
      *  sound is off or the sample hasn't finished loading yet (the first few keystrokes). */
-    fun typeClick(context: Context) {
+    fun typeClick(context: Context) = playSample(context, "type_click.wav", 0.35f)
+
+    /** One footstep, for the walk-to-venue animation. Same cheap SoundPool path as [typeClick]. */
+    fun footstep(context: Context) = playSample(context, "step.wav", 0.6f)
+
+    /** A soft clock tick, for hours passing in the last day before the deadline. */
+    fun clockTick(context: Context) = playSample(context, "tick.wav", 0.4f)
+
+    /** Load the walk/clock samples ahead of time so the first footstep isn't dropped while
+     *  SoundPool is still decoding it. */
+    fun preloadSamples(context: Context) {
+        sampleId(context, "step.wav")
+        sampleId(context, "tick.wav")
+    }
+
+    private fun playSample(context: Context, file: String, volume: Float) {
         if (!enabled) return
-        if (pool == null) {
-            val sp = android.media.SoundPool.Builder().setMaxStreams(6)
-                .setAudioAttributes(
-                    android.media.AudioAttributes.Builder()
-                        .setUsage(android.media.AudioAttributes.USAGE_GAME)
-                        .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .build()
-                ).build()
-            clickId = runCatching {
-                context.applicationContext.assets.openFd("$DIR/type_click.wav").use { sp.load(it, 1) }
-            }.getOrDefault(0)
-            pool = sp
-        }
-        if (clickId != 0) {
+        val id = sampleId(context, file)
+        if (id != 0) {
             val rate = 0.92f + kotlin.random.Random.nextFloat() * 0.16f   // slight pitch jitter
-            pool?.play(clickId, 0.35f, 0.35f, 1, 0, rate)
+            pool?.play(id, volume, volume, 1, 0, rate)
+        }
+    }
+
+    private fun sampleId(context: Context, file: String): Int {
+        val sp = pool ?: android.media.SoundPool.Builder().setMaxStreams(6)
+            .setAudioAttributes(
+                android.media.AudioAttributes.Builder()
+                    .setUsage(android.media.AudioAttributes.USAGE_GAME)
+                    .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build()
+            ).build().also { pool = it }
+        return sampleIds.getOrPut(file) {
+            runCatching {
+                context.applicationContext.assets.openFd("$DIR/$file").use { sp.load(it, 1) }
+            }.getOrDefault(0)
         }
     }
 
