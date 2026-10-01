@@ -23,7 +23,7 @@ android {
         applicationId = "com.acme.clara"
         minSdk = 24
         targetSdk = 36
-        versionCode = 7
+        versionCode = 8
         versionName = "1.4"
     }
 
