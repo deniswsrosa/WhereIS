@@ -49,7 +49,6 @@ venues=[clean(v).lstrip("$") for v in g["venues"] if clean(v)]
 occs=[o for o in (clean(o).lstrip("$") for o in g["occupations"] if clean(o)) if o != "Ok"]
 noinfo=list(dict.fromkeys(clean(x) for x in g["no_information_responses"] if clean(x)))
 leadins=[clean(x) for x in g["clue_lead_ins"] if clean(x)]
-danger=[clean(x) for x in g["danger_messages"] if clean(x)]
 ranks=g["ranks"]
 
 # Product rename (trademark): the archival corpus keeps the original character name;
@@ -133,7 +132,6 @@ for ven, line in NOINFO_BY_VENUE.items():
 K.append("    )")
 K.append("    val noInformation = noInformationByVenue.values.distinct()")
 K.append("    "+klist("clueLeadIns", leadins))
-K.append("    "+klist("dangerMessages", danger))
 K.append("    "+klist("ranks", ranks))
 K.append("")
 # Suspect-trait witness sentences, verbatim from the EXE fragment table (Ç/ü/é separators
@@ -185,22 +183,17 @@ K.append('    const val TREASURE_ID = "The treasure has been identified as %s."'
 K.append('    const val ASSIGNMENT = "Track the thief from %s to %s hideout and arrest %s!"')
 K.append('    const val DEADLINE = "You must apprehend the thief by Sunday, 5 p.m."')
 K.append('    const val WARRANT_ISSUED = "You now have a warrant to arrest %s."')
-K.append('    const val NO_WARRANT = "No warrant has been issued."')
 K.append('    const val ELIMINATES_ALL = "The information provided eliminates all possible suspects."')
 K.append('    const val CAUGHT_UP = "You have caught up with %s."')
 K.append('    const val NO_WARRANT_ESCAPE = "However, without a warrant we cannot make a legal arrest!"')
 K.append('    const val GOT_AWAY = "It looks like Clara\'s gang has gotten away with another caper!"')
-K.append('    const val TRAILED_CORRECTLY = "You have trailed %s correctly."')
 K.append('    const val FALSE_WARRANT = "Unfortunately, you have a warrant for %s."')
 K.append('    const val FALSE_ARREST = "Be careful, we could all be sued for false arrest!"')
 K.append('    const val APPREHENDED = "Thanks to your help, the %s police have apprehended %s."')
 K.append('    const val LOOT = "%s had the loot, %s, which will be returned to the grateful residents of %s."')
-K.append('    const val THANKS = "We here at Interpol thank you for your good work on this case."')
 K.append('    const val PROMOTION = "Good job, %s, you have earned a promotion."')
-K.append('    const val NEW_RANK = "Your new rank is: %s."')
 K.append('    const val TOO_LONG = "We\'ve just received word that %s slipped through your fingers because your investigation took too long!"')
 K.append('    const val CLARA_JAILED = "You have successfully arrested the ring-leader, Clara San Diego, and sent her to jail for good!"')
-K.append('    const val HALL_OF_FAME = "Congratulations, your name will go into the Interpol Hall of Fame!"')
 K.append("")
 # Promotion quiz: almanac fill-in-the-blank (first entry captured verbatim; rest authored
 # in the same style). Matched case-insensitively against the missing word.

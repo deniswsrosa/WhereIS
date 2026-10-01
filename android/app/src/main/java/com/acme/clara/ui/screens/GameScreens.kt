@@ -754,19 +754,6 @@ private fun ToolZone(
     }
 }
 
-@Composable
-private fun DialogPanel(v: Virtual, border: androidx.compose.ui.graphics.Color = Vga.White,
-                        content: @Composable ColumnScope.() -> Unit) {
-    Box(Modifier.fillMaxSize().background(Vga.Black.copy(alpha = 0.7f)), contentAlignment = Alignment.Center) {
-        Column(
-            Modifier.fillMaxWidth(0.8f).background(Vga.Blue)
-                .border(BorderStroke(v.w(1), border)).padding(v.w(6))
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally, content = content
-        )
-    }
-}
-
 /* ------------------- INVESTIGATION: witness portrait + speech bubble ------------------- */
 /** "Sport Club" -> "sport_club" : maps a venue/occupation name to its drawable resource suffix. */
 private fun snake(s: String) = s.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')

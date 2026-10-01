@@ -260,14 +260,6 @@ object Expansion {
         "Clock Tower Plaza",
     )
 
-    // Bespoke witnesses drawn for the expansion — every new venue now has its own sprite.
-    val newWitnesses: List<String> = listOf(
-        "Croupier", "Stationmaster", "Radio announcer", "Stage manager", "History professor",
-        "Antique dealer", "Court clerk", "Exchange clerk", "Head nurse", "City editor",
-        "Desk sergeant", "Control room engineer", "Prison warden", "Laboratory technician",
-        "Head waiter", "News producer", "Clock keeper",
-    )
-
     // Which witness staffs each new venue.
     val venueOccupations: Map<String, List<String>> = mapOf(
         "Casino" to listOf("Croupier"),

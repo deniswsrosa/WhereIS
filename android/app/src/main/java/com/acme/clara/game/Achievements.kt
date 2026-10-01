@@ -31,8 +31,6 @@ object Achievements {
         Achievement("kingpin", "Kingpin", "Jail the ring-leader and close the career."),
     )
 
-    fun titleOf(id: String): String = catalog.firstOrNull { it.id == id }?.title ?: id
-
     /** Every achievement id the career currently satisfies (cumulative, order-independent). */
     fun earned(c: CareerSummary): Set<String> = buildSet {
         if (c.casesSolved >= 1) add("first_arrest")
