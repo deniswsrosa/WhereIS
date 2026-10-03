@@ -10,8 +10,7 @@ import com.acme.clara.game.SoundCue
  * Audio files are MIDI, rendered by Android's built-in Sonivox General-MIDI synth:
  * `theme.mid` is the looping title theme and `jingle_0.mid`..`jingle_10.mid` are the short
  * event stingers, mapped to game moments below. Drop generated replacements straight into
- * `assets/audio/` (same filenames); the original set is archived in `assets/audio/original/`
- * for reference and is not shipped as active audio.
+ * `assets/audio/` with the same filenames.
  *
  * Everything is best-effort: if a file isn't present yet, playback simply no-ops, so the
  * game stays silent (never crashes) while a new soundtrack is being produced.
