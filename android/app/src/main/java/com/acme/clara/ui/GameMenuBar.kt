@@ -361,7 +361,7 @@ private fun DossierWindow(v: Virtual, su: Suspect, onClose: () -> Unit) {
                     Column {
                         Box(Modifier.border(BorderStroke(v.w(1), Vga.Black)).padding(v.w(2))) {
                             Box(Modifier.border(BorderStroke(v.w(1), Vga.Black))) {
-                                val slug = "suspect_" + su.name.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')
+                                val slug = "suspect_" + snake(su.name)
                                 // 61x75: the capture's bottom 5 rows were baked page-rule bars,
                                 // cropped out of the assets
                                 if (spriteExists(slug))
@@ -445,7 +445,7 @@ private fun MostWantedWindow(v: Virtual, vm: ClaraViewModel) {
 @Composable
 private fun WantedTile(v: Virtual, entry: WantedEntry, modifier: Modifier) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        val slug = "suspect_" + entry.name.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')
+        val slug = "suspect_" + snake(entry.name)
         Box(Modifier.fillMaxWidth().aspectRatio(0.82f).border(BorderStroke(v.w(0.7f), Vga.Black))
             .background(Vga.DarkGray), contentAlignment = Alignment.Center) {
             if (entry.captured && spriteExists(slug)) PixelImage(slug, Modifier.fillMaxSize())

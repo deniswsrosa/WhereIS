@@ -755,9 +755,6 @@ private fun ToolZone(
 }
 
 /* ------------------- INVESTIGATION: witness portrait + speech bubble ------------------- */
-/** "Sport Club" -> "sport_club" : maps a venue/occupation name to its drawable resource suffix. */
-private fun snake(s: String) = s.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')
-
 private data class Look(val hair: Color, val skin: Color, val shirt: Color, val style: Int)
 private fun witnessLook(occupation: String): Look {
     val h = occupation.hashCode()

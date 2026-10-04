@@ -36,6 +36,13 @@ import kotlinx.coroutines.withContext
 internal fun boundedCanvasTextScale(systemFontScale: Float): Float =
     (1f + (systemFontScale.coerceAtLeast(1f) - 1f) * 0.4f).coerceAtMost(1.10f)
 
+/** Sprite-name slug: accents stripped (NFD, drop combining marks), then lowercase runs of
+ *  non-alphanumerics collapsed to `_` — so "Restaurant / Café" → "restaurant_cafe". */
+internal fun snake(s: String): String =
+    java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD)
+        .replace(Regex("\\p{Mn}+"), "")
+        .lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')
+
 /** Scope for laying out inside a virtual 320x200 DOS screen. `unit` = one virtual pixel, in Dp. */
 class Virtual(val unit: Dp, val density: Density, private val textScale: Float = 1f) {
     fun w(n: Number): Dp = unit * n.toFloat()
