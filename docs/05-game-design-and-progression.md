@@ -2,7 +2,7 @@
 
 _How WhereIS plays: the destination roster, the free/paid split, and the implemented recognition-wave difficulty ladder. Updated 2026-08-21._
 
-> Companion docs: per-country clue content lives in [`welcome_cards_state.md`](../welcome_cards_state.md); art pipeline in [`03-city-art-pipeline.md`](03-city-art-pipeline.md).
+> Companion docs: per-country clue content lives in [`welcome_cards_state.md`](content/welcome_cards_state.md); art pipeline in [`03-city-art-pipeline.md`](03-city-art-pipeline.md).
 
 ## 1. The core loop  [Current]
 
