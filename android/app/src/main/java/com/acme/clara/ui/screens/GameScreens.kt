@@ -758,26 +758,14 @@ private fun ToolZone(
 /** "Sport Club" -> "sport_club" : maps a venue/occupation name to its drawable resource suffix. */
 private fun snake(s: String) = s.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')
 
-private data class Look(val hair: Color, val skin: Color, val shirt: Color, val style: Int)
-private fun witnessLook(occupation: String): Look {
-    val h = occupation.hashCode()
-    val hair = listOf(Vga.Yellow, Vga.Brown, Vga.Black, Vga.LightGray, Vga.LightRed, Color(0xFF6B4A2A))[(h ushr 1).mod(6)]
-    val skin = listOf(Color(0xFFF0C8A0), Color(0xFFE0A878), Color(0xFFC89058), Color(0xFF9C6B3F))[(h ushr 4).mod(4)]
-    val shirt = listOf(Vga.LightRed, Vga.Cyan, Vga.Green, Vga.LightBlue, Vga.Magenta, Vga.Brown, Vga.LightGreen)[(h ushr 7).mod(7)]
-    return Look(hair, skin, shirt, (h ushr 11).mod(4))   // style: 0 short · 1 full · 2 bald · 3 cap
-}
-
 /** Right-panel witness, matching the original (bud_palace_wit.png): the witness sprite sits
  *  in the panel's BOTTOM-LEFT corner with its occupation label in white caps directly under
  *  it at the panel's bottom edge, and the white rounded speech bubble sits to its RIGHT,
  *  vertically centred in the panel, tail pointing left toward the sprite. */
 @Composable
 private fun WitnessPanel(v: Virtual, clue: Venue, onDone: () -> Unit) {
-    val look = witnessLook(clue.occupation)
     var shown by remember(clue.text) { mutableStateOf(0) }
     LaunchedEffect(clue.text) { shown = 0; while (shown < clue.text.length) { delay(20); shown++ } }
-    val bob by rememberInfiniteTransition(label = "wb").animateFloat(
-        0f, 1f, infiniteRepeatable(tween(900, easing = LinearEasing), RepeatMode.Reverse), label = "wb")
 
     v.At(149, 13, 167, 145) {
         Box(Modifier.fillMaxSize().background(Vga.Black).border(BorderStroke(v.w(1), Vga.White))
@@ -790,14 +778,8 @@ private fun WitnessPanel(v: Virtual, clue: Venue, onDone: () -> Unit) {
                 // DOS witness bust ≈ 30-40 virtual wide × ~46 tall (measured from
                 // dos_witness_waiter_layout). Fit the portrait inside that box so the
                 // (taller-than-wide) art doesn't render oversized and eat the panel.
-                if (spriteExists(portrait)) {
-                    PixelImage(portrait, Modifier.size(v.w(40), v.w(48)), ContentScale.Fit,
-                        alignment = Alignment.BottomStart)
-                } else {
-                    Canvas(Modifier.size(v.w(32), v.w(48))) {
-                        drawBust(size.width, size.height, look, (bob - 0.5f) * size.height * 0.02f)
-                    }
-                }
+                PixelImage(portrait, Modifier.size(v.w(40), v.w(48)), ContentScale.Fit,
+                    alignment = Alignment.BottomStart)
                 Text(Strings.label("occ", clue.occupation).uppercase(), style = v.text(7, color = Vga.White, bold = true),
                     modifier = Modifier.padding(top = v.w(2)))
             }
@@ -817,46 +799,6 @@ private fun WitnessPanel(v: Virtual, clue: Venue, onDone: () -> Unit) {
                     }
                 }
             }
-        }
-    }
-}
-
-/** Head-and-shoulders caricature facing right, in the DOS witness-portrait style: a large round
- *  head with an exaggerated nose over a collared shirt. Hair varies by look.style. */
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawBust(w: Float, h: Float, look: Look, bob: Float) {
-    val ink = Vga.Black
-    val stroke = androidx.compose.ui.graphics.drawscope.Stroke(width = w * 0.025f)
-    val shTop = h * 0.72f + bob
-    drawRoundRect(look.shirt, topLeft = Offset(w * 0.02f, shTop), size = Size(w * 0.96f, h - shTop),
-        cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.18f, w * 0.18f))
-    val collar = androidx.compose.ui.graphics.Path().apply {
-        moveTo(w * 0.32f, shTop); lineTo(w * 0.50f, shTop + h * 0.10f); lineTo(w * 0.68f, shTop)
-    }
-    drawPath(collar, Vga.White, style = stroke)
-    val headCx = w * 0.50f; val headCy = h * 0.36f + bob
-    val hw = w * 0.34f; val hh = h * 0.30f
-    drawRect(look.skin, topLeft = Offset(headCx - w * 0.10f, headCy + hh * 0.55f), size = Size(w * 0.20f, h * 0.16f))
-    drawOval(look.skin, topLeft = Offset(headCx - hw, headCy - hh), size = Size(hw * 2, hh * 2))
-    drawOval(ink, topLeft = Offset(headCx - hw, headCy - hh), size = Size(hw * 2, hh * 2), style = stroke)
-    drawOval(look.skin, topLeft = Offset(headCx - hw * 1.06f, headCy - hh * 0.05f), size = Size(w * 0.10f, h * 0.09f))
-    val nose = androidx.compose.ui.graphics.Path().apply {
-        moveTo(headCx + hw * 0.70f, headCy - hh * 0.10f)
-        lineTo(headCx + hw * 1.12f, headCy + hh * 0.12f)
-        lineTo(headCx + hw * 0.70f, headCy + hh * 0.24f)
-    }
-    drawPath(nose, look.skin); drawPath(nose, ink, style = stroke)
-    drawRect(ink, topLeft = Offset(headCx + hw * 0.12f, headCy - hh * 0.44f), size = Size(w * 0.14f, h * 0.018f))
-    drawOval(ink, topLeft = Offset(headCx + hw * 0.20f, headCy - hh * 0.30f), size = Size(w * 0.055f, h * 0.06f))
-    drawArc(ink, 20f, 50f, false, topLeft = Offset(headCx + hw * 0.02f, headCy - hh * 0.02f),
-        size = Size(hw * 1.0f, hh * 0.9f), style = stroke)
-    when (look.style) {
-        2 -> {}  // bald: just a fringe over the ear
-        3 -> drawRect(look.hair, topLeft = Offset(headCx - hw * 1.02f, headCy - hh * 1.12f), size = Size(hw * 2.0f, hh * 0.55f)) // cap
-        else -> {
-            drawArc(look.hair, 160f, 230f, true,
-                topLeft = Offset(headCx - hw * 1.02f, headCy - hh * 1.12f), size = Size(hw * 2.0f, hh * 1.7f))
-            if (look.style == 1)  // fuller: sideburn down the left
-                drawRect(look.hair, topLeft = Offset(headCx - hw * 1.0f, headCy - hh * 0.2f), size = Size(w * 0.08f, hh * 1.1f))
         }
     }
 }
