@@ -53,26 +53,21 @@ only cover 9 cities. The real per-city art for all 30 is in `CITIES.DAT`.
 ## 3. Repository layout
 
 ```
-whereintheworld/
-├── acquisitions/          # read-only original zip (sha256 recorded)
-├── work/
-│   ├── extracted/wwcse/   # the original game files (CARMEN.EXE, CITIES.DAT, *.DAT, *.BMP)
-│   ├── exe_decompressed/  # CARMEN.000.exe  (PKLITE-decompressed EXE — RE target)
-│   ├── assets_png/screens/# carmen01–21.png (the 21 BMP playthrough screens as PNG)
-│   └── city_captures/     # ★ 21 clean 640×400 in-game city screenshots (this project's output)
-├── corpus/                # carmen_corpus.json (byte-exact), game_data.json, carmen_corpus.md
-├── scripts/               # extract_corpus.py, build_report.py, gen_kotlin_data.py
-├── tools/                 # ★ RE + DOSBox-capture tooling (see guide 02 & 04)
-├── reference_screens/     # 21 CARMEN##.BMP + abandonwaredos web_0N shots + INDEX.md
-├── android/               # Jetpack Compose app (Kotlin), package com.acme.clara
-└── docs/                  # ← you are here
+WhereIS/
+├── acquisitions/   # read-only original zip (sha256 recorded)
+├── corpus/         # carmen_corpus.json (byte-exact), game_data.json, carmen_corpus.md
+├── scripts/        # data/audio/i18n generators + release audit
+├── tools/          # RE + DOSBox-capture tooling (see guide 02 & 04)
+├── translation/    # i18n source catalogs, per-language output, _batches/ pipeline inputs
+├── icons/, playstore/  # launcher icons and Play listing assets
+├── android/        # Jetpack Compose app (Kotlin), package com.acme.clara
+└── docs/           # ← you are here; content/ holds clue/fact/humor source text
 ```
 
-★ = created/populated by the DOSBox-capture work; safe to keep in version control.
-
-**Not a git repo yet.** If you want history, `git init` before copying to the new
-machine, or just copy the whole folder. The `android/build/` output and the
-ephemeral `/private/tmp/.../scratchpad` are NOT part of the repo.
+The former `work/` scratch tree (extracted game files, DOSBox captures, sprite
+experiments) was removed in the repo cleanup; it is still in git history
+(`git log -- work/`). Re-extract from `acquisitions/` if you need it — guides 02–04
+still refer to those paths.
 
 ---
 
