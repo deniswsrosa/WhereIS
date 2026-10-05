@@ -7,8 +7,8 @@ android/app/src/main/assets/audio/ where GameSound.kt loads them:
   theme.mid          looping title theme
   jingle_0..10.mid   short event stingers, one per SoundCue (see GameSound.kt for the map)
 
-All melodies here are written from scratch for this game. What *is* modelled on the archived
-originals (assets/audio/original/, analysed 2026-08-02) is the ARRANGEMENT STYLE only:
+All melodies here are written from scratch for this game. What *is* modelled on the
+originals (analysed 2026-08-02) is the ARRANGEMENT STYLE only:
   - 4-6 voice polyphony per cue (the originals run 4-7)
   - the lead melody doubled on a second, brighter program (piano+glockenspiel etc.)
   - the bass line doubled on a contrasting program (the originals' twin low channels)
