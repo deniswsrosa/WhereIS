@@ -59,7 +59,7 @@ WhereIS/
 ├── scripts/        # data/audio/i18n generators + release audit
 ├── tools/          # RE + DOSBox-capture tooling (see guide 02 & 04)
 ├── translation/    # i18n source catalogs, per-language output, _batches/ pipeline inputs
-├── icons/, playstore/  # launcher icons and Play listing assets
+├── playstore/      # Play listing assets
 ├── android/        # Jetpack Compose app (Kotlin), package com.acme.clara
 └── docs/           # ← you are here; content/ holds clue/fact/humor source text
 ```
