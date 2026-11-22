@@ -36,7 +36,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextAlign
 import com.acme.clara.game.Venue
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.acme.clara.data.CityMeta
 import com.acme.clara.data.GameData
 import com.acme.clara.data.MastermindArc
@@ -45,6 +47,8 @@ import com.acme.clara.data.WorldMap
 import com.acme.clara.game.ClaraViewModel
 import com.acme.clara.game.Overlay
 import com.acme.clara.i18n.Strings
+import com.acme.clara.save.LaunchOutcome
+import com.acme.clara.save.decideLaunch
 import com.acme.clara.ui.*
 import com.acme.clara.ui.theme.Vga
 
@@ -103,13 +107,44 @@ fun IntroScreen(vm: ClaraViewModel) = VirtualScreen { v ->
 
 /* ----------------------------- TITLE ----------------------------- */
 @Composable
-fun TitleScreen(vm: ClaraViewModel) = VirtualScreen { v ->
-    // the whole screen advances, like the original's "any key or button"
-    Box(Modifier.fillMaxSize().clickable { vm.start() }) {
-        PixelImage("title_screen", Modifier.fillMaxSize())
+fun TitleScreen(vm: ClaraViewModel, launchReady: Boolean) = VirtualScreen { v ->
+    val scope = rememberCoroutineScope()
+    var outcome by remember { mutableStateOf<LaunchOutcome?>(null) }
+    var opening by remember { mutableStateOf(false) }
+    LaunchedEffect(launchReady) {
+        if (launchReady) outcome = withContext(Dispatchers.IO) { decideLaunch(vm.savedGames()) }
     }
-    v.At(0, 176, 320, 24, Alignment.Center) {
-        Text(Strings.ui("PRESS  ANY  KEY  TO  BEGIN"), style = v.text(9, color = Vga.Yellow, bold = true))
+    val openCareer = {
+        if (!opening) {
+            when (val action = outcome) {
+                LaunchOutcome.SignOn, LaunchOutcome.PendingSignOn -> vm.start()
+                is LaunchOutcome.Choose -> vm.toChooseGame()
+                is LaunchOutcome.Continue -> {
+                    opening = true
+                    scope.launch {
+                        val saved = withContext(Dispatchers.IO) { vm.savedGame(action.id) }
+                        if (saved != null) vm.resume(saved) else vm.toChooseGame()
+                    }
+                }
+                null -> Unit
+            }
+        }
+    }
+    PixelImage("title_screen", Modifier.fillMaxSize())
+    if (outcome != null) Box(Modifier.fillMaxSize().clickable(onClick = openCareer))
+    when (outcome) {
+        is LaunchOutcome.Continue, is LaunchOutcome.Choose -> {
+            v.At(56, 176, 100, 18) {
+                YellowButton(v, Strings.ui(if (outcome is LaunchOutcome.Continue) "Continue" else "Load Game"), openCareer)
+            }
+            v.At(164, 176, 100, 18) {
+                YellowButton(v, Strings.ui("New Game")) { if (!opening) vm.newGameFlow() }
+            }
+        }
+        LaunchOutcome.SignOn -> v.At(0, 176, 320, 24, Alignment.Center) {
+            Text(Strings.ui("PRESS  ANY  KEY  TO  BEGIN"), style = v.text(9, color = Vga.Yellow, bold = true))
+        }
+        else -> Unit
     }
 }
 
@@ -153,6 +188,7 @@ private const val ST_FLASH = 6       // typing FLASH + treasure
 private const val ST_GATE2 = 7       // press any key -> assignment segment
 private const val ST_ASSIGN = 8      // typing assignment + deadline
 private const val ST_BEGIN = 9       // press any key -> investigation
+private const val ST_LOOKUP = 10     // look up the submitted name in the registry
 
 @Composable
 private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin: () -> Unit) =
@@ -189,6 +225,25 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
     LaunchedEffect(stage) {
         when (stage) {
             ST_PROMPT -> { typeLines(SIGN_ON_PROMPT); stage = ST_NAME }
+            ST_LOOKUP -> {
+                val name = pendingName
+                val matches = withContext(Dispatchers.IO) { vm.savedGames(name) }
+                when (matches.size) {
+                    0 -> stage = ST_NEW_Q
+                    1 -> {
+                        typeLines(listOf("", Strings.ui("Welcome back, Detective."),
+                            Strings.ui("Retrieving your dossier...")))
+                        val saved = withContext(Dispatchers.IO) { vm.savedGame(matches.single().id) }
+                        delay(1_400)
+                        if (saved != null) vm.resume(saved) else vm.toChooseGame()
+                    }
+                    else -> {
+                        typeLines(listOf("", Strings.ui("Several dossiers match. Choose your file.")))
+                        delay(1_400)
+                        vm.toChooseGame(name)
+                    }
+                }
+            }
             ST_NEW_Q -> {
                 typeLines(listOf("", Strings.ui("Interpol has no file under that name."),
                     "", Strings.ui("First day on the job? (Y/N)")))
@@ -282,13 +337,15 @@ private fun HqPrinterScreen(vm: ClaraViewModel, promptForName: Boolean, onBegin:
                     platformImeOptions = PlatformImeOptions("flagNoExtractUi"),
                 ),
                 keyboardActions = KeyboardActions(onDone = {
+                    if (stage != ST_NAME) return@KeyboardActions
                     val nm = input.trim().ifBlank { "Gumshoe" }
                     printed.add(nm)
                     input = ""
+                    keyboard?.hide()
                     // Do not create/save the career until Yes confirms this identity. In the old
                     // flow, tapping No and backgrounding here could still resume the rejected name.
                     pendingName = nm
-                    stage = ST_NEW_Q
+                    stage = ST_LOOKUP
                 }),
                 modifier = Modifier.fillMaxWidth().focusRequester(focus)
             )
@@ -1543,12 +1600,28 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     val completedArc = vm.completedCampaignArc()
     val storyAsset = resultStoryAsset(s.won, case14Escape, completedArc)
     val claraEscaped = storyAsset == "story_clara_escape"
-    val printed = remember { mutableStateListOf<String>() }
+    val reviewed = s.resultReviewed && !s.pendingPromotion
+    val canRequestNextCase = !s.careerOver && (
+        s.casesSolved < com.acme.clara.game.GameState.CAREER_CASES ||
+            s.expansionUnlocked || com.acme.clara.billing.BillingManager.SALES_ENABLED)
+    val nextCasePrompt = Strings.ui("Ready for your next case, {0}?", s.detectiveName)
+    val printed = remember {
+        mutableStateListOf<String>().apply {
+            if (reviewed) {
+                val lines = if (canRequestNextCase) s.resultLines + nextCasePrompt else s.resultLines
+                for (line in lines) {
+                    addAll(paperWrap(line, 20))
+                    add("")
+                }
+            }
+        }
+    }
     var typing by remember { mutableStateOf("") }
-    // 0 typing report · 1 typing quiz · 2 quiz input · 3 typing verdict/ready · 4 Yes/No
-    var stage by remember { mutableStateOf(0) }
+    // 0 typing report · 2 quiz input · 3 typing verdict · 4 next-case decision
+    var stage by remember { mutableStateOf(if (reviewed) 4 else 0) }
+    var promotionVerdict by remember { mutableStateOf(emptyList<String>()) }
     var input by remember { mutableStateOf("") }
-    val quiz = remember { GameData.promotionQuiz.random() }
+    val quiz = remember { if (s.pendingPromotion) GameData.promotionQuiz.random() else null }
     val focus = remember { FocusRequester() }
     val done = stage == 4
     // The quiz answer field only appears once the player has explicitly tapped past this — it
@@ -1560,7 +1633,9 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     // S1: the captured mugshot slams in and is "filed" in the gallery before the report starts
     // printing — it used to play at the same time as the printer, so its own tap-to-continue and
     // the printer's competed for the same tap and neither was clearly the thing being responded to.
-    var slamActive by remember { mutableStateOf(s.won && !case14Escape && !reduce && s.culprit?.name != null) }
+    var slamActive by remember {
+        mutableStateOf(!reviewed && s.won && !case14Escape && !reduce && s.culprit?.name != null)
+    }
     // The paper only shows its last ~12 lines, so a long report used to just scroll continuously
     // past the reader. Pause once a page's worth has printed and wait for a tap before continuing.
     var waitingForTap by remember { mutableStateOf(false) }
@@ -1586,52 +1661,34 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
             printed.add("")
         }
     }
+    suspend fun printNextCaseDecision() {
+        if (canRequestNextCase) typeAll(listOf(nextCasePrompt))
+        stage = 4
+    }
+
     LaunchedEffect(Unit) {
-        while (slamActive) delay(30)   // let the mugshot reveal finish (and be dismissed) first
+        if (reviewed) return@LaunchedEffect
+        while (slamActive) delay(30)
         typeAll(s.resultLines)
-        when {
-            // Every campaign patent, including Chief Director at the true finale, uses the
-            // existing almanac quiz. Retirement happens only after that last quiz is resolved.
-            s.pendingPromotion -> {
-                typeAll(listOf(
-                    Strings.ui("Use the World Almanac and Book of Facts to help you find the missing word in the following sentence:"),
-                    Strings.quizQuestion(quiz),
-                ))
-                stage = 2
-            }
-            // Carmen jailed on the final case: no next case — the detective is retired
-            // from the roster; any tap returns to the title
-            s.careerOver -> stage = 5
-            else -> {
-                typeAll(listOf(Strings.ui("Ready for your next case, {0}?", s.detectiveName)))
-                stage = 4
-            }
+        if (quiz != null) {
+            typeAll(listOf(
+                Strings.ui("Use the World Almanac and Book of Facts to help you find the missing word in the following sentence:"),
+                Strings.quizQuestion(quiz),
+            ))
+            stage = 2
+        } else {
+            printNextCaseDecision()
         }
     }
     LaunchedEffect(stage) {
-        if (stage == 3) {
-            // Accent-insensitive: a translated answer (e.g. Portuguese "Nilo") shouldn't fail
-            // just because a mobile keyboard made the diacritic (if any) awkward to type.
-            val correct = foldDiacritics(input.trim()) == foldDiacritics(Strings.quizAnswer(quiz))
-            if (correct) {
-                vm.resolvePromotion(true)
-                // P4: name what the rank actually changes — route length is the real, coded
-                // reward (it scales per rank); don't promise regions or a tighter clock, which
-                // the game doesn't change.
-                val newRank = vm.s.rankIndex
-                typeAll(listOfNotNull(
-                    Strings.ui("Correct! Well done, {0}.", s.detectiveName),
-                    Strings.ui("Your new rank is: {0}.", Strings.label("rank", GameData.ranks[newRank])),
-                    promotionPerkLine(newRank),
+        if (stage == 3 && quiz != null) {
+            if (promotionVerdict.isNotEmpty()) {
+                typeAll(promotionVerdict + listOfNotNull(
+                    promotionPerkLine(s.rankIndex),
                     vm.casesToNextPromotion().takeIf { it > 0 }
                         ?.let { Strings.ui("{0} more cases until your next promotion.", it) },
                 ))
-                if (vm.s.careerOver) {
-                    stage = 5
-                } else {
-                    typeAll(listOf(Strings.ui("Ready for your next case, {0}?", s.detectiveName)))
-                    stage = 4
-                }
+                printNextCaseDecision()
             } else {
                 // DOS re-asks the same question until it's answered correctly
                 // (dos_quiz_incorrect_try_again.png) — the promotion stays attainable
@@ -1707,7 +1764,16 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
                                 platformImeOptions = PlatformImeOptions("flagNoExtractUi"),
                             ),
                             keyboardActions = KeyboardActions(onDone = {
-                                if (input.isNotBlank()) { printed.add(input); stage = 3 }
+                                if (stage == 2 && input.isNotBlank() && quiz != null) {
+                                    printed.add(input)
+                                    val correct = foldDiacritics(input.trim()) == foldDiacritics(Strings.quizAnswer(quiz))
+                                    if (correct) {
+                                        val previousLines = vm.s.resultLines.size
+                                        vm.resolvePromotion(true)
+                                        promotionVerdict = vm.s.resultLines.drop(previousLines)
+                                    }
+                                    stage = 3
+                                }
                             }),
                             modifier = Modifier.fillMaxWidth().focusRequester(focus)
                         )
@@ -1775,14 +1841,20 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
             contentAlignment = Alignment.Center,
         ) {
             when {
-                waitingForTap || (stage == 2 && !answerRevealed) || stage == 5 ->
+                waitingForTap || (stage == 2 && !answerRevealed) ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(Strings.ui("Press any key or"), style = v.text(7.5f, color = Vga.Black, bold = true))
                         Text(Strings.ui("button to continue."), style = v.text(7.5f, color = Vga.Black, bold = true))
                     }
                 done -> Row(horizontalArrangement = Arrangement.spacedBy(v.w(8))) {
-                    Box(Modifier.size(v.w(76), v.w(16))) { YellowButton(v, Strings.ui("Yes")) { vm.toBriefingForNext() } }
-                    Box(Modifier.size(v.w(76), v.w(16))) { YellowButton(v, Strings.ui("No")) { vm.menuQuitToTitle() } }
+                    if (canRequestNextCase) {
+                        Box(Modifier.size(v.w(76), v.w(24))) {
+                            YellowButton(v, Strings.ui("New Case")) { vm.toBriefingForNext() }
+                        }
+                    }
+                    Box(Modifier.size(v.w(76), v.w(24))) {
+                        YellowButton(v, Strings.ui("Save & exit")) { vm.leaveCaseResult() }
+                    }
                 }
             }
         }
@@ -1790,7 +1862,6 @@ fun ResultScreen(vm: ClaraViewModel) = VirtualScreen(keepVirtualYAboveIme = 150f
     // Tap anywhere to advance past whichever gate is currently active in the strip above.
     if (waitingForTap) Box(Modifier.fillMaxSize().clickable { waitingForTap = false })
     if (stage == 2 && !answerRevealed) Box(Modifier.fillMaxSize().clickable { answerRevealed = true })
-    if (stage == 5) Box(Modifier.fillMaxSize().clickable { vm.menuQuitToTitle() })
     // S1: the captured mugshot slams in and is "filed" in the gallery — plays before the report
     // starts printing (see `slamActive` above).
     if (slamActive) ArrestSlam(v, s.culprit?.name!!) { slamActive = false }

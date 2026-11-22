@@ -61,8 +61,9 @@ fun ChooseGameScreen(vm: ClaraViewModel) = VirtualScreen { v ->
     // deleteGame() itself stays synchronous (see ClaraViewModel kdoc), so by the time a delete
     // bumps `refresh` the file is already gone and this re-fetch correctly won't see it.
     var games by remember { mutableStateOf(emptyList<SaveMeta>()) }
-    LaunchedEffect(refresh) {
-        games = withContext(Dispatchers.IO) { vm.savedGames() }
+    val detectiveName = vm.pickerDetectiveName
+    LaunchedEffect(refresh, detectiveName) {
+        games = withContext(Dispatchers.IO) { vm.savedGames(detectiveName) }
         loading = false
     }
 

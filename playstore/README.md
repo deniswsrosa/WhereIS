@@ -100,7 +100,7 @@ cd android && ./gradlew bundleRelease
 # → app/build/outputs/bundle/release/app-release.aab
 ```
 
-Version is `versionCode 8` / `versionName "1.4"` — bump `versionCode` on every upload.
+Version is `versionCode 9` / `versionName "1.4.1"` — bump `versionCode` on every upload.
 
 ## 8. Remaining loose ends before going live
 

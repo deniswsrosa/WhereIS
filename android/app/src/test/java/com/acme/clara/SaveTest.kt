@@ -300,6 +300,39 @@ class SaveTest {
 
     // ---------- ViewModel autosave + restore ----------
 
+    @Test fun leavingAfterAPromotionResumesAtTheNextCaseDecision() {
+        val repo = InMemorySaveRepository()
+        val vm = ClaraViewModel().apply {
+            attachSave(repo, "p1") { 7L }
+            signOn("Grace")
+            devJumpToResultWin(promotion = true)
+        }
+
+        vm.resolvePromotion(false)
+        vm.leaveCaseResult()
+        assertEquals(Phase.RESULT, vm.s.phase)
+        assertTrue(repo.load("p1")!!.state.pendingPromotion)
+
+        vm.resolvePromotion(true)
+        vm.resolvePromotion(true)
+        assertEquals(1, repo.load("p1")!!.state.rankIndex)
+        vm.leaveCaseResult()
+        assertEquals(Phase.TITLE, vm.s.phase)
+        vm.flushPendingSaves()
+
+        val saved = repo.load("p1")!!
+        val decoded = SaveCodec.decode(SaveCodec.encode(saved.meta, saved.state))!!
+        val resumed = ClaraViewModel().apply { loadCareer(decoded) }
+        assertEquals(Phase.RESULT, resumed.s.phase)
+        assertEquals(1, resumed.s.rankIndex)
+        assertEquals(1, resumed.s.casesSolved)
+        assertFalse(resumed.s.pendingPromotion)
+        assertTrue(resumed.s.resultReviewed)
+        resumed.toBriefingForNext()
+        assertEquals(Phase.BRIEFING, resumed.s.phase)
+        assertFalse(resumed.s.resultReviewed)
+    }
+
     @Test fun autosavePersistsAfterEveryAction() {
         val repo = InMemorySaveRepository()
         val vm = ClaraViewModel().apply { signOn("Grace") }

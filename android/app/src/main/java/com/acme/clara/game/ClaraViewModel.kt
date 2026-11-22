@@ -148,6 +148,7 @@ data class GameState(
     val resultLines: List<String> = emptyList(),
     // Promotion earned; awaits almanac quiz (DOS: "one more clue to unravel").
     val pendingPromotion: Boolean = false,
+    val resultReviewed: Boolean = false,
     val overlay: Overlay? = null,
     val soundOn: Boolean = true,
     val hapticsOn: Boolean = true,
@@ -220,6 +221,7 @@ class ClaraViewModel : ViewModel() {
     private var repo: SaveRepository? = null
     private var profileId: String? = null
     private var clock: () -> Long = { 0L }
+    internal var initialLaunchComplete by mutableStateOf(false)
 
     /** Wire continuous autosave to a repository + profile. A no-op until attached (e.g. in tests). */
     fun attachSave(repository: SaveRepository, id: String, now: () -> Long = { System.currentTimeMillis() }) {
@@ -272,8 +274,12 @@ class ClaraViewModel : ViewModel() {
 
     private fun newProfileId(): String = "career-" + java.util.UUID.randomUUID().toString().take(8)
 
-    /** Existing saved careers, newest first (empty when no repository is bound). */
-    fun savedGames(): List<SaveMeta> = repo?.list().orEmpty()
+    /** Existing saved careers, newest first, optionally matching a name from the HQ printer. */
+    fun savedGames(detectiveName: String? = null): List<SaveMeta> {
+        val saves = repo?.list().orEmpty()
+        val name = detectiveName?.trim() ?: return saves
+        return saves.filter { it.name.trim().equals(name, ignoreCase = true) }
+    }
 
     /** Read-only half of picker resume; the UI performs this on Dispatchers.IO and calls
      * [resume] back on the main thread. */
@@ -443,8 +449,7 @@ class ClaraViewModel : ViewModel() {
     // ---------- flow ----------
     fun introDone() { if (s.phase == Phase.INTRO) s = s.copy(phase = Phase.TITLE) }
     fun start() {
-        repo?.setPendingSignOn(true)
-        s = s.copy(phase = Phase.SIGN_ON)
+        newGameFlow()
     }
 
     fun signOn(name: String) {
@@ -543,6 +548,12 @@ class ClaraViewModel : ViewModel() {
         s = GameState(phase = Phase.TITLE,
             expansionUnlocked = repo?.ownsExpansion() == true || s.expansionUnlocked)
     }
+
+    fun leaveCaseResult() {
+        if (s.phase != Phase.RESULT || s.pendingPromotion) return
+        s = s.copy(resultReviewed = true)
+        menuQuitToTitle()
+    }
     /** Game ▸ New Game — start a fresh career (a new saved profile). Names it on the sign-on screen. */
     fun newGameFlow() {
         flushPendingSaves() // protect the career being left before detaching from its profile
@@ -558,13 +569,17 @@ class ClaraViewModel : ViewModel() {
         s = GameState(phase = Phase.SIGN_ON,
             expansionUnlocked = repo?.ownsExpansion() == true || s.expansionUnlocked)
     }
+    var pickerDetectiveName: String? = null
+        private set
+
     /** Show the saved-career picker. Snapshot the active career before detaching it: onStop()
      * must not subsequently persist CHOOSE_GAME into that profile while the picker is open. */
-    fun toChooseGame() {
+    fun toChooseGame(detectiveName: String? = null) {
         // Wait here rather than merely queueing autosave(): the player can immediately re-select
         // this same file, and that read must not race the write and restore an older snapshot.
         flushPendingSaves()
         profileId = null
+        pickerDetectiveName = detectiveName
         s = s.copy(overlay = null, phase = Phase.CHOOSE_GAME)
     }
     // Options > Sound is a silent checkmark toggle in the original (the √ beside the item
@@ -660,6 +675,7 @@ class ClaraViewModel : ViewModel() {
             openClue = null,
             compSex = null, compHobby = null, compHair = null, compFeature = null, compVehicle = null,
             warrantFor = null, computed = false, won = false, resultLines = emptyList(),
+            resultReviewed = false,
             selectedTool = -1, sightingLevel = 0, sleeping = false, careerOver = false,
         )
         buildVenues()
@@ -1378,8 +1394,17 @@ class ClaraViewModel : ViewModel() {
 
     /** The promotion quiz was answered: bump the rank only when correct (like the original). */
     fun resolvePromotion(correct: Boolean) {
-        val newRank = if (correct && s.rankIndex < GameData.ranks.lastIndex) s.rankIndex + 1 else s.rankIndex
-        s = s.copy(rankIndex = newRank, pendingPromotion = false)
+        if (!s.pendingPromotion || !correct) return
+        val newRank = (s.rankIndex + 1).coerceAtMost(GameData.ranks.lastIndex)
+        val i18n = com.acme.clara.i18n.Strings
+        s = s.copy(
+            rankIndex = newRank,
+            pendingPromotion = false,
+            resultLines = s.resultLines + listOf(
+                i18n.ui("Correct! Well done, {0}.", s.detectiveName),
+                i18n.ui("Your new rank is: {0}.", i18n.label("rank", GameData.ranks[newRank])),
+            ),
+        )
         autosave()
     }
 

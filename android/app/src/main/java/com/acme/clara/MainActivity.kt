@@ -77,6 +77,7 @@ fun ClaraApp() {
     val context = LocalContext.current
     // Bind persistence and decide the launch: 0 saves → sign-on, 1 → continue, 2+ → picker.
     LaunchedEffect(Unit) {
+        if (vm.initialLaunchComplete) return@LaunchedEffect
         // Bind storage before the heavier humor-corpus parse. Even an unusually fast player who
         // skips the intro while that parse is running must get a durable sign-on draft marker.
         val store = SaveStore(context)
@@ -96,11 +97,12 @@ fun ClaraApp() {
             is LaunchOutcome.SignOn -> if (BuildConfig.DEBUG) vm.devAutoStart()
             is LaunchOutcome.Continue -> {
                 val data = withContext(Dispatchers.IO) { store.load(outcome.id) }
-                data?.let { vm.resume(it) }
+                if (data != null) vm.resume(data) else vm.toChooseGame()
             }
             is LaunchOutcome.Choose -> vm.toChooseGame()
             is LaunchOutcome.PendingSignOn -> vm.restorePendingSignOn()
         }
+        vm.initialLaunchComplete = true
     }
     // Reload the (per-language) humor corpus whenever the language changes — off the main
     // thread, same reasoning as the cold-start Humor.init() above.
@@ -149,7 +151,7 @@ fun ClaraApp() {
         androidx.compose.runtime.key(com.acme.clara.i18n.Strings.revision) {
             when (vm.s.phase) {
                 Phase.INTRO -> IntroScreen(vm)
-                Phase.TITLE -> TitleScreen(vm)
+                Phase.TITLE -> TitleScreen(vm, vm.initialLaunchComplete)
                 Phase.SIGN_ON -> SignOnScreen(vm)
                 Phase.BRIEFING -> BriefingScreen(vm)
                 Phase.CITY -> CityScreen(vm)

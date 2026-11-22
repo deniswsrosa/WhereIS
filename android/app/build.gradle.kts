@@ -23,8 +23,8 @@ android {
         applicationId = "com.acme.clara"
         minSdk = 24
         targetSdk = 36
-        versionCode = 8
-        versionName = "1.4"
+        versionCode = 9
+        versionName = "1.4.1"
     }
 
     signingConfigs {
